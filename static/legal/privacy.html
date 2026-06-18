@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy — Short-Form Studio</title>
+  <link rel="stylesheet" href="/static/styles.css">
+  <style>
+    .legal-wrap { max-width: 760px; margin: 0 auto; padding: 48px 24px 80px; }
+    .legal-back { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-2); text-decoration: none; margin-bottom: 32px; transition: color var(--t); }
+    .legal-back:hover { color: var(--text); }
+    .legal-header { margin-bottom: 40px; }
+    .legal-header h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+    .legal-header .meta { font-size: 13px; color: var(--text-2); }
+    .legal-wrap h2 { font-size: 17px; font-weight: 600; margin: 36px 0 12px; color: var(--text); }
+    .legal-wrap h3 { font-size: 14px; font-weight: 600; margin: 24px 0 8px; color: var(--text); }
+    .legal-wrap p { font-size: 14px; line-height: 1.75; color: var(--text-2); margin-bottom: 12px; }
+    .legal-wrap ul { padding-left: 20px; margin-bottom: 12px; }
+    .legal-wrap li { font-size: 14px; line-height: 1.75; color: var(--text-2); margin-bottom: 4px; }
+    .legal-wrap a { color: var(--accent); text-decoration: none; }
+    .legal-wrap a:hover { text-decoration: underline; }
+    .data-table { width: 100%; border-collapse: collapse; margin: 16px 0 24px; font-size: 13px; }
+    .data-table th { text-align: left; padding: 8px 12px; background: var(--surface-2); border: 1px solid var(--border); font-weight: 600; color: var(--text); }
+    .data-table td { padding: 8px 12px; border: 1px solid var(--border); color: var(--text-2); vertical-align: top; }
+    hr { border: none; border-top: 1px solid var(--border); margin: 36px 0; }
+    .legal-footer { margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--border); display: flex; gap: 16px; flex-wrap: wrap; font-size: 13px; color: var(--text-3); }
+    .legal-footer a { color: var(--text-2); text-decoration: none; }
+    .legal-footer a:hover { text-decoration: underline; }
+    .highlight-box { background: var(--accent-dim); border: 1px solid var(--accent); border-radius: var(--r); padding: 16px 18px; margin: 24px 0; }
+    .highlight-box p { color: var(--text); font-size: 14px; line-height: 1.65; margin-bottom: 0; }
+  </style>
+</head>
+<body>
+<div class="legal-wrap">
+  <a class="legal-back" href="javascript:history.back()">← Back</a>
+  <div class="legal-header">
+    <h1>Privacy Policy</h1>
+    <p class="meta">Short-Form Studio &nbsp;·&nbsp; Effective date: June 9, 2025 &nbsp;·&nbsp; Last updated: June 15, 2025</p>
+  </div>
+
+  <div class="highlight-box">
+    <p><strong>Summary:</strong> We collect only what we need to operate the Service. We don't sell your data. Processed video files are stored temporarily and deleted automatically. AI features (Whisper, edge-tts) run entirely on the server — no data is sent to external services.</p>
+  </div>
+
+  <h2>1. Information We Collect</h2>
+  <p>When you use Short-Form Studio, we collect the following categories of data:</p>
+
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Category</th>
+        <th>What we collect</th>
+        <th>Why</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Account data</strong></td>
+        <td>Email address, username, hashed &amp; salted password (PBKDF2-SHA256)</td>
+        <td>Account creation and authentication</td>
+      </tr>
+      <tr>
+        <td><strong>Session tokens</strong></td>
+        <td>Random UUID bearer tokens stored in your browser's localStorage</td>
+        <td>Keeping you signed in (30-day expiry)</td>
+      </tr>
+      <tr>
+        <td><strong>IP addresses</strong></td>
+        <td>Your IP address is logged in server access logs</td>
+        <td>Security, abuse prevention, server diagnostics</td>
+      </tr>
+      <tr>
+        <td><strong>Submitted URLs</strong></td>
+        <td>Third-party video URLs you paste into the editor or Clip Studio</td>
+        <td>Downloading and processing your requested video content</td>
+      </tr>
+      <tr>
+        <td><strong>Uploaded media</strong></td>
+        <td>Video, audio, and image files you upload directly to the Service</td>
+        <td>Editing, processing, and rendering your media via the Video Editor or AI Studio</td>
+      </tr>
+      <tr>
+        <td><strong>Voiceover scripts</strong></td>
+        <td>Text you submit to AI Studio for neural voiceover generation</td>
+        <td>Generating speech audio using the local edge-tts engine</td>
+      </tr>
+      <tr>
+        <td><strong>Processed video files</strong></td>
+        <td>The rendered output files stored in your Exports hub</td>
+        <td>Allowing you to download or review your exports</td>
+      </tr>
+      <tr>
+        <td><strong>Browser preferences</strong></td>
+        <td>Theme (dark/light), accent color, editor settings — stored in localStorage</td>
+        <td>Preserving your UI preferences between sessions</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>We do <strong>not</strong> collect payment information, precise geolocation data, or any biometric data.</p>
+
+  <h2>2. How We Use Your Data</h2>
+  <ul>
+    <li><strong>Providing the Service:</strong> Processing uploaded files and URLs, running the Video Editor, Clip Studio, Ranking, and AI Studio pipelines, and managing your account</li>
+    <li><strong>AI processing:</strong> Transcribing your video audio (Whisper) and synthesizing voiceover from your script (edge-tts) — both running locally on the server, no external API calls</li>
+    <li><strong>Security:</strong> Detecting and preventing unauthorized access, abuse, and spam</li>
+    <li><strong>Service improvement:</strong> Aggregated, anonymized usage statistics to understand how the Service is used</li>
+    <li><strong>Legal compliance:</strong> Responding to valid legal requests, DMCA takedown notices, and law enforcement demands where required</li>
+  </ul>
+
+  <h2>3. AI Features and Data Processing</h2>
+
+  <h3>3.1 Whisper — Automatic Subtitles</h3>
+  <p>When you use the AI Studio subtitles feature, the audio track from your video is processed by OpenAI's Whisper model running <strong>entirely on the server</strong>. No audio is transmitted to OpenAI's servers or any external endpoint. The transcription output is used only to generate subtitle overlays for your export and is discarded after rendering.</p>
+
+  <h3>3.2 edge-tts — Neural Voiceover</h3>
+  <p>When you submit a script for voiceover generation, the text is processed by Microsoft's edge-tts engine running <strong>locally on the server</strong>. No text is sent to Microsoft's cloud services. The generated audio is mixed into your export and the intermediate audio file is discarded after rendering.</p>
+
+  <h3>3.3 Future AI Features</h3>
+  <p>If we introduce AI features that require sending data to external API providers, we will update this Privacy Policy, notify users in advance, and clearly disclose which data is sent and to whom before those features are activated.</p>
+
+  <h2>4. Third-Party Data Sharing</h2>
+  <p>We do not sell, rent, or trade your personal data.</p>
+
+  <h3>4.1 Legal Disclosures</h3>
+  <p>We may disclose your information to law enforcement, government agencies, or other parties if required by valid legal process, to enforce our Terms of Service, or to protect the rights, safety, or property of Short-Form Studio or others.</p>
+
+  <h3>4.2 Service Providers</h3>
+  <p>We may use third-party infrastructure providers (hosting, storage) who process data on our behalf under data processing agreements. These providers are prohibited from using your data for their own purposes.</p>
+
+  <h2>5. Data Retention</h2>
+
+  <h3>5.1 Uploaded Media</h3>
+  <p>Video, audio, and image files you upload are stored only as long as needed to complete your requested processing. Temporary uploads are deleted automatically after the render is complete or after a short inactivity period (typically 24 hours).</p>
+
+  <h3>5.2 Exported Video Files</h3>
+  <p>Processed video files stored in your Exports hub are retained for a maximum of <strong>30 days</strong> from the date of creation, after which they are automatically deleted from the server. You should download any exports you wish to keep before this period expires.</p>
+
+  <h3>5.3 Account Data</h3>
+  <p>Your account information (email, username, profile) is retained as long as your account is active. Upon account deletion, your personal data is removed within 30 days, except where retention is required by law.</p>
+
+  <h3>5.4 Session Tokens</h3>
+  <p>Session tokens expire automatically after 30 days. Logging out immediately invalidates your session token.</p>
+
+  <h3>5.5 Server Logs</h3>
+  <p>Server access logs (including IP addresses) are retained for up to 90 days for security and diagnostic purposes, then automatically purged.</p>
+
+  <h2>6. Cookies and Local Storage</h2>
+  <p>Short-Form Studio does not use tracking cookies. We use your browser's <code>localStorage</code> to store:</p>
+  <ul>
+    <li>Your session authentication token</li>
+    <li>UI preferences (theme, accent color, editor settings)</li>
+    <li>Editor state (saved timeline and template settings)</li>
+  </ul>
+  <p>This data stays on your device and is not transmitted to our servers except where necessary to authenticate your session.</p>
+
+  <h2>7. Data Security</h2>
+  <p>We implement industry-standard security measures to protect your data, including:</p>
+  <ul>
+    <li>Passwords hashed using PBKDF2-SHA256 with a unique salt per account (210,000 rounds)</li>
+    <li>Session tokens are cryptographically random UUID values</li>
+    <li>HTTPS encryption for all data in transit (when deployed to production)</li>
+    <li>Server-side validation of all file paths and upload types to prevent directory traversal and malicious uploads</li>
+    <li>AI processing runs locally with no external data transmission</li>
+  </ul>
+  <p>No method of transmission or storage is 100% secure. We cannot guarantee absolute security but are committed to protecting your data using reasonable measures.</p>
+
+  <h2>8. Your Rights</h2>
+  <p>Depending on your jurisdiction, you may have the right to:</p>
+  <ul>
+    <li><strong>Access</strong> the personal data we hold about you</li>
+    <li><strong>Correct</strong> inaccurate personal data</li>
+    <li><strong>Delete</strong> your account and associated personal data</li>
+    <li><strong>Export</strong> your personal data in a machine-readable format</li>
+    <li><strong>Object</strong> to certain uses of your data</li>
+  </ul>
+  <p>To exercise these rights, contact us at <a href="mailto:privacy@shortformstudio.com">privacy@shortformstudio.com</a>.</p>
+
+  <h2>9. Children's Privacy</h2>
+  <p>The Service is not directed to individuals under the age of 13. We do not knowingly collect personal data from children. If you believe we have inadvertently collected data from a child, please contact us immediately.</p>
+
+  <h2>10. Changes to This Policy</h2>
+  <p>We may update this Privacy Policy periodically. The "Last updated" date at the top of this page will reflect the most recent revision. Continued use of the Service after changes constitutes acceptance of the revised policy.</p>
+
+  <h2>11. Contact</h2>
+  <p>Privacy questions or requests? Contact us at <a href="mailto:privacy@shortformstudio.com">privacy@shortformstudio.com</a>.</p>
+
+  <hr>
+  <div class="legal-footer">
+    <span>&copy; 2025 Short-Form Studio</span>
+    <a href="/legal/terms">Terms of Service</a>
+    <a href="/legal/privacy">Privacy Policy</a>
+    <a href="/legal/dmca">DMCA Policy</a>
+    <a href="/">Back to Studio</a>
+  </div>
+</div>
+<script>
+  const t = localStorage.getItem('sf-theme-base');
+  if (t === 'light') document.documentElement.setAttribute('data-theme', 'light');
+  const a = localStorage.getItem('sf-theme-accent');
+  if (a) document.documentElement.style.setProperty('--accent', a);
+</script>
+</body>
+</html>

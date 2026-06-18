@@ -1,0 +1,16 @@
+streamlit>=1.35
+yt-dlp>=2024.1.1
+ffmpeg-python>=0.2.0
+
+# AI Studio
+faster-whisper>=1.0
+edge-tts>=6.1
+
+# Backend (Supabase cloud) — install when ready to switch from SQLite
+supabase>=2.4
+python-dotenv>=1.0
+
+# SQLAlchemy ORM + FastAPI runtime
+sqlalchemy>=2.0
+uvicorn[standard]>=0.29
+email-validator>=2.0

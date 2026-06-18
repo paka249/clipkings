@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//home/ange7/.claude/plugins/cache/ui-ux-pro-max-skill/ui-ux-pro-max/2.5.0/.claude/skills/ui-ux-pro-max/**)",
+      "Bash(python3 scripts/search.py \"dashboard sidebar navigation dark SaaS\" --domain style -n 3)",
+      "Bash(python3 scripts/search.py \"media tool dark creative\" --domain color -n 2)",
+      "Bash(python3 *)",
+      "Bash(fuser -k 8080/tcp)",
+      "Bash(venv/bin/python server.py)",
+      "Bash(curl -s http://localhost:8080/)",
+      "Bash(curl -s http://localhost:8080/api/bg-templates)",
+      "Bash(fuser -k 8080/tcp 2>/dev/null; sleep 1 && venv/bin/python server.py &>/tmp/sf_server.log & *)",
+      "Bash(venv/bin/python download_bg_templates.py subway_surfers \"https://www.youtube.com/watch?v=RNaEo6Zooww\")",
+      "Bash(venv/bin/python download_bg_templates.py minecraft_parkour \"https://www.youtube.com/watch?v=z84bmLDzIIk\")",
+      "Bash(venv/bin/python download_bg_templates.py gta \"https://www.youtube.com/watch?v=5rsd34XKKkM\")",
+      "Bash(echo \"All 3 started \\(PIDs: $!\\)\")",
+      "Bash(ffprobe -v quiet -print_format json -show_streams bg_templates/gta.mp4)",
+      "Bash(pip show *)"
+    ],
+    "additionalDirectories": [
+      "/tmp"
+    ]
+  },
+  "enabledMcpjsonServers": [
+    "supabase"
+  ]
+}

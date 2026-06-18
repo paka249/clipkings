@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign in — Short-Form Studio</title>
+  <link rel="stylesheet" href="/static/styles.css">
+  <style>
+    .auth-wrap {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px 48px;
+      background: var(--bg);
+    }
+    .auth-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 32px;
+    }
+    .auth-logo-mark {
+      width: 36px; height: 36px;
+      background: var(--accent);
+      border-radius: var(--r-lg);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 14px; color: #fff; letter-spacing: -.5px;
+    }
+    .auth-logo-name {
+      font-weight: 600; font-size: 16px; color: var(--text);
+    }
+    .auth-card {
+      width: 100%; max-width: 420px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 32px;
+    }
+    .auth-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 28px;
+      gap: 0;
+    }
+    .auth-tab {
+      flex: 1; padding: 10px 0;
+      background: none; border: none;
+      color: var(--text-2); font-size: 14px; font-weight: 500;
+      cursor: pointer; border-bottom: 2px solid transparent;
+      margin-bottom: -1px; transition: color var(--t), border-color var(--t);
+    }
+    .auth-tab.active {
+      color: var(--text);
+      border-bottom-color: var(--accent);
+    }
+    .auth-form { display: none; }
+    .auth-form.active { display: block; }
+    .auth-form h2 {
+      font-size: 18px; font-weight: 600; margin-bottom: 4px;
+    }
+    .auth-form .auth-sub {
+      font-size: 13px; color: var(--text-2); margin-bottom: 24px;
+    }
+    .field { margin-bottom: 16px; }
+    .field label {
+      display: block; font-size: 12px; font-weight: 500;
+      color: var(--text-2); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .4px;
+    }
+    .field input {
+      width: 100%; height: 40px; padding: 0 12px;
+      background: var(--surface-2); border: 1px solid var(--border);
+      border-radius: var(--r); color: var(--text); font-size: 14px;
+      outline: none; transition: border-color var(--t);
+    }
+    .field input:focus { border-color: var(--accent); }
+    .field input.err { border-color: var(--danger); }
+    .field-error {
+      font-size: 12px; color: var(--danger); margin-top: 4px; display: none;
+    }
+    .auth-agree {
+      display: flex; align-items: flex-start; gap: 8px;
+      font-size: 12px; color: var(--text-2); margin-bottom: 20px;
+      line-height: 1.5;
+    }
+    .auth-agree input { margin-top: 2px; flex-shrink: 0; accent-color: var(--accent); }
+    .auth-agree a { color: var(--accent); text-decoration: none; }
+    .auth-agree a:hover { text-decoration: underline; }
+    .auth-submit {
+      width: 100%; height: 42px;
+      background: var(--accent); color: var(--accent-fg);
+      border: none; border-radius: var(--r);
+      font-size: 14px; font-weight: 600; cursor: pointer;
+      transition: background var(--t), opacity var(--t);
+    }
+    .auth-submit:hover { background: var(--accent-hover); }
+    .auth-submit:disabled { opacity: .5; cursor: not-allowed; }
+    .auth-alert {
+      background: var(--danger-dim); border: 1px solid var(--danger);
+      border-radius: var(--r); padding: 10px 14px;
+      font-size: 13px; color: var(--danger);
+      margin-bottom: 18px; display: none;
+    }
+    .auth-alt {
+      text-align: center; margin-top: 18px;
+      font-size: 13px; color: var(--text-2);
+    }
+    .auth-alt button {
+      background: none; border: none; color: var(--accent);
+      cursor: pointer; font-size: 13px; font-weight: 500;
+      padding: 0;
+    }
+    .auth-alt button:hover { text-decoration: underline; }
+    .auth-footer {
+      margin-top: 32px; text-align: center;
+      font-size: 12px; color: var(--text-3);
+    }
+    .auth-footer a {
+      color: var(--text-2); text-decoration: none;
+    }
+    .auth-footer a:hover { text-decoration: underline; }
+    .spinner {
+      display: inline-block; width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .6s linear infinite;
+      vertical-align: middle; margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<div class="auth-wrap">
+  <div class="auth-logo">
+    <div class="auth-logo-mark">SF</div>
+    <div class="auth-logo-name">Short-Form Studio</div>
+  </div>
+
+  <div class="auth-card">
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login" onclick="switchTab('login')">Sign in</button>
+      <button class="auth-tab" id="tab-register" onclick="switchTab('register')">Create account</button>
+    </div>
+
+    <!-- Sign In -->
+    <div class="auth-form active" id="form-login">
+      <h2>Welcome back</h2>
+      <p class="auth-sub">Sign in to continue to your studio</p>
+      <div class="auth-alert" id="login-alert"></div>
+      <div class="field">
+        <label for="login-id">Email or username</label>
+        <input type="text" id="login-id" placeholder="you@example.com" autocomplete="username">
+      </div>
+      <div class="field">
+        <label for="login-pw">Password</label>
+        <input type="password" id="login-pw" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <button class="auth-submit" id="login-btn" onclick="submitLogin()">Sign in</button>
+      <div class="auth-alt">
+        Don't have an account? <button onclick="switchTab('register')">Create one</button>
+      </div>
+    </div>
+
+    <!-- Create Account -->
+    <div class="auth-form" id="form-register">
+      <h2>Create your account</h2>
+      <p class="auth-sub">Free to start — no credit card required</p>
+      <div class="auth-alert" id="reg-alert"></div>
+      <div class="field">
+        <label for="reg-username">Username</label>
+        <input type="text" id="reg-username" placeholder="yourname" autocomplete="username">
+        <div class="field-error" id="reg-username-err"></div>
+      </div>
+      <div class="field">
+        <label for="reg-email">Email</label>
+        <input type="email" id="reg-email" placeholder="you@example.com" autocomplete="email">
+        <div class="field-error" id="reg-email-err"></div>
+      </div>
+      <div class="field">
+        <label for="reg-pw">Password</label>
+        <input type="password" id="reg-pw" placeholder="Min. 8 characters" autocomplete="new-password">
+        <div class="field-error" id="reg-pw-err"></div>
+      </div>
+      <div class="field">
+        <label for="reg-pw2">Confirm password</label>
+        <input type="password" id="reg-pw2" placeholder="Repeat password" autocomplete="new-password">
+        <div class="field-error" id="reg-pw2-err"></div>
+      </div>
+      <div class="auth-agree">
+        <input type="checkbox" id="reg-agree">
+        <label for="reg-agree">
+          I agree to the <a href="/legal/terms" target="_blank">Terms of Service</a>
+          and <a href="/legal/privacy" target="_blank">Privacy Policy</a>.
+          I confirm that I own or have explicit permission for any video content I process.
+        </label>
+      </div>
+      <button class="auth-submit" id="reg-btn" onclick="submitRegister()">Create account</button>
+      <div class="auth-alt">
+        Already have an account? <button onclick="switchTab('login')">Sign in</button>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top:16px;text-align:center">
+    <a href="/" style="font-size:13px;color:var(--text-3);text-decoration:none">
+      Continue without an account →
+    </a>
+  </div>
+
+  <div class="auth-footer">
+    &copy; 2025 Short-Form Studio &nbsp;·&nbsp;
+    <a href="/legal/terms" target="_blank">Terms</a> &nbsp;·&nbsp;
+    <a href="/legal/privacy" target="_blank">Privacy</a> &nbsp;·&nbsp;
+    <a href="/legal/dmca" target="_blank">DMCA</a>
+  </div>
+</div>
+
+<script>
+  // Apply saved theme before render
+  const savedTheme = localStorage.getItem('sf-theme-base');
+  if (savedTheme === 'light') document.documentElement.setAttribute('data-theme', 'light');
+  const savedAccent = localStorage.getItem('sf-theme-accent');
+  if (savedAccent) document.documentElement.style.setProperty('--accent', savedAccent);
+
+  // Redirect if already logged in
+  const existingToken = localStorage.getItem('sf-auth-token');
+  if (existingToken) {
+    fetch('/api/auth/me', { headers: { 'Authorization': 'Bearer ' + existingToken } })
+      .then(r => { if (r.ok) window.location.replace('/'); });
+  }
+
+  function switchTab(tab) {
+    document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+    document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+    document.getElementById('form-login').classList.toggle('active', tab === 'login');
+    document.getElementById('form-register').classList.toggle('active', tab === 'register');
+  }
+
+  function showAlert(id, msg) {
+    const el = document.getElementById(id);
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+  function hideAlert(id) {
+    document.getElementById(id).style.display = 'none';
+  }
+  function setLoading(btnId, loading) {
+    const btn = document.getElementById(btnId);
+    if (loading) {
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span>Please wait…';
+    } else {
+      btn.disabled = false;
+    }
+  }
+
+  function onAuthSuccess(data) {
+    localStorage.setItem('sf-auth-token', data.token);
+    localStorage.setItem('sf-auth-user', JSON.stringify(data.user));
+    // Also pre-fill the profile name so the sidebar shows the right name
+    localStorage.setItem('sf-profile-name',  data.user.username);
+    localStorage.setItem('sf-profile-email', data.user.email);
+    window.location.replace('/');
+  }
+
+  async function submitLogin() {
+    hideAlert('login-alert');
+    const identifier = document.getElementById('login-id').value.trim();
+    const password   = document.getElementById('login-pw').value;
+    if (!identifier || !password) {
+      showAlert('login-alert', 'Please enter your email/username and password.');
+      return;
+    }
+    setLoading('login-btn', true);
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        document.getElementById('login-btn').disabled = false;
+        document.getElementById('login-btn').textContent = 'Sign in';
+        showAlert('login-alert', data.detail || 'Login failed. Try again.');
+        return;
+      }
+      onAuthSuccess(data);
+    } catch {
+      document.getElementById('login-btn').disabled = false;
+      document.getElementById('login-btn').textContent = 'Sign in';
+      showAlert('login-alert', 'Network error — make sure the server is running.');
+    }
+  }
+
+  async function submitRegister() {
+    hideAlert('reg-alert');
+    // Clear field errors
+    ['reg-username-err','reg-email-err','reg-pw-err','reg-pw2-err'].forEach(id => {
+      document.getElementById(id).style.display = 'none';
+    });
+
+    const username = document.getElementById('reg-username').value.trim();
+    const email    = document.getElementById('reg-email').value.trim();
+    const pw       = document.getElementById('reg-pw').value;
+    const pw2      = document.getElementById('reg-pw2').value;
+    const agreed   = document.getElementById('reg-agree').checked;
+
+    let hasErr = false;
+    function fieldErr(id, msg) {
+      const el = document.getElementById(id);
+      el.textContent = msg; el.style.display = 'block'; hasErr = true;
+    }
+    if (!username) fieldErr('reg-username-err', 'Username is required');
+    if (!email || !email.includes('@')) fieldErr('reg-email-err', 'Enter a valid email');
+    if (pw.length < 8) fieldErr('reg-pw-err', 'Password must be at least 8 characters');
+    if (pw !== pw2)  fieldErr('reg-pw2-err', 'Passwords do not match');
+    if (!agreed) {
+      showAlert('reg-alert', 'You must agree to the Terms of Service and Privacy Policy to continue.');
+      return;
+    }
+    if (hasErr) return;
+
+    setLoading('reg-btn', true);
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, email, password: pw }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        document.getElementById('reg-btn').disabled = false;
+        document.getElementById('reg-btn').textContent = 'Create account';
+        showAlert('reg-alert', data.detail || 'Registration failed. Try again.');
+        return;
+      }
+      onAuthSuccess(data);
+    } catch {
+      document.getElementById('reg-btn').disabled = false;
+      document.getElementById('reg-btn').textContent = 'Create account';
+      showAlert('reg-alert', 'Network error — make sure the server is running.');
+    }
+  }
+
+  // Allow Enter key to submit
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Enter') return;
+    const loginActive = document.getElementById('form-login').classList.contains('active');
+    if (loginActive) submitLogin();
+    else submitRegister();
+  });
+</script>
+</body>
+</html>

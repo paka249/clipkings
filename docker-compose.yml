@@ -1,0 +1,12 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/app/data          # SQLite DB persistence
+      - ./exports:/app/exports    # rendered video files
+      - ./uploads:/app/uploads    # user uploads
+    environment:
+      - DATABASE_URL=sqlite:////app/data/app.db
+    restart: unless-stopped

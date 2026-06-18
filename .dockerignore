@@ -1,0 +1,19 @@
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.env
+.env.*
+
+# Runtime data — mounted as volumes
+data/
+exports/
+uploads/
+app_data/
+bg_templates/
+
+# Dev/editor files
+.git/
+.gitignore
+docs/
+*.md
