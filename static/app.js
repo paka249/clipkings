@@ -71,7 +71,7 @@ const _TOOL_NAMES = { editor:'Video Editor', clipstudio:'Clip Studio', templates
 const _TOOL_ICONS = { editor:'#i-film', clipstudio:'#i-edit', templates:'#i-tmpl', ranking:'#i-ranking', aistudio:'#i-aistudio', exports:'#i-folder' };
 
 function showPage(name, _fromHistory = false) {
-  if (!_VALID_PAGES.has(name)) name = 'dashboard';
+  if (!_VALID_PAGES.has(name)) name = 'templates';
 
   // Stop editor preview playback when leaving
   const currentPage = document.querySelector('.page.active')?.id?.replace('page-', '');
@@ -89,6 +89,7 @@ function showPage(name, _fromHistory = false) {
   const pageEl = document.getElementById('page-' + name);
   if (!pageEl) return;
   pageEl.classList.add('active');
+  document.querySelector('.main')?.classList.toggle('is-editor', name === 'editor');
   const navEl = document.querySelector('[data-page="' + name + '"]');
   if (navEl) navEl.classList.add('active');
   if (!_fromHistory) history.pushState({ page: name }, '', '#' + name);
@@ -3209,7 +3210,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Restore page from URL hash (back/forward support)
   const hashPage = location.hash.slice(1);
-  const startPage = _VALID_PAGES.has(hashPage) ? hashPage : 'dashboard';
+  const startPage = _VALID_PAGES.has(hashPage) ? hashPage : 'templates';
   history.replaceState({ page: startPage }, '', '#' + startPage);
   showPage(startPage, true);
 
@@ -3701,4 +3702,19 @@ async function dashCsRender() {
     document.getElementById('dcs-progress-label').textContent = 'Error: ' + e.message;
     btn.disabled = false;
   }
+}
+
+// ── Editor: caption track ─────────────────────────────────────
+function vedAddCaption() {
+  const text = prompt('Caption text:');
+  if (!text) return;
+  const row = document.getElementById('ved-tl-caption-row');
+  const id = 'cap-' + Date.now();
+  const div = document.createElement('div');
+  div.className = 'ved-tl-clip';
+  div.id = id;
+  div.style.cssText = 'left:2px;width:160px;top:4px;height:24px;font-size:.65rem;padding:0 6px;display:flex;align-items:center;gap:4px;';
+  div.innerHTML = `<span style="opacity:.7">T</span><span style="overflow:hidden;white-space:nowrap;text-overflow:ellipsis">${text}</span>`;
+  div.title = text;
+  row.appendChild(div);
 }
