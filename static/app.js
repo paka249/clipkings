@@ -64,9 +64,9 @@ function fmtTS(secs) {
 }
 
 // ── Navigation ───────────────────────────────────────────────
-const _VALID_PAGES = new Set(['dashboard','templates','editor','clipstudio','exports','account','upgrade','ranking','aistudio','docs']);
+const _VALID_PAGES = new Set(['dashboard','templates','splitscreen','editor','clipstudio','exports','account','upgrade','ranking','aistudio','docs']);
 
-const _TOOL_PAGES = new Set(['editor','clipstudio','templates','ranking','aistudio','exports']);
+const _TOOL_PAGES = new Set(['editor','clipstudio','templates','splitscreen','ranking','aistudio','exports']);
 const _TOOL_NAMES = { editor:'Video Editor', clipstudio:'Clip Studio', templates:'Templates', ranking:'Ranking', aistudio:'AI Studio', exports:'Exports' };
 const _TOOL_ICONS = { editor:'#i-film', clipstudio:'#i-edit', templates:'#i-tmpl', ranking:'#i-ranking', aistudio:'#i-aistudio', exports:'#i-folder' };
 
@@ -3248,33 +3248,81 @@ const DASH = {
   jobId: null,
 };
 
-function dashCarouselScroll(dir) {
-  const row = document.getElementById('tmpl-carousel');
-  row.scrollBy({ left: dir * 220, behavior: 'smooth' });
-}
+const _TMPL_NAMES = { cs: 'Clip Studio', split: 'Splitscreen', ai: 'AI Studio', rk: 'Ranking' };
 
 function dashSelectTemplate(name) {
+  const pg = document.getElementById('page-templates');
+  if (!pg) return;
+
+  if (DASH.template !== name) {
+    DASH.primaryUploadId = null; DASH.primaryUrl = ''; DASH.bgTemplate = '';
+    DASH.clips = []; DASH.rkItems = [];
+    if (typeof DCS !== 'undefined') { DCS.clips = []; DCS.uploadId = null; DCS.primaryUrl = ''; }
+    const cl = document.getElementById('ds-clip-list');  if (cl) cl.innerHTML = '';
+    const dc = document.getElementById('dcs-clip-list'); if (dc) dc.innerHTML = '';
+    const rk = document.getElementById('drk-item-list'); if (rk) rk.innerHTML = '';
+  }
   DASH.template = name;
+
+  // CSS class drives visibility — no style.display juggling
+  pg.classList.add('tmpl-ws-open');
+
+  const titleEl = document.getElementById('tmpl-ws-title');
+  if (titleEl) titleEl.textContent = _TMPL_NAMES[name] || name;
+
   document.querySelectorAll('.tmpl-picker-card').forEach(c =>
     c.classList.toggle('active', c.dataset.tmpl === name));
-  // center the selected card in the carousel
-  const card = document.querySelector(`.tmpl-picker-card[data-tmpl="${name}"]`);
-  if (card) card.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-  const ws = document.getElementById('dash-workspace');
-  ws.classList.add('open');
+
   ['cs', 'split', 'ai', 'rk'].forEach(p => {
     const el = document.getElementById('dash-panel-' + p);
     if (el) el.style.display = p === name ? '' : 'none';
   });
   dashResetPreview();
-  ws.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  document.querySelector('.main')?.scrollTo({ top: 0, behavior: 'smooth' });
 }
+
+function dashUpdateSplitPreview() {
+  const res = (document.getElementById('ds-resolution') || {}).value || '1080x1920';
+  const ratio = parseInt((document.getElementById('ds-split-ratio') || {}).value || '50', 10);
+  const [w, h] = res.split('x').map(Number);
+  const topH = Math.round(h * ratio / 100);
+  const botH = h - topH;
+  const topEl = document.getElementById('ds-preview-top');
+  const botEl = document.getElementById('ds-preview-bot');
+  const dimTop = document.getElementById('ds-dim-top');
+  const dimBot = document.getElementById('ds-dim-bot');
+  const outLabel = document.getElementById('ds-output-label');
+  if (topEl) topEl.style.flex = ratio + '';
+  if (botEl) botEl.style.flex = (100 - ratio) + '';
+  if (dimTop) dimTop.textContent = w + ' × ' + topH;
+  if (dimBot) dimBot.textContent = w + ' × ' + botH;
+  if (outLabel) outLabel.textContent = 'Output: ' + w + ' × ' + h;
+}
+
+function dashBackToPicker() {
+  const pg = document.getElementById('page-templates');
+  if (pg) pg.classList.remove('tmpl-ws-open');
+  DASH.template = null;
+  dashResetPreview();
+  document.querySelectorAll('.tmpl-picker-card').forEach(c => c.classList.remove('active'));
+}
+
+// Wire template card clicks
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.tmpl-picker-card[data-tmpl]').forEach(card => {
+    card.addEventListener('click', function() {
+      dashSelectTemplate(this.dataset.tmpl);
+    });
+  });
+});
 
 function dashResetPreview() {
   const vid = document.getElementById('dash-pv-video');
-  vid.pause(); vid.src = ''; vid.style.display = 'none';
-  document.getElementById('dash-pv-placeholder').style.display = '';
-  document.getElementById('dash-pv-result').style.display = 'none';
+  if (vid) { vid.pause(); vid.src = ''; vid.style.display = 'none'; }
+  const ph = document.getElementById('dash-pv-placeholder');
+  if (ph) ph.style.display = '';
+  const res = document.getElementById('dash-pv-result');
+  if (res) res.style.display = 'none';
 }
 
 function dashShowPreview(src) {
@@ -3470,10 +3518,21 @@ async function dashAiGenerate() {
   document.getElementById('dai-progress-wrap').style.display = '';
   document.getElementById('dai-log').innerHTML = '';
 
+  const fontMap = {
+    'impact': 'Impact', 'montserrat': 'DejaVu Sans Bold', 'oswald': 'DejaVu Sans Bold',
+    'bebas': 'Impact', 'arial': 'Liberation Sans Bold', 'roboto': 'DejaVu Sans',
+    'playfair': 'DejaVu Serif Bold',
+  };
+  const rawFont = document.getElementById('dai-sub-font')?.value || 'impact';
+  const sizeMap = { small: 40, medium: 48, large: 58, xlarge: 70 };
+  const rawSize = document.getElementById('dai-sub-size')?.value || 'medium';
+
   const body = {
     do_subtitles: document.getElementById('dai-do-subs').checked,
     sub_model:    document.getElementById('dai-sub-model').value,
     sub_style:    document.getElementById('dai-sub-style').value,
+    sub_font:     fontMap[rawFont] || 'DejaVu Sans Bold',
+    sub_size:     sizeMap[rawSize] || 48,
     do_voiceover: document.getElementById('dai-do-vo').checked,
     vo_voice:     document.getElementById('dai-voice').value,
     vo_script:    document.getElementById('dai-script').value.trim(),
@@ -3574,22 +3633,29 @@ async function _dashPoll(jobId, prefix) {
 
       const entries = (job.logs || []).slice(seen);
       seen += entries.length;
-      entries.forEach(e => {
-        const div = document.createElement('div');
-        div.className = 'log-line log-' + (e.level || 'inf');
-        div.textContent = `[${e.ts}] ${e.msg}`;
-        logEl.appendChild(div);
-        logEl.scrollTop = logEl.scrollHeight;
-      });
+      if (logEl) {
+        entries.forEach(e => {
+          const div = document.createElement('div');
+          div.className = 'log-line log-' + (e.level || 'inf');
+          div.textContent = `[${e.ts}] ${e.msg}`;
+          logEl.appendChild(div);
+          logEl.scrollTop = logEl.scrollHeight;
+        });
+      }
 
       if (job.status === 'completed') {
+        if (fillEl) fillEl.style.width = '100%';
+        if (labelEl) labelEl.textContent = 'Done ✓';
         dashShowPreview('/api/video/' + job.output);
         dashShowDownload(job.output);
         return;
       }
-      if (job.status === 'failed') return;
+      if (job.status === 'failed') {
+        if (labelEl) labelEl.textContent = '✗ Failed — check log';
+        return;
+      }
       setTimeout(tick, 1500);
-    } catch { setTimeout(tick, 2000); }
+    } catch (err) { setTimeout(tick, 2000); }
   };
   tick();
 }
@@ -3681,16 +3747,17 @@ async function dashCsRender() {
   document.getElementById('dcs-progress-fill').style.width = '0%';
   document.getElementById('dcs-progress-label').textContent = 'Queuing…';
 
-  const fmt = document.getElementById('dcs-format').value;
-  const quality = document.getElementById('dcs-quality').value;
-  const [cw, ch] = fmt === '9:16' ? [1080, 1920] : fmt === '1:1' ? [1080, 1080] : [1920, 1080];
+  const fmtMap = { '9:16': '1080x1920', '1:1': '1080x1080', '16:9': '1920x1080' };
+  const resolution = fmtMap[document.getElementById('dcs-format').value] || '1080x1920';
+  const qualMap = { standard: 23, high: 18, compact: 28 };
+  const crf = qualMap[document.getElementById('dcs-quality').value] || 23;
 
   const body = {
     template: 'center_crop',
     clips: DCS.clips,
-    canvas_w: cw,
-    canvas_h: ch,
-    quality,
+    resolution,
+    codec: 'h264',
+    crf,
     ...(DCS.uploadId ? { primary_upload_id: DCS.uploadId } : { primary_url: document.getElementById('dcs-url').value.trim() }),
   };
 
