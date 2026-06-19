@@ -1160,7 +1160,7 @@ function addRankingItem() {
   const idx = RKS.items.length;
   if (idx >= 20) return;
   const color = RK_DEFAULT_COLORS[idx % RK_DEFAULT_COLORS.length];
-  RKS.items.push({ url: '', start: '0:00', end: '', label: '', color, fit: 'crop', crop_x: 0.5, crop_y: 0.5, _thumb: '', _thumbW: 0, _thumbH: 0 });
+  RKS.items.push({ url: '', start: '0:00', end: '', label: '', color, font: 'DejaVu Sans Bold', fit: 'crop', crop_x: 0.5, crop_y: 0.5, _thumb: '', _thumbW: 0, _thumbH: 0 });
   _renderRankingItems();
   _checkRankingReady();
 }
@@ -1188,6 +1188,7 @@ function _readRankingItemsFromDOM() {
       end:    row.querySelector('.rk-end').value.trim(),
       label:  row.querySelector('.rk-label').value.trim(),
       color:  row.querySelector('.rk-color').value,
+      font:   (row.querySelector('.rk-font-sel') || {}).value || 'DejaVu Sans Bold',
       fit:    row.querySelector('.rk-fit').value,
       crop_x: cropBox ? parseFloat(cropBox.dataset.cropx || 0.5) : (existing.crop_x ?? 0.5),
       crop_y: cropBox ? parseFloat(cropBox.dataset.cropy || 0.5) : (existing.crop_y ?? 0.5),
@@ -1215,6 +1216,12 @@ function _renderRankingItems() {
         <div class="rk-row-mid">
           <input class="text-input rk-label" type="text" placeholder="Label (e.g. Trash can karen)"
             value="${esc(item.label)}" oninput="RKS.items[${i}].label=this.value">
+          <select class="select-input rk-font-sel" title="Label font"
+            onchange="RKS.items[${i}].font=this.value">
+            ${['DejaVu Sans Bold','Liberation Sans Bold','Ubuntu Bold','FreeSans Bold','Impact','Arial Bold'].map(f =>
+              `<option value="${f}"${item.font===f?' selected':''}>${f}</option>`
+            ).join('')}
+          </select>
         </div>
         <div class="rk-row-bot">
           <span class="field-label" style="margin:0">Clip from</span>
