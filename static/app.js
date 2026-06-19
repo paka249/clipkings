@@ -1614,8 +1614,96 @@ function aisSourceTab(type) {
 function aisToggleSection(section, enabled) {
   const card = document.getElementById(`ais-${section}-card`);
   if (!card) return;
-  card.style.opacity      = enabled ? '1' : '.45';
-  card.style.pointerEvents = enabled ? '' : 'none';
+  card.style.display = enabled ? '' : 'none';
+}
+
+/* ── Editor canvas expand ──────────────────────────── */
+function vedExpandCanvas() {
+  const overlay = document.getElementById('ved-expand-overlay');
+  const video   = document.getElementById('ved-preview-video');
+  const expVid  = document.getElementById('ved-expand-video');
+  const expPh   = document.getElementById('ved-expand-ph');
+  if (!overlay) return;
+  if (video && video.src && !video.paused) {
+    expVid.src = video.src;
+    expVid.currentTime = video.currentTime;
+    expVid.style.display = '';
+    expPh.style.display = 'none';
+  } else if (video && video.src) {
+    expVid.src = video.src;
+    expVid.style.display = '';
+    expPh.style.display = 'none';
+  } else {
+    expVid.style.display = 'none';
+    expPh.style.display = '';
+  }
+  overlay.classList.add('open');
+}
+function vedCollapseCanvas(e) {
+  if (e && e.target !== e.currentTarget) return;
+  const overlay = document.getElementById('ved-expand-overlay');
+  const expVid  = document.getElementById('ved-expand-video');
+  if (overlay) overlay.classList.remove('open');
+  if (expVid) { expVid.pause(); expVid.src = ''; }
+}
+
+/* ── Feature preview expand (AI Studio, Ranking, etc.) ──── */
+function featExpandPreview(btn) {
+  const panel   = btn.closest('.feat-preview-panel');
+  const overlay = document.getElementById('feat-expand-overlay');
+  const expVid  = document.getElementById('feat-expand-video');
+  const expPh   = document.getElementById('feat-expand-ph');
+  if (!overlay || !panel) return;
+  const vid = panel.querySelector('video');
+  if (vid && vid.src) {
+    expVid.src = vid.src;
+    expVid.currentTime = vid.currentTime || 0;
+    expVid.style.display = '';
+    expPh.style.display = 'none';
+  } else {
+    expVid.style.display = 'none';
+    expPh.style.display = '';
+  }
+  overlay.classList.add('open');
+}
+function featCollapsePreview(e) {
+  if (e && e.target !== e.currentTarget) return;
+  const overlay = document.getElementById('feat-expand-overlay');
+  const expVid  = document.getElementById('feat-expand-video');
+  if (overlay) overlay.classList.remove('open');
+  if (expVid) { expVid.pause(); expVid.src = ''; }
+}
+
+/* ── Feature panel resize handle ────────────────────── */
+function featResizeStart(e, handle) {
+  const layout = handle.closest('.feature-layout');
+  if (!layout) return;
+  const mainCol    = layout.querySelector('.feature-col-main');
+  const previewCol = layout.querySelector('.feature-col-preview');
+  if (!mainCol || !previewCol) return;
+
+  handle.classList.add('dragging');
+  const startX     = e.clientX;
+  const startMain  = mainCol.getBoundingClientRect().width;
+  const startPrev  = previewCol.getBoundingClientRect().width;
+  const totalW     = startMain + startPrev;
+
+  function onMove(ev) {
+    const dx      = ev.clientX - startX;
+    const newMain = Math.max(300, Math.min(totalW - 180, startMain + dx));
+    const newPrev = totalW - newMain;
+    mainCol.style.flex    = 'none';
+    mainCol.style.width   = newMain + 'px';
+    previewCol.style.width = newPrev + 'px';
+  }
+  function onUp() {
+    handle.classList.remove('dragging');
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+  }
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
+  e.preventDefault();
 }
 
 async function aisPreviewUrl() {
