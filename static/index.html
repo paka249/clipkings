@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ClipKings</title>
-  <link rel="stylesheet" href="/static/styles.css?v=11">
+  <link rel="stylesheet" href="/static/styles.css?v=14">
 </head>
 <body>
 
@@ -660,139 +660,202 @@
     <div id="page-splitscreen" class="page">
       <div class="page-header">
         <h1>Gaming Background</h1>
-        <p class="page-sub">Layer your video over a gaming background clip.</p>
+        <p class="page-sub">Layer your video over a looping gaming background clip.</p>
       </div>
-      <div class="dash-ws-layout">
-        <div class="dash-ws-steps">
 
-          <div class="dash-step">
-            <div class="dash-step-label">Step 1 — Upload Your Video</div>
-            <div class="card">
-              <div class="ais-tab-row" style="margin-bottom:12px">
-                <button class="ais-tab active" id="ds-tab-url" onclick="dashSrcTab('url')">URL</button>
-                <button class="ais-tab" id="ds-tab-file" onclick="dashSrcTab('file')">Upload</button>
-              </div>
-              <div id="ds-url-section">
-                <div class="url-row">
-                  <input id="ds-url" type="text" class="text-input" placeholder="https://www.youtube.com/watch?v=…" oninput="dashSplitCheckReady()">
-                  <button class="btn-outline" onclick="dashPreviewUrl()"><svg class="icon icon-sm"><use href="#i-eye"/></svg> Preview</button>
-                </div>
-                <div id="ds-url-info" class="preview-info" style="display:none"></div>
-              </div>
-              <div id="ds-file-section" style="display:none">
-                <input id="ds-file-input" type="file" style="display:none" accept="video/*,.mp4,.mov,.mkv,.webm" onchange="dashFileChosen(this.files[0])">
-                <label for="ds-file-input" class="ais-dropzone" ondragover="event.preventDefault()" ondrop="dashDropFile(event)">
-                  <svg class="icon icon-xl" style="color:var(--text-3)"><use href="#i-upload"/></svg>
-                  <div style="font-size:.85rem;color:var(--text-2);margin-top:6px">Drop video or <span style="color:var(--accent)">browse</span></div>
-                  <div style="font-size:.75rem;color:var(--text-3);margin-top:2px">MP4 · MOV · MKV · WebM</div>
-                </label>
-                <div id="ds-file-status" style="margin-top:8px;font-size:.8rem;color:var(--text-2)"></div>
-              </div>
-            </div>
-          </div>
+      <div class="feature-layout">
+        <div class="feature-col-main">
+          <div class="dash-ws-steps">
 
-          <div class="dash-step">
-            <div class="dash-step-label">Step 2 — Gaming Background</div>
-            <div class="card">
-              <p class="card-hint">Choose a background for the bottom half.</p>
-              <div class="ds-bg-grid" id="ds-bg-grid">
-                <div class="ds-bg-card" id="ds-bg-subway" onclick="dashSelectBg('subway_surfers')">
-                  <video class="ds-bg-video" muted loop playsinline preload="auto" onmouseenter="this.play()" onmouseleave="this.pause()" src="/api/bg-video/subway_surfers"></video>
-                  <div class="ds-bg-name">Subway Surfers</div>
+            <div class="dash-step">
+              <div class="dash-step-label">Step 1 — Upload Your Video</div>
+              <div class="card">
+                <div class="ais-tab-row" style="margin-bottom:12px">
+                  <button class="ais-tab active" id="ds-tab-url" onclick="dashSrcTab('url')">URL</button>
+                  <button class="ais-tab" id="ds-tab-file" onclick="dashSrcTab('file')">Upload</button>
                 </div>
-                <div class="ds-bg-card" id="ds-bg-minecraft" onclick="dashSelectBg('minecraft_parkour')">
-                  <video class="ds-bg-video" muted loop playsinline preload="auto" onmouseenter="this.play()" onmouseleave="this.pause()" src="/api/bg-video/minecraft_parkour"></video>
-                  <div class="ds-bg-name">Minecraft</div>
-                </div>
-                <div class="ds-bg-card" id="ds-bg-gta" onclick="dashSelectBg('gta')">
-                  <video class="ds-bg-video" muted loop playsinline preload="auto" onmouseenter="this.play()" onmouseleave="this.pause()" src="/api/bg-video/gta"></video>
-                  <div class="ds-bg-name">GTA</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="dash-step">
-            <div class="dash-step-label">Step 3 — Window Size</div>
-            <div class="card">
-              <p class="card-hint">Set the split ratio between your video and the gaming background.</p>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
-                <div>
-                  <label class="field-label">Output Size</label>
-                  <select id="ds-resolution" class="select-input" onchange="dashUpdateSplitPreview()">
-                    <option value="1080x1920">1080×1920 (9:16)</option>
-                    <option value="1080x1080">1080×1080 (1:1)</option>
-                    <option value="720x1280">720×1280 (9:16 HD)</option>
-                  </select>
-                </div>
-                <div>
-                  <label class="field-label">Split</label>
-                  <select id="ds-split-ratio" class="select-input" onchange="dashUpdateSplitPreview()">
-                    <option value="50">50 / 50</option>
-                    <option value="60">60 / 40</option>
-                    <option value="40">40 / 60</option>
-                    <option value="70">70 / 30</option>
-                  </select>
-                </div>
-              </div>
-              <div class="split-preview-wrap">
-                <div class="split-preview-phone">
-                  <div class="split-preview-top" id="ds-preview-top">
-                    <span>Your Video</span>
-                    <small id="ds-dim-top">1080 × 960</small>
+                <div id="ds-url-section">
+                  <div class="url-row">
+                    <input id="ds-url" type="text" class="text-input" placeholder="https://www.youtube.com/watch?v=…" oninput="dashSplitCheckReady()">
+                    <button class="btn-outline" onclick="dashPreviewUrl()"><svg class="icon icon-sm"><use href="#i-eye"/></svg> Preview</button>
                   </div>
-                  <div class="split-preview-bot" id="ds-preview-bot">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="1.5" style="width:22px;height:22px"><rect x="2" y="7" width="20" height="11" rx="5"/><path d="M6 10v4M8 12H4"/><circle cx="15" cy="10.5" r=".9" fill="rgba(255,255,255,.6)" stroke="none"/><circle cx="17.5" cy="12" r=".9" fill="rgba(255,255,255,.6)" stroke="none"/><circle cx="15" cy="13.5" r=".9" fill="rgba(255,255,255,.6)" stroke="none"/><circle cx="12.5" cy="12" r=".9" fill="rgba(255,255,255,.6)" stroke="none"/></svg>
-                    <span>Gaming BG</span>
-                    <small id="ds-dim-bot">1080 × 960</small>
+                  <div id="ds-url-info" class="preview-info" style="display:none"></div>
+                </div>
+                <div id="ds-file-section" style="display:none">
+                  <input id="ds-file-input" type="file" style="display:none" accept="video/*,.mp4,.mov,.mkv,.webm" onchange="dashFileChosen(this.files[0])">
+                  <label for="ds-file-input" class="ais-dropzone" ondragover="event.preventDefault()" ondrop="dashDropFile(event)">
+                    <svg class="icon icon-xl" style="color:var(--text-3)"><use href="#i-upload"/></svg>
+                    <div style="font-size:.85rem;color:var(--text-2);margin-top:6px">Drop video or <span style="color:var(--accent)">browse</span></div>
+                    <div style="font-size:.75rem;color:var(--text-3);margin-top:2px">MP4 · MOV · MKV · WebM</div>
+                  </label>
+                  <div id="ds-file-status" style="margin-top:8px;font-size:.8rem;color:var(--text-2)"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="dash-step">
+              <div class="dash-step-label">Step 2 — Gaming Background</div>
+              <div class="card">
+                <p class="card-hint">Hover to preview · click to select · clips loop automatically</p>
+                <div class="ds-hcar-wrap">
+                  <button class="ds-hcar-nav ds-hcar-prev" onclick="dsCarScroll(-1)">&#8249;</button>
+                  <div class="ds-hcar-scroll" id="ds-bg-grid">
+
+                    <div class="ds-bg-card" id="ds-bg-subway_surfers" onclick="dashSelectBg('subway_surfers')"
+                         onmouseenter="bgCardHover(this,true)" onmouseleave="bgCardHover(this,false)">
+                      <img class="ds-bg-poster" src="/api/bg-thumb/subway_surfers" alt="Subway Surfers">
+                      <video class="ds-bg-video" muted loop playsinline preload="none" src="/api/bg-video/subway_surfers"></video>
+                      <div class="ds-bg-name">Subway Surfers</div>
+                    </div>
+
+                    <div class="ds-bg-card" id="ds-bg-subway_surfers_2" onclick="dashSelectBg('subway_surfers_2')"
+                         onmouseenter="bgCardHover(this,true)" onmouseleave="bgCardHover(this,false)">
+                      <img class="ds-bg-poster" src="/api/bg-thumb/subway_surfers_2" alt="Subway Surfers 2">
+                      <video class="ds-bg-video" muted loop playsinline preload="none" src="/api/bg-video/subway_surfers_2"></video>
+                      <div class="ds-bg-name">Subway Surfers 2</div>
+                    </div>
+
+                    <div class="ds-bg-card" id="ds-bg-minecraft_parkour" onclick="dashSelectBg('minecraft_parkour')"
+                         onmouseenter="bgCardHover(this,true)" onmouseleave="bgCardHover(this,false)">
+                      <img class="ds-bg-poster" src="/api/bg-thumb/minecraft_parkour" alt="Minecraft">
+                      <video class="ds-bg-video" muted loop playsinline preload="none" src="/api/bg-video/minecraft_parkour"></video>
+                      <div class="ds-bg-name">Minecraft</div>
+                    </div>
+
+                    <div class="ds-bg-card" id="ds-bg-minecraft_parkour_2" onclick="dashSelectBg('minecraft_parkour_2')"
+                         onmouseenter="bgCardHover(this,true)" onmouseleave="bgCardHover(this,false)">
+                      <img class="ds-bg-poster" src="/api/bg-thumb/minecraft_parkour_2" alt="Minecraft 2">
+                      <video class="ds-bg-video" muted loop playsinline preload="none" src="/api/bg-video/minecraft_parkour_2"></video>
+                      <div class="ds-bg-name">Minecraft 2</div>
+                    </div>
+
+                    <div class="ds-bg-card" id="ds-bg-gta" onclick="dashSelectBg('gta')"
+                         onmouseenter="bgCardHover(this,true)" onmouseleave="bgCardHover(this,false)">
+                      <img class="ds-bg-poster" src="/api/bg-thumb/gta" alt="GTA">
+                      <video class="ds-bg-video" muted loop playsinline preload="none" src="/api/bg-video/gta"></video>
+                      <div class="ds-bg-name">GTA</div>
+                    </div>
+
+                    <div class="ds-bg-card" id="ds-bg-gta_2" onclick="dashSelectBg('gta_2')"
+                         onmouseenter="bgCardHover(this,true)" onmouseleave="bgCardHover(this,false)">
+                      <img class="ds-bg-poster" src="/api/bg-thumb/gta_2" alt="GTA 2">
+                      <video class="ds-bg-video" muted loop playsinline preload="none" src="/api/bg-video/gta_2"></video>
+                      <div class="ds-bg-name">GTA 2</div>
+                    </div>
+
+                    <div class="ds-bg-card" id="ds-bg-satisfying" onclick="dashSelectBg('satisfying')"
+                         onmouseenter="bgCardHover(this,true)" onmouseleave="bgCardHover(this,false)">
+                      <img class="ds-bg-poster" src="/api/bg-thumb/satisfying" alt="Satisfying">
+                      <video class="ds-bg-video" muted loop playsinline preload="none" src="/api/bg-video/satisfying"></video>
+                      <div class="ds-bg-name">Satisfying</div>
+                    </div>
+
+                    <div class="ds-bg-card" id="ds-bg-satisfying_2" onclick="dashSelectBg('satisfying_2')"
+                         onmouseenter="bgCardHover(this,true)" onmouseleave="bgCardHover(this,false)">
+                      <img class="ds-bg-poster" src="/api/bg-thumb/satisfying_2" alt="Satisfying 2">
+                      <video class="ds-bg-video" muted loop playsinline preload="none" src="/api/bg-video/satisfying_2"></video>
+                      <div class="ds-bg-name">Satisfying 2</div>
+                    </div>
+
+                  </div>
+                  <button class="ds-hcar-nav ds-hcar-next" onclick="dsCarScroll(1)">&#8250;</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="dash-step">
+              <div class="dash-step-label">Step 3 — Window Size</div>
+              <div class="card">
+                <p class="card-hint">Set the split ratio between your video and the gaming background.</p>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+                  <div>
+                    <label class="field-label">Output Size</label>
+                    <select id="ds-resolution" class="select-input" onchange="dashUpdateSplitPreview()">
+                      <option value="1080x1920">1080×1920 (9:16)</option>
+                      <option value="1080x1080">1080×1080 (1:1)</option>
+                      <option value="720x1280">720×1280 (9:16 HD)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="field-label">Split</label>
+                    <select id="ds-split-ratio" class="select-input" onchange="dashUpdateSplitPreview()">
+                      <option value="50">50 / 50</option>
+                      <option value="60">60 / 40</option>
+                      <option value="40">40 / 60</option>
+                      <option value="70">70 / 30</option>
+                    </select>
                   </div>
                 </div>
-                <div id="ds-output-label" class="split-output-label">Output: 1080 × 1920</div>
+                <div class="split-preview-wrap">
+                  <div class="split-preview-phone">
+                    <div class="split-preview-top" id="ds-preview-top">
+                      <span>Your Video</span>
+                      <small id="ds-dim-top">1080 × 960</small>
+                    </div>
+                    <div class="split-preview-bot" id="ds-preview-bot">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="1.5" style="width:22px;height:22px"><rect x="2" y="7" width="20" height="11" rx="5"/><path d="M6 10v4M8 12H4"/><circle cx="15" cy="10.5" r=".9" fill="rgba(255,255,255,.6)" stroke="none"/><circle cx="17.5" cy="12" r=".9" fill="rgba(255,255,255,.6)" stroke="none"/><circle cx="15" cy="13.5" r=".9" fill="rgba(255,255,255,.6)" stroke="none"/><circle cx="12.5" cy="12" r=".9" fill="rgba(255,255,255,.6)" stroke="none"/></svg>
+                      <span>Gaming BG</span>
+                      <small id="ds-dim-bot">1080 × 960</small>
+                    </div>
+                  </div>
+                  <div id="ds-output-label" class="split-output-label">Output: 1080 × 1920</div>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div class="dash-step">
-            <div class="dash-step-label">Step 4 — Timeline</div>
-            <div class="card">
-              <p class="card-hint">Add start/end timestamps for each clip segment.</p>
-              <div class="ds-ts-row">
-                <input id="ds-ts-start" type="text" class="text-input" placeholder="00:00" style="flex:1">
-                <input id="ds-ts-end"   type="text" class="text-input" placeholder="00:30" style="flex:1">
-                <button class="btn-outline" onclick="dashAddClip()">+ Add</button>
-              </div>
-              <div id="ds-clip-list" class="ds-clip-list"></div>
-            </div>
-          </div>
-
-          <div class="dash-step">
-            <div class="dash-step-label">Step 5 — Generate</div>
-            <div class="card">
-              <button class="btn-primary btn-generate" id="ds-render-btn" onclick="dashSplitRender()" disabled>
-                <svg class="icon icon-sm"><use href="#i-zap"/></svg> Generate Video
-              </button>
-              <div id="ds-progress-wrap" style="display:none;margin-top:12px">
-                <div class="progress-bar-wrap"><div class="progress-bar-fill" id="ds-progress-fill"></div></div>
-                <div id="ds-progress-label" class="progress-label"></div>
-                <div id="ds-log" class="log-box" style="margin-top:8px"></div>
+            <div class="dash-step">
+              <div class="dash-step-label">Step 4 — Timeline</div>
+              <div class="card">
+                <p class="card-hint">Add start/end timestamps for each clip segment.</p>
+                <div class="ds-ts-row">
+                  <input id="ds-ts-start" type="text" class="text-input" placeholder="00:00" style="flex:1">
+                  <input id="ds-ts-end"   type="text" class="text-input" placeholder="00:30" style="flex:1">
+                  <button class="btn-outline" onclick="dashAddClip()">+ Add</button>
+                </div>
+                <div id="ds-clip-list" class="ds-clip-list"></div>
               </div>
             </div>
-          </div>
 
+            <div class="dash-step">
+              <div class="dash-step-label">Step 5 — Generate</div>
+              <div class="card">
+                <button class="btn-primary btn-generate" id="ds-render-btn" onclick="dashSplitRender()" disabled>
+                  <svg class="icon icon-sm"><use href="#i-zap"/></svg> Generate Video
+                </button>
+                <div id="ds-progress-wrap" style="display:none;margin-top:12px">
+                  <div class="progress-bar-wrap"><div class="progress-bar-fill" id="ds-progress-fill"></div></div>
+                  <div id="ds-progress-label" class="progress-label"></div>
+                  <div id="ds-log" class="log-box" style="margin-top:8px"></div>
+                </div>
+              </div>
+            </div>
+
+          </div>
         </div>
-        <div class="dash-ws-preview">
-          <div class="dash-pv-hdr">Preview</div>
-          <div class="dash-pv-box" id="dash-pv-box">
-            <video id="dash-pv-video" controls playsinline style="display:none;width:100%;border-radius:8px;max-height:520px;object-fit:contain"></video>
-            <div id="dash-pv-placeholder" class="dash-pv-placeholder">
-              <svg class="icon" style="width:36px;height:36px;color:var(--text-3)"><use href="#i-film"/></svg>
-              <p style="color:var(--text-3);font-size:.82rem;margin:8px 0 0">Upload a video to preview</p>
+
+        <div class="feat-resize-handle" onmousedown="featResizeStart(event,this)"></div>
+
+        <div class="feature-col-preview">
+          <div class="feat-preview-panel">
+            <div class="feat-preview-hdr">
+              <svg class="icon icon-sm"><use href="#i-film"/></svg> Preview
+              <button class="feat-expand-btn" onclick="featExpandPreview(this)" title="Expand preview">
+                <svg class="icon icon-sm"><use href="#i-expand"/></svg>
+              </button>
             </div>
-            <div id="dash-pv-result" style="display:none;margin-top:12px">
+            <div class="feat-preview-area">
+              <div id="dash-pv-placeholder" class="feat-preview-ph">
+                <svg class="icon" style="width:32px;height:32px;color:var(--text-3)"><use href="#i-film"/></svg>
+                <p style="color:var(--text-3);font-size:.8rem;margin:8px 0 0;text-align:center">Upload a video<br>to preview</p>
+              </div>
+              <video id="dash-pv-video" controls playsinline style="display:none;width:100%;border-radius:6px;object-fit:contain"></video>
+            </div>
+            <div id="dash-pv-result" style="display:none;padding:12px">
               <button class="btn-primary" style="width:100%" id="dash-pv-dl-btn">Download</button>
             </div>
           </div>
         </div>
+
       </div>
     </div>
 
@@ -2136,6 +2199,6 @@
   </div>
 </div>
 
-<script src="/static/app.js?v=11"></script>
+<script src="/static/app.js?v=14"></script>
 </body>
 </html>

@@ -97,14 +97,15 @@ function showPage(name, _fromHistory = false) {
   // Track last-used tool for dashboard recent section
   if (_TOOL_PAGES.has(name)) localStorage.setItem('sf-last-tool', name);
 
-  if (name === 'clipstudio') loadExportsList();
-  if (name === 'exports')    loadExportsPage();
-  if (name === 'account')    loadAccountPage();
-  if (name === 'templates')  loadGamingTemplateStatus();
+  if (name === 'clipstudio')  loadExportsList();
+  if (name === 'exports')     loadExportsPage();
+  if (name === 'account')     loadAccountPage();
+  if (name === 'templates')   loadGamingTemplateStatus();
+  if (name === 'splitscreen') dsCheckBgTemplates();
   if (name === 'ranking')  { if (RKS.items.length === 0) { addRankingItem(); addRankingItem(); addRankingItem(); } else { _renderRankingItems(); } }
-  if (name === 'aistudio')   aisLoadUploads();
-  if (name === 'editor')     { vedRenderPhotoTrack(); vedRenderAudioTrack(); }
-  if (name === 'dashboard')  _updateDashboardRecent();
+  if (name === 'aistudio')    aisLoadUploads();
+  if (name === 'editor')      { vedRenderPhotoTrack(); vedRenderAudioTrack(); }
+  if (name === 'dashboard')   _updateDashboardRecent();
 }
 
 function _updateDashboardRecent() {
@@ -3500,12 +3501,27 @@ function dashSplitCheckReady() {
   document.getElementById('ds-render-btn').disabled = !(hasSource && hasBg && hasClips);
 }
 
-function dashSelectBg(name) {
-  DASH.bgTemplate = name;
+function dashSelectBg(slug) {
+  DASH.bgTemplate = slug;
   document.querySelectorAll('.ds-bg-card').forEach(c => c.classList.remove('selected'));
-  const map = { subway_surfers: 'ds-bg-subway', minecraft_parkour: 'ds-bg-minecraft', gta: 'ds-bg-gta' };
-  document.getElementById(map[name])?.classList.add('selected');
+  document.getElementById(`ds-bg-${slug}`)?.classList.add('selected');
   dashSplitCheckReady();
+}
+
+function bgCardHover(card, enter) {
+  const vid = card.querySelector('.ds-bg-video');
+  if (!vid) return;
+  if (enter) {
+    vid.play().catch(() => {});
+  } else {
+    vid.pause();
+    vid.currentTime = 0;
+  }
+}
+
+function dsCarScroll(dir) {
+  const el = document.getElementById('ds-bg-grid');
+  if (el) el.scrollBy({ left: dir * 240, behavior: 'smooth' });
 }
 
 function dashAddClip() {

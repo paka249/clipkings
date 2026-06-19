@@ -244,10 +244,17 @@ def api_delete_export(filename: str):
     return {"deleted": filename}
 
 
+_BG_VALID = {
+    "subway_surfers", "subway_surfers_2",
+    "minecraft_parkour", "minecraft_parkour_2",
+    "gta", "gta_2",
+    "satisfying", "satisfying_2",
+}
+
 @app.get("/api/bg-templates")
 def api_bg_templates():
     templates = []
-    for name in ("subway_surfers", "minecraft_parkour", "gta"):
+    for name in sorted(_BG_VALID):
         path = BG_TEMPLATES_DIR / f"{name}.mp4"
         templates.append({"name": name, "ready": path.exists()})
     return templates
@@ -255,13 +262,28 @@ def api_bg_templates():
 
 @app.get("/api/bg-video/{name}")
 def api_bg_video(name: str):
-    safe = {"subway_surfers", "minecraft_parkour", "gta"}
-    if name not in safe:
+    if name not in _BG_VALID:
         raise HTTPException(404)
     path = BG_TEMPLATES_DIR / f"{name}.mp4"
     if not path.exists():
-        raise HTTPException(404, detail="Gaming template video not downloaded yet")
+        raise HTTPException(404, detail="Gaming template video not downloaded yet — run download_bg_templates.py")
     return FileResponse(str(path), media_type="video/mp4")
+
+
+@app.get("/api/bg-thumb/{slug}")
+def api_bg_thumb(slug: str):
+    if slug not in _BG_VALID:
+        raise HTTPException(404)
+    video_path = BG_TEMPLATES_DIR / f"{slug}.mp4"
+    if not video_path.exists():
+        raise HTTPException(404, detail="Video not downloaded yet")
+    thumb_path = BG_TEMPLATES_DIR / f"{slug}_thumb.jpg"
+    if not thumb_path.exists():
+        subprocess.run([
+            "ffmpeg", "-y", "-ss", "3", "-i", str(video_path),
+            "-vframes", "1", "-q:v", "2", str(thumb_path),
+        ], check=True, capture_output=True)
+    return FileResponse(str(thumb_path), media_type="image/jpeg")
 
 
 @app.get("/api/download/{filename}")

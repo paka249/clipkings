@@ -2925,28 +2925,76 @@ kbd {
   margin-bottom: 6px;
 }
 
-/* Background grid */
-.ds-bg-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
+/* ── Gaming BG horizontal carousel ────────────────────────── */
+.ds-hcar-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
+.ds-hcar-scroll {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  padding: 4px 2px 10px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+  flex: 1;
+}
+.ds-hcar-scroll::-webkit-scrollbar { height: 4px; }
+.ds-hcar-scroll::-webkit-scrollbar-track { background: transparent; }
+.ds-hcar-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+.ds-hcar-nav {
+  flex-shrink: 0;
+  width: 28px; height: 52px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: var(--r); color: var(--text-2); font-size: 18px; font-weight: 700;
+  cursor: pointer; transition: background var(--t), color var(--t);
+  line-height: 1;
+}
+.ds-hcar-nav:hover { background: var(--accent-dim); color: var(--accent); border-color: var(--accent); }
+
+/* Individual card */
 .ds-bg-card {
+  flex-shrink: 0;
+  width: 110px;
+  scroll-snap-align: start;
   border-radius: var(--r);
   overflow: hidden;
   border: 2px solid var(--border);
   cursor: pointer;
   position: relative;
-  transition: border-color var(--t);
+  transition: border-color var(--t), transform 150ms;
 }
-.ds-bg-card:hover { border-color: var(--accent); }
-.ds-bg-card.selected { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(59,130,246,.3); }
-.ds-bg-video { width: 100%; aspect-ratio: 9/16; object-fit: cover; display: block; }
+.ds-bg-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+.ds-bg-card.selected { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,130,246,.35); }
+
+/* Poster image (shown by default) */
+.ds-bg-poster {
+  width: 100%; aspect-ratio: 9/16; object-fit: cover; display: block;
+  transition: opacity 200ms;
+}
+/* Video (overlaid, fades in on hover) */
+.ds-bg-video {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 200ms;
+  pointer-events: none;
+}
+.ds-bg-card:hover .ds-bg-poster { opacity: 0; }
+.ds-bg-card:hover .ds-bg-video  { opacity: 1; }
+
 .ds-bg-name {
   position: absolute; bottom: 0; left: 0; right: 0;
-  padding: 4px 6px;
-  font-size: .65rem; font-weight: 600;
-  background: rgba(0,0,0,.7); color: #fff;
+  padding: 4px 5px;
+  font-size: .62rem; font-weight: 600;
+  background: rgba(0,0,0,.72); color: #fff;
   text-align: center;
 }
 
