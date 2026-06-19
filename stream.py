@@ -1,4 +1,4 @@
-"""Launcher for the Short-Form Studio Streamlit app."""
+"""Launcher for the ClipKings Streamlit app."""
 
 from shortform_studio.app import main
 

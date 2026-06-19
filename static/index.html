@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Short-Form Studio</title>
+  <title>ClipKings</title>
   <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
@@ -148,8 +148,8 @@
   <!-- ── Sidebar ─────────────────────────────────────────────── -->
   <aside class="sidebar" id="sidebar">
     <div class="logo">
-      <div class="logo-mark">SF</div>
-      <div class="logo-name">Short-Form Studio</div>
+      <div class="logo-mark">CK</div>
+      <div class="logo-name">ClipKings</div>
       <button class="sidebar-collapse-btn" id="sidebar-collapse-btn" onclick="toggleSidebar()" title="Collapse sidebar">
         <svg class="icon icon-sm" id="sidebar-collapse-icon"><use href="#i-chevron-left"/></svg>
       </button>
@@ -215,60 +215,433 @@
 
     <!-- Dashboard ────────────────────────────────────────────── -->
     <div id="page-dashboard" class="page active">
-      <div class="greeting">
-        <div>
-          <h1>Hey, <em id="greeting-name">there</em></h1>
-          <p class="sub">What will you create today?</p>
-        </div>
+
+      <div class="tmpl-picker-hdr">
+        <h1>Choose a Template</h1>
+        <p class="tmpl-picker-sub">Pick a format — each one is built for a different type of short.</p>
       </div>
 
-      <p class="dash-summary">Upload · edit · render · export. FFmpeg processes everything locally — no watermarks, no cloud, no API keys.</p>
+      <div class="tmpl-carousel-wrap">
+      <button class="tmpl-carousel-btn tmpl-carousel-prev" onclick="dashCarouselScroll(-1)" aria-label="Previous">&#8249;</button>
+      <div class="tmpl-picker-row" id="tmpl-carousel">
 
-      <!-- Recent tool -->
-      <div id="dash-recent" class="dash-recent-wrap" style="display:none"></div>
-
-      <!-- Primary tools -->
-      <div class="dash-hero">
-        <div class="dash-hero-card" onclick="showPage('editor')">
-          <div class="dash-hero-icon"><svg class="icon icon-lg"><use href="#i-film"/></svg></div>
-          <div class="dash-hero-body">
-            <div class="dash-hero-name">Video Editor</div>
-            <div class="dash-hero-desc">Multi-track timeline — arrange photos, videos, and audio. Trim, zoom, and render a finished short.</div>
-            <div class="dash-hero-cta">Open Editor →</div>
+        <!-- Clip Studio -->
+        <div class="tmpl-picker-card" data-tmpl="cs" onclick="dashSelectTemplate('cs')">
+          <div class="tmpl-picker-thumb" style="background:linear-gradient(175deg,#0d1117,#1a2332)">
+            <div class="tpt-cs">
+              <div class="tpt-cs-frame">
+                <div class="tpt-cs-scene">
+                  <div class="tpt-cs-bar" style="width:90%;opacity:.35"></div>
+                  <div class="tpt-cs-bar" style="width:70%;opacity:.25"></div>
+                  <div class="tpt-cs-bar" style="width:80%;opacity:.2"></div>
+                </div>
+                <div class="tpt-cs-caption">YOUR CLIP</div>
+                <div class="tpt-cs-handles">
+                  <div class="tpt-cs-handle"></div>
+                  <div class="tpt-cs-timeline"></div>
+                  <div class="tpt-cs-handle"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="tmpl-picker-footer">
+            <span class="tmpl-picker-name">Clip Studio</span>
+            <span class="tmpl-picker-tag">Trim · Crop</span>
           </div>
         </div>
-        <div class="dash-hero-card" onclick="showPage('clipstudio')">
-          <div class="dash-hero-icon"><svg class="icon icon-lg"><use href="#i-edit"/></svg></div>
-          <div class="dash-hero-body">
-            <div class="dash-hero-name">Clip Studio</div>
-            <div class="dash-hero-desc">Paste a URL or upload a file. Crop to vertical, trim your clip, and export in one shot.</div>
-            <div class="dash-hero-cta">Open Studio →</div>
+
+        <!-- Splitscreen + Gaming BG -->
+        <div class="tmpl-picker-card" data-tmpl="split" onclick="dashSelectTemplate('split')">
+          <div class="tmpl-picker-thumb" style="background:linear-gradient(175deg,#0a0e0a,#0d1b2a)">
+            <div class="tpt-split">
+              <div class="tpt-split-top">
+                <div class="tpt-split-presenter">
+                  <div class="tpt-sp-head"></div>
+                  <div class="tpt-sp-body"></div>
+                </div>
+                <div class="tpt-split-badge">YOUR VIDEO</div>
+              </div>
+              <div class="tpt-split-line"></div>
+              <div class="tpt-split-bot">
+                <div class="tpt-split-bg-label">GAMING BG</div>
+                <div class="tpt-mc-blocks"><div></div><div></div><div></div><div></div><div></div><div></div></div>
+              </div>
+            </div>
+          </div>
+          <div class="tmpl-picker-footer">
+            <span class="tmpl-picker-name">Splitscreen</span>
+            <span class="tmpl-picker-tag">Gaming BG</span>
           </div>
         </div>
+
+        <!-- AI Studio -->
+        <div class="tmpl-picker-card" data-tmpl="ai" onclick="dashSelectTemplate('ai')">
+          <div class="tmpl-picker-thumb" style="background:linear-gradient(175deg,#1a1040,#312e81)">
+            <div class="tpt-ai">
+              <div class="tpt-ai-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="rgba(165,180,252,.8)" stroke-width="1.5" style="width:28px;height:28px">
+                  <path d="M12 2a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3z"/>
+                  <path d="M19 10a7 7 0 0 1-14 0"/>
+                  <line x1="12" y1="17" x2="12" y2="21"/>
+                  <line x1="8" y1="21" x2="16" y2="21"/>
+                </svg>
+              </div>
+              <div class="tpt-ai-bars"><div style="height:35%"></div><div style="height:75%"></div><div style="height:55%"></div><div style="height:90%"></div><div style="height:65%"></div><div style="height:45%"></div><div style="height:80%"></div><div style="height:50%"></div></div>
+              <div class="tpt-ai-sub">AI Voiceover + Subs</div>
+            </div>
+          </div>
+          <div class="tmpl-picker-footer">
+            <span class="tmpl-picker-name">AI Studio</span>
+            <span class="tmpl-picker-tag">TTS · Subs</span>
+          </div>
+        </div>
+
+        <!-- Ranking -->
+        <div class="tmpl-picker-card" data-tmpl="rk" onclick="dashSelectTemplate('rk')">
+          <div class="tmpl-picker-thumb" style="background:linear-gradient(175deg,#3b0f78,#1a0533)">
+            <div class="tpt-ranking">
+              <div class="tpt-ranking-title">RANKING</div>
+              <div class="tpt-ranking-item"><span class="tpt-rank-num" style="color:#FFD700">1</span><div class="tpt-rank-bar" style="width:82%;background:linear-gradient(90deg,#FFD700,#FFA500)"></div></div>
+              <div class="tpt-ranking-item"><span class="tpt-rank-num" style="color:#C0C0C0">2</span><div class="tpt-rank-bar" style="width:66%;background:linear-gradient(90deg,#C0C0C0,#888)"></div></div>
+              <div class="tpt-ranking-item"><span class="tpt-rank-num" style="color:#CD7F32">3</span><div class="tpt-rank-bar" style="width:52%;background:linear-gradient(90deg,#CD7F32,#8B5A2B)"></div></div>
+              <div class="tpt-ranking-item"><span class="tpt-rank-num" style="color:#555">4</span><div class="tpt-rank-bar" style="width:40%;background:#333"></div></div>
+              <div class="tpt-ranking-item"><span class="tpt-rank-num" style="color:#444">5</span><div class="tpt-rank-bar" style="width:28%;background:#2a2a2a"></div></div>
+            </div>
+          </div>
+          <div class="tmpl-picker-footer">
+            <span class="tmpl-picker-name">Ranking</span>
+            <span class="tmpl-picker-tag">Countdown</span>
+          </div>
+        </div>
+
+      </div>
+      <button class="tmpl-carousel-btn tmpl-carousel-next" onclick="dashCarouselScroll(1)" aria-label="Next">&#8250;</button>
       </div>
 
-      <!-- Secondary tools -->
-      <div class="section-hdr"><h2>More Tools</h2></div>
-      <div class="qt-row qt-row-4">
-        <div class="qt-card" onclick="showPage('templates')">
-          <div class="qt-icon"><svg class="icon icon-lg"><use href="#i-tmpl"/></svg></div>
-          <div class="qt-name">Templates</div>
-          <div class="qt-desc">Pre-built layouts: crop, split-screen, gaming backgrounds</div>
-        </div>
-        <div class="qt-card" onclick="showPage('ranking')">
-          <div class="qt-icon"><svg class="icon icon-lg"><use href="#i-ranking"/></svg></div>
-          <div class="qt-name">Ranking</div>
-          <div class="qt-desc">Animated countdown shorts with reveal labels</div>
-        </div>
-        <div class="qt-card" onclick="openAiStudioTemplate()">
-          <div class="qt-icon"><svg class="icon icon-lg"><use href="#i-aistudio"/></svg></div>
-          <div class="qt-name">AI Studio</div>
-          <div class="qt-desc">Burn-in subtitles + neural voiceover with Whisper &amp; edge-tts</div>
-        </div>
-        <div class="qt-card" onclick="showPage('exports')">
-          <div class="qt-icon"><svg class="icon icon-lg"><use href="#i-folder"/></svg></div>
-          <div class="qt-name">Exports</div>
-          <div class="qt-desc">Download and manage all your rendered shorts</div>
+      <!-- ── Inline workspace ───────────────────────────────── -->
+      <div id="dash-workspace" class="dash-workspace">
+
+        <div class="dash-ws-layout">
+
+          <!-- Steps column -->
+          <div class="dash-ws-steps">
+
+            <!-- SPLITSCREEN ──────────────────────────────── -->
+            <div id="dash-panel-split" style="display:none">
+
+              <div class="dash-step">
+                <div class="dash-step-label">Step 1</div>
+                <div class="card">
+                  <div class="card-title">Upload Your Video</div>
+                  <div class="ais-tab-row" style="margin-bottom:12px">
+                    <button class="ais-tab active" id="ds-tab-url" onclick="dashSrcTab('url')">URL</button>
+                    <button class="ais-tab" id="ds-tab-file" onclick="dashSrcTab('file')">Upload</button>
+                  </div>
+                  <div id="ds-url-section">
+                    <div class="url-row">
+                      <input id="ds-url" type="text" class="text-input" placeholder="https://www.youtube.com/watch?v=…" oninput="dashSplitCheckReady()">
+                      <button class="btn-outline" onclick="dashPreviewUrl()"><svg class="icon icon-sm"><use href="#i-eye"/></svg> Preview</button>
+                    </div>
+                    <div id="ds-url-info" class="preview-info" style="display:none"></div>
+                  </div>
+                  <div id="ds-file-section" style="display:none">
+                    <input id="ds-file-input" type="file" style="display:none" accept="video/*,.mp4,.mov,.mkv,.webm" onchange="dashFileChosen(this.files[0])">
+                    <label for="ds-file-input" class="ais-dropzone" ondragover="event.preventDefault()" ondrop="dashDropFile(event)">
+                      <svg class="icon icon-xl" style="color:var(--text-3)"><use href="#i-upload"/></svg>
+                      <div style="font-size:.85rem;color:var(--text-2);margin-top:6px">Drop video or <span style="color:var(--accent)">browse</span></div>
+                      <div style="font-size:.75rem;color:var(--text-3);margin-top:2px">MP4 · MOV · MKV · WebM</div>
+                    </label>
+                    <div id="ds-file-status" style="margin-top:8px;font-size:.8rem;color:var(--text-2)"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="dash-step">
+                <div class="dash-step-label">Step 2</div>
+                <div class="card">
+                  <div class="card-title">Background</div>
+                  <p class="card-hint">Choose a gaming background for the bottom half.</p>
+                  <div class="ds-bg-grid" id="ds-bg-grid">
+                    <div class="ds-bg-card" id="ds-bg-subway" onclick="dashSelectBg('subway_surfers')">
+                      <video class="ds-bg-video" muted loop playsinline preload="auto" onmouseenter="this.play()" onmouseleave="this.pause()" src="/api/bg-video/subway_surfers"></video>
+                      <div class="ds-bg-name">Subway Surfers</div>
+                    </div>
+                    <div class="ds-bg-card" id="ds-bg-minecraft" onclick="dashSelectBg('minecraft_parkour')">
+                      <video class="ds-bg-video" muted loop playsinline preload="auto" onmouseenter="this.play()" onmouseleave="this.pause()" src="/api/bg-video/minecraft_parkour"></video>
+                      <div class="ds-bg-name">Minecraft</div>
+                    </div>
+                    <div class="ds-bg-card" id="ds-bg-gta" onclick="dashSelectBg('gta')">
+                      <video class="ds-bg-video" muted loop playsinline preload="auto" onmouseenter="this.play()" onmouseleave="this.pause()" src="/api/bg-video/gta"></video>
+                      <div class="ds-bg-name">GTA</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="dash-step">
+                <div class="dash-step-label">Step 3</div>
+                <div class="card">
+                  <div class="card-title">Timeline</div>
+                  <p class="card-hint">Add start/end timestamps for each clip segment.</p>
+                  <div class="ds-ts-row">
+                    <input id="ds-ts-start" type="text" class="text-input" placeholder="00:00" style="flex:1">
+                    <input id="ds-ts-end"   type="text" class="text-input" placeholder="00:30" style="flex:1">
+                    <button class="btn-outline" onclick="dashAddClip()">+ Add</button>
+                  </div>
+                  <div id="ds-clip-list" class="ds-clip-list"></div>
+                </div>
+              </div>
+
+              <div class="dash-step">
+                <div class="dash-step-label">Step 4</div>
+                <div class="card">
+                  <button class="btn-primary" style="width:100%" id="ds-render-btn" onclick="dashSplitRender()" disabled>Render →</button>
+                  <div id="ds-progress-wrap" style="display:none;margin-top:12px">
+                    <div class="progress-bar-wrap"><div class="progress-bar-fill" id="ds-progress-fill"></div></div>
+                    <div id="ds-progress-label" class="progress-label"></div>
+                    <div id="ds-log" class="log-box" style="margin-top:8px"></div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- AI STUDIO ────────────────────────────────── -->
+            <div id="dash-panel-ai" style="display:none">
+
+              <div class="dash-step">
+                <div class="dash-step-label">Step 1</div>
+                <div class="card">
+                  <div class="card-title">Upload Your Video</div>
+                  <div class="ais-tab-row" style="margin-bottom:12px">
+                    <button class="ais-tab active" id="dai-tab-url" onclick="dashAiSrcTab('url')">URL</button>
+                    <button class="ais-tab" id="dai-tab-file" onclick="dashAiSrcTab('file')">Upload</button>
+                  </div>
+                  <div id="dai-url-section">
+                    <div class="url-row">
+                      <input id="dai-url" type="text" class="text-input" placeholder="https://www.youtube.com/watch?v=…" oninput="dashAiCheckReady()">
+                    </div>
+                  </div>
+                  <div id="dai-file-section" style="display:none">
+                    <input id="dai-file-input" type="file" style="display:none" accept="video/*,.mp4,.mov,.mkv,.webm" onchange="dashAiFileChosen(this.files[0])">
+                    <label for="dai-file-input" class="ais-dropzone" ondragover="event.preventDefault()" ondrop="dashAiDropFile(event)">
+                      <svg class="icon icon-xl" style="color:var(--text-3)"><use href="#i-upload"/></svg>
+                      <div style="font-size:.85rem;color:var(--text-2);margin-top:6px">Drop video or <span style="color:var(--accent)">browse</span></div>
+                    </label>
+                    <div id="dai-file-status" style="margin-top:8px;font-size:.8rem;color:var(--text-2)"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="dash-step">
+                <div class="dash-step-label">Step 2</div>
+                <div class="card">
+                  <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+                    <input type="checkbox" id="dai-do-subs" style="accent-color:var(--accent)" onchange="dashAiCheckReady()">
+                    <div class="card-title" style="margin:0">Subtitles <span style="font-weight:400;color:var(--text-2);font-size:.8rem">(Whisper)</span></div>
+                  </div>
+                  <div id="dai-subs-opts" style="opacity:.4;pointer-events:none">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                      <div>
+                        <label class="field-label">Model</label>
+                        <select id="dai-sub-model" class="select-input"><option value="base">Base (fast)</option><option value="small">Small (accurate)</option></select>
+                      </div>
+                      <div>
+                        <label class="field-label">Style</label>
+                        <select id="dai-sub-style" class="select-input"><option value="shadow">Shadow</option><option value="bold">Bold</option><option value="outline">Outline</option></select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="dash-step">
+                <div class="dash-step-label">Step 3</div>
+                <div class="card">
+                  <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+                    <input type="checkbox" id="dai-do-vo" style="accent-color:var(--accent)" onchange="dashAiToggleVo();dashAiCheckReady()">
+                    <div class="card-title" style="margin:0">Voiceover <span style="font-weight:400;color:var(--text-2);font-size:.8rem">(edge-tts)</span></div>
+                  </div>
+                  <div id="dai-vo-opts" style="opacity:.4;pointer-events:none">
+                    <label class="field-label">Voice</label>
+                    <select id="dai-voice" class="select-input" style="margin-bottom:10px">
+                      <option value="jenny">Jenny — F · US</option>
+                      <option value="guy">Guy — M · US</option>
+                      <option value="aria">Aria — F · US</option>
+                      <option value="sara">Sara — F · US</option>
+                      <option value="ryan">Ryan — M · US</option>
+                      <option value="natasha">Natasha — F · AU</option>
+                    </select>
+                    <label class="field-label">Script</label>
+                    <textarea id="dai-script" class="text-input" rows="4" placeholder="Type the narration you want the AI to speak…" style="resize:vertical;width:100%" oninput="dashAiCheckReady()"></textarea>
+                  </div>
+                </div>
+              </div>
+
+              <div class="dash-step">
+                <div class="dash-step-label">Step 4</div>
+                <div class="card">
+                  <button class="btn-primary" style="width:100%" id="dai-render-btn" onclick="dashAiGenerate()" disabled>Generate →</button>
+                  <div id="dai-progress-wrap" style="display:none;margin-top:12px">
+                    <div class="progress-bar-wrap"><div class="progress-bar-fill" id="dai-progress-fill"></div></div>
+                    <div id="dai-progress-label" class="progress-label"></div>
+                    <div id="dai-log" class="log-box" style="margin-top:8px"></div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- CLIP STUDIO ──────────────────────────────── -->
+            <div id="dash-panel-cs" style="display:none">
+
+              <div class="dash-step">
+                <div class="dash-step-label">Step 1</div>
+                <div class="card">
+                  <div class="card-title">Upload Your Video</div>
+                  <div class="ais-tab-row" style="margin-bottom:12px">
+                    <button class="ais-tab active" id="dcs-tab-url" onclick="dashCsSrcTab('url')">URL</button>
+                    <button class="ais-tab" id="dcs-tab-file" onclick="dashCsSrcTab('file')">Upload</button>
+                  </div>
+                  <div id="dcs-url-section">
+                    <div class="url-row">
+                      <input id="dcs-url" type="text" class="text-input" placeholder="https://www.youtube.com/watch?v=…" oninput="dashCsCheckReady()">
+                      <button class="btn-outline" onclick="dashCsPreviewUrl()"><svg class="icon icon-sm"><use href="#i-eye"/></svg> Preview</button>
+                    </div>
+                    <div id="dcs-url-info" class="preview-info" style="display:none"></div>
+                  </div>
+                  <div id="dcs-file-section" style="display:none">
+                    <input id="dcs-file-input" type="file" style="display:none" accept="video/*,.mp4,.mov,.mkv,.webm" onchange="dashCsFileChosen(this.files[0])">
+                    <label for="dcs-file-input" class="ais-dropzone" ondragover="event.preventDefault()" ondrop="dashCsDropFile(event)">
+                      <svg class="icon icon-xl" style="color:var(--text-3)"><use href="#i-upload"/></svg>
+                      <div style="font-size:.85rem;color:var(--text-2);margin-top:6px">Drop video or <span style="color:var(--accent)">browse</span></div>
+                      <div style="font-size:.75rem;color:var(--text-3);margin-top:2px">MP4 · MOV · MKV · WebM</div>
+                    </label>
+                    <div id="dcs-file-status" style="margin-top:8px;font-size:.8rem;color:var(--text-2)"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="dash-step">
+                <div class="dash-step-label">Step 2</div>
+                <div class="card">
+                  <div class="card-title">Timeline</div>
+                  <p class="card-hint">Add start/end timestamps for each clip segment to extract.</p>
+                  <div class="ds-ts-row">
+                    <input id="dcs-ts-start" type="text" class="text-input" placeholder="00:00" style="flex:1">
+                    <input id="dcs-ts-end"   type="text" class="text-input" placeholder="00:30" style="flex:1">
+                    <button class="btn-outline" onclick="dashCsAddClip()">+ Add</button>
+                  </div>
+                  <div id="dcs-clip-list" class="ds-clip-list"></div>
+                </div>
+              </div>
+
+              <div class="dash-step">
+                <div class="dash-step-label">Step 3</div>
+                <div class="card">
+                  <div class="card-title">Output</div>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                    <div>
+                      <label class="field-label">Format</label>
+                      <select id="dcs-format" class="select-input">
+                        <option value="9:16">9:16 Vertical</option>
+                        <option value="1:1">1:1 Square</option>
+                        <option value="16:9">16:9 Landscape</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="field-label">Quality</label>
+                      <select id="dcs-quality" class="select-input">
+                        <option value="standard">Standard</option>
+                        <option value="high">High</option>
+                        <option value="compact">Compact</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="dash-step">
+                <div class="dash-step-label">Step 4</div>
+                <div class="card">
+                  <button class="btn-primary" style="width:100%" id="dcs-render-btn" onclick="dashCsRender()" disabled>Render →</button>
+                  <div id="dcs-progress-wrap" style="display:none;margin-top:12px">
+                    <div class="progress-bar-wrap"><div class="progress-bar-fill" id="dcs-progress-fill"></div></div>
+                    <div id="dcs-progress-label" class="progress-label"></div>
+                    <div id="dcs-log" class="log-box" style="margin-top:8px"></div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- RANKING ──────────────────────────────────── -->
+            <div id="dash-panel-rk" style="display:none">
+
+              <div class="dash-step">
+                <div class="dash-step-label">Step 1</div>
+                <div class="card">
+                  <div class="card-title">Add Clips</div>
+                  <p class="card-hint">Add each ranked item — paste a URL and set in/out timestamps.</p>
+                  <div class="ds-rk-form">
+                    <input id="drk-url"   type="text" class="text-input" placeholder="Video URL">
+                    <div class="ds-ts-row" style="margin-top:8px">
+                      <input id="drk-start" type="text" class="text-input" placeholder="Start 0:00" style="flex:1">
+                      <input id="drk-end"   type="text" class="text-input" placeholder="End 0:30" style="flex:1">
+                      <input id="drk-label" type="text" class="text-input" placeholder="Label" style="flex:1.2">
+                    </div>
+                    <button class="btn-outline" style="width:100%;margin-top:8px" onclick="dashRkAddItem()">+ Add Item</button>
+                  </div>
+                  <div id="drk-item-list" class="ds-clip-list" style="margin-top:10px"></div>
+                </div>
+              </div>
+
+              <div class="dash-step">
+                <div class="dash-step-label">Step 2</div>
+                <div class="card">
+                  <div class="card-title">Title &amp; Style</div>
+                  <div style="display:grid;grid-template-columns:1fr auto;gap:8px;margin-bottom:8px">
+                    <input id="drk-title" type="text" class="text-input" value="RANKING" placeholder="Ranking keyword">
+                    <input type="color" id="drk-title-color" value="#FFFFFF" style="height:38px;width:44px;border-radius:var(--r);border:1px solid var(--border);cursor:pointer">
+                  </div>
+                  <div style="display:grid;grid-template-columns:1fr auto;gap:8px">
+                    <input id="drk-subtitle" type="text" class="text-input" placeholder="Topic / subtitle (optional)">
+                    <input type="color" id="drk-subtitle-color" value="#FFD700" style="height:38px;width:44px;border-radius:var(--r);border:1px solid var(--border);cursor:pointer">
+                  </div>
+                </div>
+              </div>
+
+              <div class="dash-step">
+                <div class="dash-step-label">Step 3</div>
+                <div class="card">
+                  <button class="btn-primary" style="width:100%" id="drk-render-btn" onclick="dashRkRender()" disabled>Render →</button>
+                  <div id="drk-progress-wrap" style="display:none;margin-top:12px">
+                    <div class="progress-bar-wrap"><div class="progress-bar-fill" id="drk-progress-fill"></div></div>
+                    <div id="drk-progress-label" class="progress-label"></div>
+                    <div id="drk-log" class="log-box" style="margin-top:8px"></div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+
+          <!-- Preview column -->
+          <div class="dash-ws-preview">
+            <div class="dash-pv-hdr">Preview</div>
+            <div class="dash-pv-box" id="dash-pv-box">
+              <video id="dash-pv-video" controls playsinline style="display:none;width:100%;border-radius:8px;max-height:520px;object-fit:contain"></video>
+              <div id="dash-pv-placeholder" class="dash-pv-placeholder">
+                <svg class="icon" style="width:36px;height:36px;color:var(--text-3)"><use href="#i-film"/></svg>
+                <p style="color:var(--text-3);font-size:.82rem;margin:8px 0 0">Upload a video to preview</p>
+              </div>
+              <div id="dash-pv-result" style="display:none;margin-top:12px">
+                <button class="btn-primary" style="width:100%" id="dash-pv-dl-btn">Download</button>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
 
@@ -1277,7 +1650,7 @@
     <div id="page-docs" class="page">
       <div class="page-header">
         <h1><em>Docs</em> &amp; Help</h1>
-        <p class="sub">Everything you need to get the most out of Short-Form Studio.</p>
+        <p class="sub">Everything you need to get the most out of ClipKings.</p>
       </div>
 
       <div class="docs-layout">
@@ -1393,7 +1766,7 @@
               </div>
               <div class="docs-faq-item">
                 <div class="docs-faq-q">Where are my exports stored?</div>
-                <div class="docs-faq-a">Exports are stored on the server where Short-Form Studio is running, in your account's exports directory. They are accessible only to you. Files are deleted after 30 days.</div>
+                <div class="docs-faq-a">Exports are stored on the server where ClipKings is running, in your account's exports directory. They are accessible only to you. Files are deleted after 30 days.</div>
               </div>
               <div class="docs-faq-item">
                 <div class="docs-faq-q">Does AI Studio need an internet connection?</div>
@@ -1498,7 +1871,7 @@
 
     <!-- Legal footer -->
     <footer class="legal-footer-bar">
-      <span>&copy; 2025 Short-Form Studio</span>
+      <span>&copy; 2025 ClipKings</span>
       <a href="/legal/terms" target="_blank">Terms</a>
       <a href="/legal/privacy" target="_blank">Privacy</a>
       <a href="/legal/dmca" target="_blank">DMCA</a>

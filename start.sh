@@ -8,7 +8,7 @@ if lsof -ti:8080 &>/dev/null; then
   sleep 1
 fi
 
-echo "Starting Short-Form Studio..."
+echo "Starting ClipKings..."
 echo "Open http://localhost:8080 in your browser"
 echo "Press Ctrl+C to stop"
 venv/bin/python server.py

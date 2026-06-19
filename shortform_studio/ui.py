@@ -495,7 +495,7 @@ def render_header() -> None:
   <span class="badge">FFmpeg</span>
   <span class="badge">yt-dlp</span>
   <span class="badge">1080×1920</span>
-  <h1>🎬 Short-Form Studio</h1>
+  <h1>🎬 ClipKings</h1>
   <p>Automated multi-track vertical video composition engine &mdash;
      clone of Viblo / LAKAI-style workflows</p>
     <div class="hero-subline">The app now downloads source videos first so FFmpeg gets audio and video together, which avoids the no-audio stream issue you hit earlier.</div>

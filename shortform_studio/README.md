@@ -1,4 +1,4 @@
-# Short-Form Studio Web Plan
+# ClipKings Web Plan
 
 ## What is implemented now
 - Local Streamlit UI for ingesting video URLs, building clip timelines, rendering FFmpeg exports, and downloading MP4s.

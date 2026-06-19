@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Download and trim pre-baked gaming background clips for Short-Form Studio.
+Download and trim pre-baked gaming background clips for ClipKings.
 
 Usage:
   python download_bg_templates.py subway_surfers  <YouTube-URL>

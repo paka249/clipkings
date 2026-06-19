@@ -1,5 +1,5 @@
 """
-Short-Form Studio — FastAPI backend.
+ClipKings — FastAPI backend.
 Run:  venv/bin/python server.py
 Open: http://localhost:8080
 """
@@ -32,7 +32,7 @@ from shortform_studio.ffmpeg import build_cmd_ai_studio, build_cmd_center_crop, 
 from shortform_studio.timestamps import validate_clips
 from shortform_studio.yt import download_video, extract_stream_url
 
-app = FastAPI(title="Short-Form Studio")
+app = FastAPI(title="ClipKings")
 
 Path(__file__).parent.joinpath("data").mkdir(exist_ok=True)
 Base.metadata.create_all(bind=engine)
@@ -1190,5 +1190,5 @@ if __name__ == "__main__":
     init_db()
     EXPORTS_DIR.mkdir(parents=True, exist_ok=True)
     UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
-    print("Short-Form Studio running at http://localhost:8080")
+    print("ClipKings running at http://localhost:8080")
     uvicorn.run(app, host="0.0.0.0", port=8080, reload=False)

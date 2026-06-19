@@ -1,1 +1,1 @@
-"""Short-Form Studio package."""
+"""ClipKings package."""

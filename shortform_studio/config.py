@@ -7,7 +7,7 @@ try:
 except ImportError:
     pass
 
-APP_TITLE = "Short-Form Studio"
+APP_TITLE = "ClipKings"
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 EXPORTS_DIR = PROJECT_ROOT / "exports"

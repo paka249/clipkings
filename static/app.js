@@ -1557,7 +1557,7 @@ function showUpgradeComingSoon() {
   _modal({
     icon: 'zap', iconColor: 'info',
     title: 'Coming soon',
-    msg: 'Paid plans aren\'t live yet — Short-Form Studio is completely free during beta.',
+    msg: 'Paid plans aren\'t live yet — ClipKings is completely free during beta.',
     confirm: { label: 'Got it' },
   });
 }
@@ -3233,4 +3233,472 @@ document.addEventListener('DOMContentLoaded', () => {
       else                                    vedRemoveFromSeq(VED.selectedClip);
     }
   });
-});
+})();
+
+// ── Dashboard inline workspace ────────────────────────────────
+
+const DASH = {
+  template: null,
+  primaryUploadId: null,
+  primaryUrl: '',
+  bgTemplate: '',
+  clips: [],
+  rkItems: [],
+  jobId: null,
+};
+
+function dashCarouselScroll(dir) {
+  const row = document.getElementById('tmpl-carousel');
+  row.scrollBy({ left: dir * 220, behavior: 'smooth' });
+}
+
+function dashSelectTemplate(name) {
+  DASH.template = name;
+  document.querySelectorAll('.tmpl-picker-card').forEach(c =>
+    c.classList.toggle('active', c.dataset.tmpl === name));
+  // center the selected card in the carousel
+  const card = document.querySelector(`.tmpl-picker-card[data-tmpl="${name}"]`);
+  if (card) card.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  const ws = document.getElementById('dash-workspace');
+  ws.classList.add('open');
+  ['cs', 'split', 'ai', 'rk'].forEach(p => {
+    const el = document.getElementById('dash-panel-' + p);
+    if (el) el.style.display = p === name ? '' : 'none';
+  });
+  dashResetPreview();
+  ws.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function dashResetPreview() {
+  const vid = document.getElementById('dash-pv-video');
+  vid.pause(); vid.src = ''; vid.style.display = 'none';
+  document.getElementById('dash-pv-placeholder').style.display = '';
+  document.getElementById('dash-pv-result').style.display = 'none';
+}
+
+function dashShowPreview(src) {
+  const vid = document.getElementById('dash-pv-video');
+  vid.src = src; vid.style.display = '';
+  document.getElementById('dash-pv-placeholder').style.display = 'none';
+}
+
+function dashShowDownload(filename) {
+  const btn = document.getElementById('dash-pv-dl-btn');
+  btn.onclick = () => downloadExport(filename);
+  document.getElementById('dash-pv-result').style.display = '';
+}
+
+// ── Shared upload ────────────────────────────────────────────
+
+async function _dashUpload(file, statusEl) {
+  statusEl.textContent = 'Uploading…';
+  const form = new FormData();
+  form.append('file', file);
+  try {
+    const res = await fetch('/api/upload', { method: 'POST', body: form });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Upload failed');
+    statusEl.textContent = `✓ ${data.name} (${data.size_mb} MB)`;
+    return data;
+  } catch (e) {
+    statusEl.textContent = `Error: ${e.message}`;
+    return null;
+  }
+}
+
+// ── SPLITSCREEN ───────────────────────────────────────────────
+
+function dashSrcTab(mode) {
+  document.getElementById('ds-url-section').style.display  = mode === 'url'  ? '' : 'none';
+  document.getElementById('ds-file-section').style.display = mode === 'file' ? '' : 'none';
+  document.getElementById('ds-tab-url').classList.toggle('active', mode === 'url');
+  document.getElementById('ds-tab-file').classList.toggle('active', mode === 'file');
+}
+
+function dashDropFile(ev) {
+  ev.preventDefault();
+  const file = ev.dataTransfer.files[0];
+  if (file) dashFileChosen(file);
+}
+
+async function dashFileChosen(file) {
+  const statusEl = document.getElementById('ds-file-status');
+  const data = await _dashUpload(file, statusEl);
+  if (!data) return;
+  DASH.primaryUploadId = data.id;
+  DASH.primaryUrl = '';
+  dashShowPreview('/api/uploads/stream/' + data.id);
+  dashSplitCheckReady();
+}
+
+async function dashPreviewUrl() {
+  const url = document.getElementById('ds-url').value.trim();
+  const info = document.getElementById('ds-url-info');
+  if (!url) return;
+  info.style.display = ''; info.textContent = 'Fetching…';
+  try {
+    const res = await fetch('/api/preview', { method: 'POST',
+      headers: {'Content-Type':'application/json'}, body: JSON.stringify({ url }) });
+    const d = await res.json();
+    if (!res.ok) throw new Error(d.detail);
+    info.textContent = `✓ ${d.title.slice(0,60)} · ${Math.round(d.duration)}s`;
+    DASH.primaryUrl = url;
+    dashSplitCheckReady();
+  } catch (e) {
+    info.textContent = `Error: ${e.message}`;
+  }
+}
+
+function dashSplitCheckReady() {
+  const hasSource = DASH.primaryUploadId || document.getElementById('ds-url').value.trim();
+  const hasBg     = DASH.bgTemplate !== '';
+  const hasClips  = DASH.clips.length > 0;
+  document.getElementById('ds-render-btn').disabled = !(hasSource && hasBg && hasClips);
+}
+
+function dashSelectBg(name) {
+  DASH.bgTemplate = name;
+  document.querySelectorAll('.ds-bg-card').forEach(c => c.classList.remove('selected'));
+  const map = { subway_surfers: 'ds-bg-subway', minecraft_parkour: 'ds-bg-minecraft', gta: 'ds-bg-gta' };
+  document.getElementById(map[name])?.classList.add('selected');
+  dashSplitCheckReady();
+}
+
+function dashAddClip() {
+  const start = document.getElementById('ds-ts-start').value.trim();
+  const end   = document.getElementById('ds-ts-end').value.trim();
+  if (!start || !end) return;
+  DASH.clips.push({ start, end });
+  document.getElementById('ds-ts-start').value = '';
+  document.getElementById('ds-ts-end').value   = '';
+  _dashRenderClips();
+  dashSplitCheckReady();
+}
+
+function _dashRenderClips() {
+  const list = document.getElementById('ds-clip-list');
+  list.innerHTML = DASH.clips.map((c, i) =>
+    `<div class="ds-clip-row">
+      <span>#${i+1} &nbsp; ${c.start} → ${c.end}</span>
+      <button class="ds-clip-del" onclick="dashDelClip(${i})">×</button>
+    </div>`
+  ).join('');
+}
+
+function dashDelClip(i) {
+  DASH.clips.splice(i, 1);
+  _dashRenderClips();
+  dashSplitCheckReady();
+}
+
+async function dashSplitRender() {
+  const btn = document.getElementById('ds-render-btn');
+  btn.disabled = true;
+  document.getElementById('ds-progress-wrap').style.display = '';
+  document.getElementById('ds-log').innerHTML = '';
+
+  const body = {
+    template: 'split_screen',
+    bg_template: DASH.bgTemplate,
+    clips: DASH.clips,
+    resolution: '1080x1920',
+    codec: 'h264',
+  };
+  if (DASH.primaryUploadId) body.primary_upload_id = DASH.primaryUploadId;
+  else body.primary_url = document.getElementById('ds-url').value.trim();
+
+  try {
+    const res = await fetch('/api/generate', { method: 'POST',
+      headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    const d = await res.json();
+    if (!res.ok) throw new Error(d.detail);
+    _dashPoll(d.job_id, 'ds');
+  } catch (e) {
+    document.getElementById('ds-log').textContent = 'Error: ' + e.message;
+    btn.disabled = false;
+  }
+}
+
+// ── AI STUDIO ────────────────────────────────────────────────
+
+function dashAiSrcTab(mode) {
+  document.getElementById('dai-url-section').style.display  = mode === 'url'  ? '' : 'none';
+  document.getElementById('dai-file-section').style.display = mode === 'file' ? '' : 'none';
+  document.getElementById('dai-tab-url').classList.toggle('active', mode === 'url');
+  document.getElementById('dai-tab-file').classList.toggle('active', mode === 'file');
+}
+
+function dashAiDropFile(ev) {
+  ev.preventDefault();
+  const file = ev.dataTransfer.files[0];
+  if (file) dashAiFileChosen(file);
+}
+
+async function dashAiFileChosen(file) {
+  const statusEl = document.getElementById('dai-file-status');
+  const data = await _dashUpload(file, statusEl);
+  if (!data) return;
+  DASH.primaryUploadId = data.id;
+  dashShowPreview('/api/uploads/stream/' + data.id);
+  dashAiCheckReady();
+}
+
+function dashAiToggleVo() {
+  const on = document.getElementById('dai-do-vo').checked;
+  document.getElementById('dai-vo-opts').style.cssText = on ? '' : 'opacity:.4;pointer-events:none';
+  // also wire subs toggle
+  const subsOn = document.getElementById('dai-do-subs').checked;
+  document.getElementById('dai-subs-opts').style.cssText = subsOn ? '' : 'opacity:.4;pointer-events:none';
+}
+
+function dashAiCheckReady() {
+  const hasSource = DASH.primaryUploadId || document.getElementById('dai-url').value.trim();
+  const hasSubs   = document.getElementById('dai-do-subs').checked;
+  const hasVo     = document.getElementById('dai-do-vo').checked;
+  const hasScript = document.getElementById('dai-script').value.trim();
+  const ready = hasSource && (hasSubs || (hasVo && hasScript));
+  document.getElementById('dai-render-btn').disabled = !ready;
+  // toggle opts visibility
+  document.getElementById('dai-subs-opts').style.cssText = hasSubs ? '' : 'opacity:.4;pointer-events:none';
+  document.getElementById('dai-vo-opts').style.cssText   = hasVo   ? '' : 'opacity:.4;pointer-events:none';
+}
+
+async function dashAiGenerate() {
+  const btn = document.getElementById('dai-render-btn');
+  btn.disabled = true;
+  document.getElementById('dai-progress-wrap').style.display = '';
+  document.getElementById('dai-log').innerHTML = '';
+
+  const body = {
+    do_subtitles: document.getElementById('dai-do-subs').checked,
+    sub_model:    document.getElementById('dai-sub-model').value,
+    sub_style:    document.getElementById('dai-sub-style').value,
+    do_voiceover: document.getElementById('dai-do-vo').checked,
+    vo_voice:     document.getElementById('dai-voice').value,
+    vo_script:    document.getElementById('dai-script').value.trim(),
+    codec: 'h264', crf: 23,
+  };
+  if (DASH.primaryUploadId) body.upload_id = DASH.primaryUploadId;
+  else body.source_url = document.getElementById('dai-url').value.trim();
+
+  try {
+    const res = await fetch('/api/generate/ai-studio', { method: 'POST',
+      headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    const d = await res.json();
+    if (!res.ok) throw new Error(d.detail);
+    _dashPoll(d.job_id, 'dai');
+  } catch (e) {
+    document.getElementById('dai-log').textContent = 'Error: ' + e.message;
+    btn.disabled = false;
+  }
+}
+
+// ── RANKING ──────────────────────────────────────────────────
+
+function dashRkAddItem() {
+  const url   = document.getElementById('drk-url').value.trim();
+  const start = document.getElementById('drk-start').value.trim() || '0:00';
+  const end   = document.getElementById('drk-end').value.trim();
+  const label = document.getElementById('drk-label').value.trim() || `Item ${DASH.rkItems.length + 1}`;
+  if (!url || !end) { alert('Paste a URL and set an end time.'); return; }
+  DASH.rkItems.push({ url, start, end, label, color: '#FFFFFF', fit: 'crop', crop_x: 0.5, crop_y: 0.5 });
+  document.getElementById('drk-url').value = '';
+  document.getElementById('drk-start').value = '';
+  document.getElementById('drk-end').value = '';
+  document.getElementById('drk-label').value = '';
+  _dashRkRenderList();
+  document.getElementById('drk-render-btn').disabled = DASH.rkItems.length < 1;
+}
+
+function _dashRkRenderList() {
+  const list = document.getElementById('drk-item-list');
+  list.innerHTML = DASH.rkItems.map((it, i) =>
+    `<div class="ds-clip-row">
+      <span>#${i+1} ${it.label} &nbsp; ${it.start} → ${it.end}</span>
+      <button class="ds-clip-del" onclick="dashRkDel(${i})">×</button>
+    </div>`
+  ).join('');
+}
+
+function dashRkDel(i) {
+  DASH.rkItems.splice(i, 1);
+  _dashRkRenderList();
+  document.getElementById('drk-render-btn').disabled = DASH.rkItems.length < 1;
+}
+
+async function dashRkRender() {
+  const btn = document.getElementById('drk-render-btn');
+  btn.disabled = true;
+  document.getElementById('drk-progress-wrap').style.display = '';
+  document.getElementById('drk-log').innerHTML = '';
+
+  const body = {
+    title:          document.getElementById('drk-title').value || 'RANKING',
+    title_color:    document.getElementById('drk-title-color').value,
+    subtitle:       document.getElementById('drk-subtitle').value,
+    subtitle_color: document.getElementById('drk-subtitle-color').value,
+    items:          DASH.rkItems,
+    resolution:     '1080x1920',
+    codec:          'h264',
+    crf:            23,
+  };
+
+  try {
+    const res = await fetch('/api/generate/ranking', { method: 'POST',
+      headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    const d = await res.json();
+    if (!res.ok) throw new Error(d.detail);
+    _dashPoll(d.job_id, 'drk');
+  } catch (e) {
+    document.getElementById('drk-log').textContent = 'Error: ' + e.message;
+    btn.disabled = false;
+  }
+}
+
+// ── Shared poller ────────────────────────────────────────────
+
+async function _dashPoll(jobId, prefix) {
+  const fillEl   = document.getElementById(prefix + '-progress-fill');
+  const labelEl  = document.getElementById(prefix + '-progress-label');
+  const logEl    = document.getElementById(prefix + '-log');
+  let seen = 0;
+
+  const tick = async () => {
+    try {
+      const res = await fetch('/api/jobs/' + jobId);
+      const job = await res.json();
+
+      if (fillEl)  fillEl.style.width  = (job.progress || 0) + '%';
+      if (labelEl) labelEl.textContent = job.status + (job.progress ? ` · ${job.progress}%` : '');
+
+      const entries = (job.logs || []).slice(seen);
+      seen += entries.length;
+      entries.forEach(e => {
+        const div = document.createElement('div');
+        div.className = 'log-line log-' + (e.level || 'inf');
+        div.textContent = `[${e.ts}] ${e.msg}`;
+        logEl.appendChild(div);
+        logEl.scrollTop = logEl.scrollHeight;
+      });
+
+      if (job.status === 'completed') {
+        dashShowPreview('/api/video/' + job.output);
+        dashShowDownload(job.output);
+        return;
+      }
+      if (job.status === 'failed') return;
+      setTimeout(tick, 1500);
+    } catch { setTimeout(tick, 2000); }
+  };
+  tick();
+}
+
+// ── Clip Studio ──────────────────────────────────────────────
+const DCS = { clips: [], uploadId: null, primaryUrl: '' };
+
+function dashCsSrcTab(mode) {
+  document.getElementById('dcs-url-section').style.display  = mode === 'url'  ? '' : 'none';
+  document.getElementById('dcs-file-section').style.display = mode === 'file' ? '' : 'none';
+  document.getElementById('dcs-tab-url').classList.toggle('active',  mode === 'url');
+  document.getElementById('dcs-tab-file').classList.toggle('active', mode === 'file');
+}
+
+function dashCsDropFile(ev) {
+  ev.preventDefault();
+  const f = ev.dataTransfer.files[0];
+  if (f) dashCsFileChosen(f);
+}
+
+async function dashCsFileChosen(file) {
+  const st = document.getElementById('dcs-file-status');
+  st.textContent = 'Uploading…';
+  try {
+    const data = await _dashUpload(file, st);
+    DCS.uploadId = data.id;
+    DCS.primaryUrl = '';
+    st.textContent = `✓ ${data.name} (${data.size_mb} MB)`;
+    dashShowPreview('/api/upload/' + data.id);
+    dashCsCheckReady();
+  } catch (e) {
+    st.textContent = 'Upload failed: ' + e.message;
+  }
+}
+
+async function dashCsPreviewUrl() {
+  const url = document.getElementById('dcs-url').value.trim();
+  if (!url) return;
+  const info = document.getElementById('dcs-url-info');
+  info.style.display = '';
+  info.textContent = 'Fetching info…';
+  try {
+    const r = await fetch('/api/preview', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url }) });
+    const d = await r.json();
+    DCS.primaryUrl = url;
+    DCS.uploadId = null;
+    info.textContent = d.title ? `✓ ${d.title}` : '✓ Ready';
+    dashCsCheckReady();
+  } catch {
+    info.textContent = 'Could not fetch info';
+  }
+}
+
+function dashCsAddClip() {
+  const s = document.getElementById('dcs-ts-start').value.trim();
+  const e = document.getElementById('dcs-ts-end').value.trim();
+  if (!s || !e) return;
+  DCS.clips.push({ start: s, end: e });
+  document.getElementById('dcs-ts-start').value = '';
+  document.getElementById('dcs-ts-end').value = '';
+  _dashCsRenderClips();
+  dashCsCheckReady();
+}
+
+function _dashCsRenderClips() {
+  const el = document.getElementById('dcs-clip-list');
+  if (!DCS.clips.length) { el.innerHTML = ''; return; }
+  el.innerHTML = DCS.clips.map((c, i) =>
+    `<div class="ds-clip-row">${c.start} → ${c.end}<button class="ds-clip-del" onclick="dashCsDelClip(${i})">✕</button></div>`
+  ).join('');
+}
+
+function dashCsDelClip(i) {
+  DCS.clips.splice(i, 1);
+  _dashCsRenderClips();
+  dashCsCheckReady();
+}
+
+function dashCsCheckReady() {
+  const hasSrc = !!(DCS.uploadId || document.getElementById('dcs-url').value.trim());
+  const hasClips = DCS.clips.length > 0;
+  document.getElementById('dcs-render-btn').disabled = !(hasSrc && hasClips);
+}
+
+async function dashCsRender() {
+  const btn = document.getElementById('dcs-render-btn');
+  btn.disabled = true;
+  document.getElementById('dcs-progress-wrap').style.display = '';
+  document.getElementById('dcs-progress-fill').style.width = '0%';
+  document.getElementById('dcs-progress-label').textContent = 'Queuing…';
+
+  const fmt = document.getElementById('dcs-format').value;
+  const quality = document.getElementById('dcs-quality').value;
+  const [cw, ch] = fmt === '9:16' ? [1080, 1920] : fmt === '1:1' ? [1080, 1080] : [1920, 1080];
+
+  const body = {
+    template: 'center_crop',
+    clips: DCS.clips,
+    canvas_w: cw,
+    canvas_h: ch,
+    quality,
+    ...(DCS.uploadId ? { primary_upload_id: DCS.uploadId } : { primary_url: document.getElementById('dcs-url').value.trim() }),
+  };
+
+  try {
+    const r = await fetch('/api/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const { job_id } = await r.json();
+    _dashPoll(job_id, 'dcs');
+  } catch (e) {
+    document.getElementById('dcs-progress-label').textContent = 'Error: ' + e.message;
+    btn.disabled = false;
+  }
+}
