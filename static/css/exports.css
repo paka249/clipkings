@@ -1,0 +1,137 @@
+/* ── Exports list ───────────────────────────────────────────── */
+.export-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: .82rem;
+}
+.export-row:last-child { border-bottom: none; }
+.export-name {
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: .72rem;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.export-size { color: var(--text-3); font-size: .74rem; white-space: nowrap; font-family: var(--mono); }
+
+/* ── Exports page full rows ─────────────────────────────────── */
+.export-full-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border);
+}
+.export-full-row:last-child { border-bottom: none; }
+.export-ext-badge {
+  font-family: var(--mono);
+  font-size: .65rem;
+  font-weight: 700;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 6px;
+  color: var(--text-3);
+  white-space: nowrap;
+  text-transform: uppercase;
+}
+.export-date {
+  color: var(--text-3);
+  font-size: .74rem;
+  white-space: nowrap;
+  min-width: 90px;
+  text-align: right;
+}
+.exports-view-all {
+  padding: 10px 0 2px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* ── Exports page toolbar + multi-select ────────────────────── */
+.exports-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.export-select-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--accent-dim);
+  border: 1px solid rgba(59,130,246,.2);
+  border-radius: var(--r);
+  margin-bottom: 10px;
+  font-size: .82rem;
+  color: var(--accent);
+  font-weight: 500;
+}
+.export-select-bar span { margin-right: 4px; }
+.export-select-bar .btn-del {
+  background: var(--danger-dim);
+  border-color: rgba(239,68,68,.3);
+  color: #f87171;
+}
+
+.export-select-all-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0 8px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 2px;
+}
+
+.export-checkbox {
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+  accent-color: var(--accent);
+  flex-shrink: 0;
+}
+
+/* ── Watch exports modal ────────────────────────────────────── */
+.watch-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.72);
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.watch-modal-inner {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 16px;
+  width: 100%;
+  max-width: 400px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.watch-modal-close {
+  position: absolute;
+  top: 8px; right: 10px;
+  background: none;
+  border: none;
+  color: var(--text-2);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: background var(--t);
+}
+.watch-modal-close:hover { background: var(--surface-2); }
+.watch-modal-inner .sfs-player { max-width: 100%; }

@@ -1,0 +1,94 @@
+/* ── Gaming template section ─────────────────────────────────── */
+.tmpl-section-hdr {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 24px 0 12px;
+  font-size: .78rem;
+  font-weight: 600;
+  color: var(--text-2);
+  letter-spacing: -.01em;
+}
+.gaming-tmpl-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 8px;
+}
+.gaming-tmpl-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color var(--t), transform var(--t);
+}
+.gaming-tmpl-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+.gaming-tmpl-card.not-ready { opacity: .55; }
+.gaming-tmpl-thumb {
+  height: 220px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  padding: 10px;
+  position: relative;
+  overflow: hidden;
+}
+.gtmpl-ss   { background: linear-gradient(145deg,#1a0a00,#3d1a00,#8b3a00); }
+.gtmpl-mc   { background: linear-gradient(145deg,#0a1a05,#1a3a0a,#2d5a10); }
+.gtmpl-gta  { background: linear-gradient(145deg,#05050f,#0a0a2e,#1a1a4a); }
+.gaming-thumb-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity .4s;
+}
+.gaming-tmpl-card:hover .gaming-thumb-video { opacity: 1; }
+.gaming-tmpl-label {
+  position: relative;
+  z-index: 1;
+  font-size: .75rem;
+  font-weight: 600;
+  color: rgba(255,255,255,.9);
+  letter-spacing: -.01em;
+  text-shadow: 0 1px 4px rgba(0,0,0,.8);
+}
+.gaming-status-chip {
+  position: absolute;
+  top: 8px; right: 8px;
+  z-index: 2;
+  font-size: .6rem;
+  font-family: var(--mono);
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 999px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.gstatus-ready  { background: rgba(34,197,94,.18); color: #4ade80; border: 1px solid rgba(34,197,94,.3); }
+.gstatus-needed { background: rgba(0,0,0,.45); color: rgba(255,255,255,.7); border: 1px solid rgba(255,255,255,.15); }
+.gaming-tmpl-body { padding: 10px 12px 12px; }
+
+/* ── Specialty template card themes ─────────────────────────── */
+.tmpl-card-ranking  { border-color: rgba(159,122,234,.4); }
+.tmpl-card-aistudio { border-color: rgba(99,102,241,.4); }
+[data-theme="light"] .tmpl-card-ranking  { background: #f9f5ff; }
+[data-theme="light"] .tmpl-card-aistudio { background: #f0f1ff; }
+
+/* ── BG template badge in editor ────────────────────────────── */
+.bg-template-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  background: var(--accent-dim);
+  border: 1px solid rgba(59,130,246,.25);
+  border-radius: var(--r);
+  font-size: .82rem;
+  color: var(--accent);
+  margin-bottom: 5px;
+}
+.bg-template-badge span { flex: 1; font-weight: 500; }

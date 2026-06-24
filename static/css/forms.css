@@ -1,0 +1,157 @@
+/* ── Form elements ──────────────────────────────────────────── */
+.field-label {
+  display: block;
+  font-size: .78rem;
+  font-weight: 500;
+  color: var(--text-2);
+  margin-bottom: 5px;
+}
+.field-label .muted { color: var(--text-3); font-weight: 400; }
+
+.url-row { display: flex; gap: 6px; margin-bottom: 5px; }
+
+.text-input {
+  flex: 1;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 8px 10px;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: .84rem;
+  outline: none;
+  transition: border-color var(--t);
+  min-width: 0;
+}
+.text-input:focus { border-color: var(--accent); }
+.text-input::placeholder { color: var(--text-3); }
+
+.select-input {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 8px 10px;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: .84rem;
+  outline: none;
+  cursor: pointer;
+  margin-bottom: 10px;
+  transition: border-color var(--t);
+}
+.select-input:focus { border-color: var(--accent); }
+
+.template-desc {
+  color: var(--text-2);
+  font-size: .82rem;
+  line-height: 1.7;
+  padding: 10px 12px;
+  background: var(--surface-2);
+  border-left: 2px solid var(--accent);
+  border-radius: 0 var(--r) var(--r) 0;
+}
+
+/* ── Buttons ────────────────────────────────────────────────── */
+.btn-primary, .btn-outline, .btn-ghost, .btn-danger,
+.btn-generate, .btn-sm, .btn-del {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid transparent;
+  border-radius: var(--r);
+  cursor: pointer;
+  font-family: var(--font);
+  font-weight: 500;
+  font-size: .82rem;
+  padding: 7px 13px;
+  transition: background var(--t), border-color var(--t), color var(--t), opacity var(--t), transform var(--t);
+  text-decoration: none;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: var(--accent-fg);
+}
+.btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
+
+.btn-outline {
+  background: transparent;
+  border-color: var(--border);
+  color: var(--text-2);
+}
+.btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+.btn-ghost {
+  background: var(--surface-2);
+  border-color: transparent;
+  color: var(--text-2);
+}
+.btn-ghost:hover { color: var(--text); }
+
+.btn-danger {
+  background: var(--danger-dim);
+  border-color: rgba(239,68,68,.25);
+  color: #f87171;
+  width: 100%;
+}
+.btn-danger:hover { background: rgba(239,68,68,.18); }
+
+.btn-generate {
+  background: var(--accent);
+  color: var(--accent-fg);
+  width: 100%;
+  padding: 10px;
+  font-size: .875rem;
+  font-weight: 600;
+  margin: 10px 0;
+  letter-spacing: -.01em;
+}
+.btn-generate:hover:not(:disabled) { background: var(--accent-hover); }
+.btn-generate:disabled { opacity: .3; cursor: not-allowed; transform: none !important; }
+
+.btn-sm {
+  background: var(--surface-2);
+  border-color: var(--border);
+  color: var(--text-2);
+  padding: 4px 9px;
+  font-size: .75rem;
+}
+.btn-sm:hover { color: var(--text); border-color: var(--text-3); }
+
+.btn-del {
+  background: var(--danger-dim);
+  border-color: rgba(239,68,68,.25);
+  color: #f87171;
+  padding: 4px 8px;
+  font-size: .75rem;
+}
+.btn-del:hover { background: rgba(239,68,68,.18); }
+
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--text-3);
+  cursor: pointer;
+  width: 26px; height: 26px;
+  border-radius: var(--r);
+  transition: background var(--t), color var(--t);
+}
+.btn-icon:hover { background: var(--danger-dim); color: var(--danger); }
+
+/* ── Standardised generate button override ──────────────────── */
+.btn-generate {
+  width: 100%;
+  display: flex; align-items: center; justify-content: center;
+  gap: 7px;
+  font-size: .92rem;
+  font-weight: 600;
+  letter-spacing: .01em;
+  padding: 11px 20px;
+}

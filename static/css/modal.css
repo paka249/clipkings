@@ -1,0 +1,83 @@
+/* ── App Modal ──────────────────────────────────────────────── */
+.sfm-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0,0,0,.65);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+.sfm-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 30px 28px 24px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 24px 60px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.04);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  animation: sfm-in 170ms var(--ease) both;
+}
+
+@keyframes sfm-in {
+  from { opacity: 0; transform: scale(.93) translateY(-10px); }
+  to   { opacity: 1; transform: scale(1)  translateY(0); }
+}
+
+.sfm-icon-wrap {
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 4px;
+  flex-shrink: 0;
+}
+.sfm-icon-danger { background: var(--danger-dim); color: var(--danger); }
+.sfm-icon-warn   { background: rgba(245,158,11,.13); color: var(--warn); }
+.sfm-icon-info   { background: var(--accent-dim); color: var(--accent); }
+.sfm-icon-success{ background: rgba(34,197,94,.13); color: var(--success); }
+
+.sfm-title {
+  font-size: 1.05rem; font-weight: 700;
+  text-align: center; color: var(--text);
+  line-height: 1.3;
+}
+
+.sfm-msg {
+  font-size: .84rem; color: var(--text-2);
+  text-align: center; line-height: 1.65;
+  max-width: 310px;
+  word-break: break-word;
+}
+.sfm-msg strong { color: var(--text); font-weight: 600; }
+
+.sfm-input-wrap { width: 100%; margin-top: 6px; }
+.sfm-input-label { display: block; margin-bottom: 6px; }
+
+.sfm-btns {
+  display: flex; gap: 8px;
+  width: 100%; margin-top: 12px;
+}
+.sfm-btn {
+  flex: 1; height: 40px;
+  font-size: .85rem; font-weight: 600;
+  border-radius: var(--r); cursor: pointer;
+  border: none;
+  transition: background var(--t), opacity var(--t);
+}
+.sfm-btn-cancel {
+  background: var(--surface-2); color: var(--text-2);
+  border: 1px solid var(--border);
+}
+.sfm-btn-cancel:hover { background: var(--border); color: var(--text); }
+.sfm-btn-confirm { background: var(--accent); color: var(--accent-fg); }
+.sfm-btn-confirm:hover { background: var(--accent-hover); }
+.sfm-btn-danger  { background: var(--danger); color: #fff; }
+.sfm-btn-danger:hover  { background: #dc2626; }

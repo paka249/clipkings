@@ -1,0 +1,66 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* ── Design tokens ──────────────────────────────────────────── */
+:root {
+  /* 5-color base palette — dark (default) */
+  --bg:        #0A0A0A;
+  --surface:   #111111;
+  --border:    #262626;
+  --text:      #F5F5F5;
+  --accent:    #3B82F6;
+
+  /* Derived — flow from the 5 above, do not hardcode elsewhere */
+  --surface-2:   #1A1A1A;
+  --text-2:      #A3A3A3;
+  --text-3:      #525252;
+  --accent-dim:  rgba(59,130,246,.1);
+  --accent-fg:   #FFFFFF;
+  --accent-hover:#2563EB;
+
+  /* Semantic */
+  --danger:      #EF4444;
+  --danger-dim:  rgba(239,68,68,.1);
+  --success:     #22C55E;
+  --warn:        #F59E0B;
+
+  /* Typography */
+  --font: 'Inter', system-ui, -apple-system, sans-serif;
+  --mono: ui-monospace, 'JetBrains Mono', 'Fira Code', monospace;
+
+  /* Geometry */
+  --r:   6px;
+  --r-lg: 10px;
+  --sidebar-w: 220px;
+
+  /* Motion */
+  --t: 150ms;
+  --ease: cubic-bezier(.16,1,.3,1);
+}
+
+[data-theme="light"] {
+  --bg:        #F5F5F5;
+  --surface:   #FFFFFF;
+  --border:    #E5E5E5;
+  --text:      #0A0A0A;
+  --accent:    #2563EB;
+
+  --surface-2:   #EBEBEB;
+  --text-2:      #525252;
+  --text-3:      #A3A3A3;
+  --accent-dim:  rgba(37,99,235,.08);
+  --accent-fg:   #FFFFFF;
+  --accent-hover:#1D4ED8;
+}
+
+/* ── Reset ──────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}

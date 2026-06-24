@@ -1,0 +1,132 @@
+/* ── Template cards (dashboard quick links) ─────────────────── */
+.tmpl-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+.tmpl-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color var(--t);
+}
+.tmpl-card:not(.tmpl-soon):hover { border-color: var(--accent); }
+.tmpl-soon { opacity: .45; cursor: default; }
+.tmpl-thumb {
+  height: 96px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  color: var(--text-3);
+}
+.tmpl-badge {
+  position: absolute;
+  top: 8px; right: 8px;
+  font-size: .6rem;
+  font-family: var(--mono);
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 999px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.badge-ready { background: rgba(34,197,94,.12); color: #4ade80; border: 1px solid rgba(34,197,94,.25); }
+.badge-coming { background: var(--surface-2); color: var(--text-3); border: 1px solid var(--border); }
+.tmpl-body { padding: 10px 12px 12px; }
+.tmpl-name { font-weight: 600; font-size: .84rem; color: var(--text); margin-bottom: 3px; }
+.tmpl-desc { color: var(--text-2); font-size: .76rem; line-height: 1.4; }
+
+/* ── Full template cards (Templates page) ───────────────────── */
+.tmpl-full-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.tmpl-full-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  transition: border-color var(--t);
+}
+.tmpl-full-card:hover { border-color: var(--accent); }
+.tmpl-full-thumb {
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-3);
+}
+.tmpl-full-body { padding: 18px 20px 20px; }
+.tmpl-full-name { font-weight: 600; font-size: .95rem; color: var(--text); margin-bottom: 8px; letter-spacing: -.01em; }
+.tmpl-full-desc { color: var(--text-2); font-size: .84rem; line-height: 1.6; margin-bottom: 12px; }
+.tag-row { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 14px; }
+.tag {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 2px 8px;
+  font-size: .72rem;
+  color: var(--text-2);
+  font-family: var(--mono);
+}
+.tag.cyan {
+  background: var(--accent-dim);
+  border-color: rgba(59,130,246,.25);
+  color: var(--accent);
+}
+
+/* ── General card component ─────────────────────────────────── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 18px;
+}
+.card-title {
+  font-size: .68rem;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  margin-bottom: 12px;
+}
+.card-hint { color: var(--text-3); font-size: .78rem; margin-bottom: 12px; line-height: 1.5; }
+
+/* ── Dashboard hero cards ───────────────────────────────────── */
+.dash-hero {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.dash-hero-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--r-lg);
+  padding: 20px 18px 20px 16px;
+  cursor: pointer;
+  transition: border-color var(--t), box-shadow var(--t), transform var(--t);
+}
+.dash-hero-card:hover {
+  border-color: var(--accent);
+  box-shadow: 0 4px 20px rgba(0,0,0,.1);
+  transform: translateY(-1px);
+}
+.dash-hero-icon {
+  width: 42px; height: 42px;
+  background: var(--accent-dim);
+  border-radius: var(--r);
+  display: grid; place-items: center;
+  color: var(--accent);
+  flex-shrink: 0;
+  transition: background var(--t);
+}
+.dash-hero-card:hover .dash-hero-icon { background: var(--accent); color: var(--accent-fg); }
+.dash-hero-body { display: flex; flex-direction: column; min-width: 0; }
+.dash-hero-name { font-size: .97rem; font-weight: 700; color: var(--text); letter-spacing: -.02em; margin-bottom: 4px; }
+.dash-hero-desc { font-size: .8rem; color: var(--text-2); line-height: 1.5; margin-bottom: 10px; flex: 1; }
+.dash-hero-cta { font-size: .78rem; font-weight: 600; color: var(--accent); }

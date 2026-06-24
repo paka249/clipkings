@@ -1,0 +1,489 @@
+/* ── Video Editor (full-screen layout) ──────────────────────── */
+#page-editor.ved-app {
+  height: 100%; flex-direction: column; overflow: hidden;
+}
+#page-editor.ved-app.active { display: flex !important; }
+
+/* Top toolbar */
+.ved-topbar {
+  display: flex; align-items: center; gap: 12px;
+  padding: 0 16px; height: 42px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface); flex-shrink: 0;
+}
+.ved-topbar-title {
+  display: flex; align-items: center; gap: 6px;
+  font-size: .88rem; font-weight: 600; color: var(--text);
+  letter-spacing: -.01em;
+}
+.ved-topbar-end { display: flex; align-items: center; gap: 6px; margin-left: auto; }
+.ved-tb-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 12px; border: 1px solid var(--border);
+  border-radius: var(--r); background: var(--surface-2);
+  color: var(--text-2); font-size: .8rem; font-weight: 500;
+  cursor: pointer; transition: background var(--t), color var(--t);
+}
+.ved-tb-btn:hover { background: var(--accent-dim); color: var(--accent); border-color: var(--accent); }
+.ved-tb-uploading {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: .78rem; color: var(--text-3);
+}
+
+/* Three-panel workspace */
+.ved-workspace { display: flex; flex: 1; overflow: hidden; min-height: 0; }
+
+/* Left: Media Library panel */
+.ved-media-panel {
+  width: 220px; flex-shrink: 0;
+  border-right: 1px solid var(--border);
+  background: var(--surface);
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.ved-panel-hd {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 9px 11px 7px;
+  font-size: .68rem; font-weight: 600;
+  letter-spacing: .08em; text-transform: uppercase; color: var(--text-3);
+  border-bottom: 1px solid var(--border); flex-shrink: 0;
+}
+.ved-panel-add-btn {
+  width: 22px; height: 22px;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--border); border-radius: calc(var(--r) - 1px);
+  color: var(--text-3); cursor: pointer;
+  transition: color var(--t), background var(--t);
+}
+.ved-panel-add-btn:hover { color: var(--accent); border-color: var(--accent); background: var(--accent-dim); }
+.ved-lib-scroll { flex: 1; overflow-y: auto; padding: 8px; }
+
+/* Media library grid & cards */
+.ved-lib-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(106px, 1fr));
+  gap: 7px;
+}
+.ved-lib-card {
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 6px;
+  display: flex; flex-direction: column; gap: 4px; cursor: default;
+  transition: border-color var(--t);
+}
+.ved-lib-card:hover { border-color: var(--accent); }
+.ved-lib-thumb {
+  height: 62px; border-radius: calc(var(--r) - 2px);
+  background: var(--surface);
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden; color: var(--text-3); position: relative;
+}
+.ved-lib-thumb video {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+}
+.ved-lib-name {
+  font-size: .7rem; color: var(--text); font-weight: 500;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ved-lib-meta { font-size: .65rem; color: var(--text-3); }
+.ved-lib-btns { display: flex; gap: 3px; margin-top: 1px; }
+.ved-lib-btn {
+  flex: 1; font-size: .68rem; padding: 2px 4px;
+  border-radius: calc(var(--r) - 2px); border: 1px solid var(--border);
+  background: var(--surface); color: var(--text-2); cursor: pointer;
+  transition: background var(--t), color var(--t); white-space: nowrap; text-align: center;
+}
+.ved-lib-btn:hover { background: var(--accent-dim); color: var(--accent); border-color: var(--accent); }
+.ved-lib-btn-danger:hover { background: rgba(239,68,68,.1); color: #f87171; border-color: rgba(239,68,68,.25); }
+
+/* Center: Preview canvas */
+.ved-preview-center {
+  flex: 1; background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden; position: relative;
+}
+.ved-canvas-outer {
+  flex: 1; align-self: stretch;
+  display: flex; align-items: center; justify-content: center; padding: 8px;
+  box-sizing: border-box;
+}
+.ved-canvas-box {
+  background: #111;
+  border-radius: var(--r);
+  box-shadow: 0 0 0 1px var(--border), 0 8px 36px rgba(0,0,0,.55);
+  aspect-ratio: 9/16;
+  height: calc(100% - 16px);
+  max-width: calc(100% - 16px);
+  min-height: 120px;
+  display: flex; align-items: center; justify-content: center;
+  position: relative; overflow: hidden; flex-shrink: 0;
+}
+.ved-preview-placeholder {
+  display: flex; flex-direction: column; align-items: center;
+  text-align: center; padding: 20px; user-select: none;
+}
+
+/* Right: Side panel */
+.ved-side-panel {
+  width: 240px; flex-shrink: 0;
+  border-left: 1px solid var(--border); background: var(--surface);
+  display: flex; flex-direction: column; overflow-y: auto;
+}
+.ved-sp-pad { padding: 8px 12px; }
+.ved-optional-tag {
+  font-size: .68rem; font-weight: 400; color: var(--text-3);
+  letter-spacing: 0; text-transform: none; margin-left: 4px;
+}
+.ved-audio-track-info {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 10px; background: var(--surface-2);
+  border: 1px solid var(--border); border-radius: var(--r);
+}
+.ved-audio-track-name {
+  flex: 1; min-width: 0; font-size: .8rem; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ved-audio-hint { font-size: .76rem; color: var(--text-3); line-height: 1.55; }
+.ved-side-sep { height: 1px; background: var(--border); flex-shrink: 0; }
+.ved-render-fields { display: flex; flex-direction: column; gap: 6px; }
+.ved-render-field { display: flex; flex-direction: column; gap: 3px; }
+.ved-field-lbl { font-size: .7rem; color: var(--text-3); font-weight: 500; }
+.ved-side-panel .select-input { font-size: .8rem; padding: 5px 8px; }
+.btn-icon-xs { width: 22px !important; height: 22px !important; }
+
+/* Clip Inspector */
+.ved-insp-name {
+  font-size: .82rem; font-weight: 500; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 8px;
+}
+.ved-insp-row { display: flex; gap: 8px; margin-bottom: 8px; }
+.ved-insp-field { display: flex; flex-direction: column; gap: 3px; flex: 1; }
+.ved-insp-lbl { font-size: .68rem; color: var(--text-3); font-weight: 500; }
+.ved-insp-input {
+  font-size: .8rem; padding: 4px 8px;
+  border: 1px solid var(--border); border-radius: calc(var(--r) - 2px);
+  background: var(--surface-2); color: var(--text); font-family: var(--mono); width: 100%;
+}
+.ved-insp-input:focus { outline: none; border-color: var(--accent); }
+.ved-insp-range {
+  width: 100%; accent-color: var(--accent); cursor: pointer;
+  height: 4px; margin: 4px 0;
+}
+.ved-insp-actions { display: flex; gap: 4px; }
+.ved-insp-empty {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 8px; padding: 24px 10px; text-align: center;
+  font-size: .75rem; color: var(--text-3); line-height: 1.5;
+}
+.ved-insp-track-tag {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: .65rem; font-weight: 600; color: var(--text-3);
+  letter-spacing: .06em; text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.ved-insp-dur-hint { font-size: .68rem; color: var(--text-3); margin: 4px 0 8px; }
+
+/* ── Light-mode clip colour tokens ──────────────────────────── */
+:root {
+  --clip-video-bg:     #1a2a4a;
+  --clip-video-border: rgba(59,130,246,.4);
+  --clip-photo-bg:     #2a1a4a;
+  --clip-photo-border: rgba(139,92,246,.45);
+  --clip-audio-bg:     #0d2a1a;
+  --clip-audio-border: rgba(34,197,94,.45);
+  --clip-canvas-bg:    #0f1f35;
+}
+[data-theme="light"] {
+  --clip-video-bg:     #dbeafe;
+  --clip-video-border: rgba(59,130,246,.55);
+  --clip-photo-bg:     #ede9fe;
+  --clip-photo-border: rgba(139,92,246,.55);
+  --clip-audio-bg:     #dcfce7;
+  --clip-audio-border: rgba(34,197,94,.55);
+  --clip-canvas-bg:    #c7d8f0;
+}
+
+/* ── Timeline shell ──────────────────────────────────────────── */
+.ved-timeline {
+  flex-shrink: 0; height: 200px;
+  border-top: 2px solid var(--border); background: var(--surface);
+  display: flex; flex-direction: column;
+}
+.ved-tl-bar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 0 12px; height: 38px; flex-shrink: 0;
+  border-bottom: 1px solid var(--border);
+}
+.ved-tl-ctrl-btn {
+  width: 28px; height: 28px; border-radius: 50%;
+  border: 1px solid var(--border); background: var(--surface-2);
+  color: var(--text-2); cursor: pointer;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  transition: background var(--t), color var(--t), border-color var(--t);
+  font-size: .85rem; font-weight: 700; line-height: 1;
+}
+.ved-tl-ctrl-btn:hover { background: var(--accent-dim); color: var(--accent); border-color: var(--accent); }
+.ved-tl-ctrl-btn:active { transform: scale(.93); }
+.ved-tl-timecode {
+  font-family: var(--mono); font-size: .8rem;
+  display: flex; align-items: center; gap: 4px;
+}
+.ved-tl-timecode strong { color: var(--text); font-weight: 600; }
+.ved-tl-timecode span  { color: var(--text-3); }
+.ved-tl-zoom-lbl { font-size: .7rem; color: var(--text-3); min-width: 24px; text-align: center; }
+
+/* ── Timeline body (labels + scrollable area) ────────────────── */
+.ved-tl-canvas {
+  flex: 1; display: flex; overflow: hidden;
+}
+.ved-tl-label-col {
+  width: 54px; flex-shrink: 0;
+  display: flex; flex-direction: column;
+  border-right: 1px solid var(--border); background: var(--surface);
+  z-index: 4;
+}
+.ved-tl-label-spacer { height: 22px; flex-shrink: 0; border-bottom: 1px solid var(--border); }
+.ved-tl-track-label {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 2px; flex-shrink: 0; position: relative;
+  font-size: .55rem; font-weight: 700; color: var(--text-3);
+  text-transform: uppercase; letter-spacing: .04em;
+  border-bottom: 1px solid var(--border); background: var(--surface);
+  cursor: pointer; user-select: none;
+  transition: background var(--t), color var(--t);
+}
+.ved-tl-track-label svg { opacity: .55; transition: opacity var(--t); }
+.ved-tl-track-label:hover { background: var(--surface-2); color: var(--text-2); }
+.ved-tl-track-label:hover svg { opacity: .8; }
+.ved-tl-label-plus {
+  position: absolute; top: 3px; right: 4px;
+  font-size: .7rem; font-weight: 700; color: var(--accent);
+  opacity: 0; transition: opacity var(--t);
+}
+.ved-tl-track-label:hover .ved-tl-label-plus { opacity: 1; }
+.ved-tl-label-photo { height: 38px; }
+.ved-tl-label-video { height: 66px; }
+.ved-tl-label-audio { height: 46px; }
+.ved-tl-label-caption { height: 32px; }
+
+/* ── Scrollable area ─────────────────────────────────────────── */
+.ved-tl-scroll {
+  flex: 1; overflow-x: auto; overflow-y: hidden;
+  background: var(--bg); cursor: crosshair;
+}
+.ved-tl-scroll::-webkit-scrollbar { height: 4px; }
+.ved-tl-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+.ved-tl-inner {
+  position: relative; display: flex; flex-direction: column;
+  min-height: 172px;
+}
+
+/* ── Ruler ───────────────────────────────────────────────────── */
+.ved-tl-ruler {
+  height: 22px; flex-shrink: 0;
+  position: relative; background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  user-select: none;
+}
+.ved-tl-tick {
+  position: absolute; top: 0; bottom: 0;
+  width: 1px; pointer-events: none;
+  background: var(--border);
+}
+.ved-tl-tick--major { background: var(--text-3); }
+.ved-tl-tick-label {
+  position: absolute; top: 10px; left: 0;
+  transform: translateX(-50%);
+  font-size: .56rem; color: var(--text-3);
+  font-family: var(--mono); white-space: nowrap;
+}
+
+/* ── Playhead ────────────────────────────────────────────────── */
+.ved-tl-playhead {
+  position: absolute; top: 0; bottom: 0; left: 0;
+  width: 0; z-index: 10; pointer-events: none;
+}
+.ved-tl-playhead-head {
+  width: 11px; height: 11px; border-radius: 50%;
+  background: var(--accent);
+  position: absolute; top: 0; left: -5.5px;
+}
+.ved-tl-playhead-line {
+  position: absolute; top: 5px; bottom: 0; left: -1px;
+  width: 2px; background: var(--accent);
+}
+
+/* ── Tracks ──────────────────────────────────────────────────── */
+.ved-tl-track {
+  height: 66px; flex-shrink: 0;
+  position: relative; border-bottom: 1px solid var(--border);
+  background: var(--bg);
+}
+.ved-tl-track--photo { height: 38px; }
+.ved-tl-track--audio { height: 46px; }
+.ved-tl-track--caption { height: 32px; background: rgba(251,191,36,.04); }
+.ved-tl-track--caption .ved-tl-clip { background: rgba(251,191,36,.7); }
+.ved-tl-clips { position: relative; height: 100%; }
+
+/* ── Clips ───────────────────────────────────────────────────── */
+.ved-tl-clip {
+  position: absolute; top: 4px; bottom: 4px;
+  border-radius: 6px; overflow: hidden;
+  border: 2px solid var(--clip-video-border);
+  background: var(--clip-video-bg);
+  cursor: pointer; user-select: none;
+  transition: border-color .1s;
+  min-width: 4px;
+}
+.ved-tl-clip canvas {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  pointer-events: none;
+}
+.ved-tl-clip-info {
+  position: absolute; inset: 0; z-index: 2; pointer-events: none;
+  display: flex; flex-direction: column; justify-content: space-between;
+  padding: 3px 5px;
+}
+[data-theme=""] .ved-tl-clip-info,
+[data-theme="dark"] .ved-tl-clip-info,
+:root:not([data-theme="light"]) .ved-tl-clip-info {
+  background: linear-gradient(to bottom,
+    rgba(0,0,0,.55) 0%, rgba(0,0,0,.05) 40%,
+    rgba(0,0,0,.05) 60%, rgba(0,0,0,.55) 100%);
+}
+[data-theme="light"] .ved-tl-clip-info {
+  background: linear-gradient(to bottom,
+    rgba(255,255,255,.7) 0%, rgba(255,255,255,.1) 40%,
+    rgba(255,255,255,.1) 60%, rgba(255,255,255,.7) 100%);
+}
+[data-theme="light"] .ved-tl-clip-nm,
+[data-theme="light"] .ved-tl-clip-dur { color: rgba(0,0,0,.75) !important; }
+[data-theme="light"] .ved-tl-clip-idx { background: rgba(0,0,0,.75); color: #fff; }
+.ved-tl-clip-info-top { display: flex; align-items: center; gap: 3px; overflow: hidden; }
+.ved-tl-clip-info-bot { display: flex; align-items: flex-end; }
+.ved-tl-clip:hover { border-color: var(--accent); }
+.ved-tl-clip--sel {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 1px var(--accent);
+}
+.ved-tl-clip--photo {
+  background: var(--clip-photo-bg);
+  border-color: var(--clip-photo-border);
+}
+.ved-tl-clip--photo:hover { border-color: #a78bfa; }
+.ved-tl-clip--audio {
+  background: var(--clip-audio-bg);
+  border-color: var(--clip-audio-border);
+}
+.ved-tl-clip--audio:hover { border-color: #22c55e; }
+.ved-tl-clip--playing {
+  border-color: #22c55e !important;
+  box-shadow: 0 0 0 1.5px #22c55e;
+  animation: vedClipPulse 1.4s ease-in-out infinite;
+}
+@keyframes vedClipPulse {
+  0%, 100% { box-shadow: 0 0 0 1.5px #22c55e; }
+  50%       { box-shadow: 0 0 0 3px rgba(34,197,94,.4); }
+}
+.ved-tl-clip-idx {
+  width: 13px; height: 13px; border-radius: 50%;
+  background: rgba(255,255,255,.9); color: #000;
+  font-size: .54rem; font-weight: 800;
+  display: grid; place-items: center; flex-shrink: 0;
+}
+.ved-tl-clip-nm {
+  font-size: .6rem; color: rgba(255,255,255,.9); font-weight: 500;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ved-tl-clip-dur { font-size: .56rem; color: rgba(255,255,255,.65); font-family: var(--mono); }
+.ved-tl-clip-handle {
+  position: absolute; top: 0; bottom: 0; width: 10px;
+  cursor: ew-resize; display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity 120ms; z-index: 5;
+}
+.ved-tl-clip:hover .ved-tl-clip-handle,
+.ved-tl-clip--sel .ved-tl-clip-handle { opacity: 1; pointer-events: auto; }
+.ved-tl-clip-handle-l {
+  left: 0; border-radius: 5px 0 0 5px;
+  background: linear-gradient(to right, rgba(255,255,255,.3), transparent);
+}
+.ved-tl-clip-handle-r {
+  right: 0; border-radius: 0 5px 5px 0;
+  background: linear-gradient(to left, rgba(255,255,255,.3), transparent);
+}
+.ved-tl-clip-handle-bar { width: 3px; height: 16px; background: #fff; border-radius: 2px; }
+.ved-tl-clip--drag-over {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 2px var(--accent) !important;
+}
+.ved-tl-clip--dragging { opacity: .35; }
+.ved-tl-empty-hint {
+  position: absolute; top: 50%; left: 12px; transform: translateY(-50%);
+  font-size: .7rem; color: var(--text-3); pointer-events: none;
+}
+.ved-seq-empty {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 32px 20px; text-align: center;
+}
+
+/* ── Editor layout ──────────────────────────────────────────── */
+.editor-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 22px;
+}
+.editor-header h1 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 3px;
+  letter-spacing: -.025em;
+}
+.badges { display: flex; gap: 5px; padding-top: 4px; }
+.badge {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 3px 9px;
+  font-size: .7rem;
+  font-family: var(--mono);
+  color: var(--text-3);
+}
+
+.editor-cols { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 16px; }
+.editor-left, .editor-right { display: flex; flex-direction: column; }
+
+/* ── Editor resize handles ──────────────────────────────────── */
+.ved-tl-resize-handle {
+  height: 5px;
+  flex-shrink: 0;
+  cursor: row-resize;
+  background: var(--border);
+  transition: background 150ms;
+}
+.ved-tl-resize-handle:hover,
+.ved-tl-resize-handle.dragging { background: var(--accent); }
+
+.ved-props-resize-handle {
+  width: 4px;
+  flex-shrink: 0;
+  cursor: col-resize;
+  background: var(--border);
+  transition: background 150ms;
+}
+.ved-props-resize-handle:hover,
+.ved-props-resize-handle.dragging { background: var(--accent); }
+
+/* ── Caption track label (non-<label>) ─────────────────────── */
+.ved-tl-label-caption {
+  display: flex; align-items: center; gap: 6px;
+  padding: 0 8px;
+  color: var(--text-3); font-size: .72rem; font-weight: 500;
+  cursor: pointer; flex-shrink: 0;
+  transition: background var(--t), color var(--t);
+}
+.ved-tl-label-caption:hover { background: var(--surface-2); color: var(--text-2); }
+.ved-tl-label-caption svg { opacity: .55; transition: opacity var(--t); }
+.ved-tl-label-caption:hover svg { opacity: .8; }
+
+/* ── Timeline canvas clips overflow fix ─────────────────────── */
+.ved-tl-inner { overflow: hidden; }

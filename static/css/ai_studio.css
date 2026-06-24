@@ -1,0 +1,118 @@
+/* ── AI Studio ──────────────────────────────────────────────── */
+.ais-tab-row {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+.ais-tab {
+  padding: 5px 16px;
+  border-radius: var(--r);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-size: .82rem; font-weight: 500;
+  cursor: pointer;
+  transition: background var(--t), color var(--t), border-color var(--t);
+}
+.ais-tab.active {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.ais-dropzone {
+  border: 2px dashed var(--border);
+  border-radius: var(--r-lg);
+  padding: 28px 16px;
+  text-align: center;
+  cursor: pointer;
+  user-select: none;
+  transition: border-color var(--t), background var(--t);
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+}
+.ais-dropzone:hover {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.ais-uploads-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+.ais-upload-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-radius: var(--r);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  font-size: .82rem;
+  transition: border-color var(--t);
+}
+.ais-upload-row.ais-upload-selected {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+.ais-upload-name {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+}
+.ais-upload-meta {
+  font-size: .75rem;
+  color: var(--text-3);
+  flex-shrink: 0;
+}
+
+.ais-style-row,
+.ais-voice-row,
+.ais-mix-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+.ais-style-opt,
+.ais-voice-btn,
+.ais-mix-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: var(--r);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  font-size: .82rem;
+  cursor: pointer;
+  user-select: none;
+  transition: border-color var(--t), background var(--t);
+}
+.ais-style-opt:has(input:checked),
+.ais-voice-btn:has(input:checked),
+.ais-mix-btn:has(input:checked) {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+  color: var(--accent);
+}
+.ais-style-opt input,
+.ais-voice-btn input,
+.ais-mix-btn input { display: none; }
+
+.ais-pos-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+.ais-pos-lbl {
+  font-size: .75rem;
+  color: var(--text-3);
+  flex-shrink: 0;
+}

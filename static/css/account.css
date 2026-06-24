@@ -1,0 +1,66 @@
+/* ── Account / profile ──────────────────────────────────────── */
+.account-cols { display: grid; grid-template-columns: 340px 1fr; gap: 16px; align-items: start; }
+.profile-section {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+.profile-avatar-lg {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  background: var(--accent);
+  display: grid; place-items: center;
+  color: var(--accent-fg);
+  font-weight: 700;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+.sys-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: .82rem;
+}
+.sys-row:last-child { border-bottom: none; }
+.sys-row span:first-child { color: var(--text-2); }
+.sys-row span:last-child { color: var(--accent); font-family: var(--mono); font-size: .76rem; }
+
+/* ── Profile appearance ─────────────────────────────────────── */
+.profile-appearance { padding: 4px 0; }
+.profile-theme-row { width: 100%; }
+.profile-accent-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.profile-accent-swatches { display: flex; gap: 6px; flex-wrap: wrap; }
+.accent-swatch {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+  transition: transform var(--t), border-color var(--t);
+  flex-shrink: 0;
+}
+.accent-swatch:hover { transform: scale(1.2); }
+.accent-swatch.active { border-color: var(--text); }
+.accent-custom-wrap {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  font-size: .75rem;
+  color: var(--text-2);
+}
+.accent-custom-wrap input[type="color"] {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  padding: 0; cursor: pointer; background: none;
+}
+.accent-custom-wrap input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+.accent-custom-wrap input[type="color"]::-webkit-color-swatch { border: none; border-radius: 50%; }
+.accent-custom-lbl { font-size: .72rem; color: var(--text-3); }

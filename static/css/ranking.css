@@ -1,0 +1,118 @@
+/* ── Ranking editor ─────────────────────────────────────────── */
+.rk-config-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px 14px;
+  align-items: start;
+}
+
+.rk-item-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 14px;
+  margin-bottom: 10px;
+  transition: border-color var(--t);
+}
+.rk-item-row:hover { border-color: rgba(59,130,246,.35); }
+
+.rk-num {
+  width: 32px; height: 32px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 14px;
+  color: var(--text-2); flex-shrink: 0;
+  margin-top: 4px;
+}
+
+.rk-fields { flex: 1; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+
+.rk-row-top, .rk-row-mid, .rk-row-bot {
+  display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+}
+.rk-row-top .text-input { flex: 1; min-width: 120px; }
+.rk-row-mid .text-input { flex: 1; min-width: 100px; }
+.rk-row-bot .text-input { width: 80px; flex: none; }
+.rk-fit { width: 100px; flex: none; font-size: .78rem; padding: 4px 6px; }
+.rk-font-sel { flex: 1; min-width: 120px; font-size: .78rem; }
+.rk-color { width: 38px; height: 34px; border-radius: var(--r); border: 1px solid var(--border); cursor: pointer; flex-shrink: 0; padding: 2px; background: var(--surface-2); }
+
+.rk-preview-info {
+  font-size: 12px; color: var(--text-2);
+  display: flex; align-items: center; gap: 4px;
+}
+.rk-prev-ok { color: var(--success); }
+.rk-prev-err { color: var(--danger); }
+
+.rk-item-actions {
+  display: flex; flex-direction: column; gap: 4px;
+  flex-shrink: 0; margin-top: 2px;
+}
+.btn-danger-icon { color: var(--danger) !important; border-color: var(--danger) !important; }
+.btn-danger-icon:hover { background: var(--danger-dim) !important; }
+
+.rk-spinner {
+  display: inline-block; width: 12px; height: 12px;
+  border: 2px solid rgba(255,255,255,.3); border-top-color: #fff;
+  border-radius: 50%; animation: spin .6s linear infinite;
+  vertical-align: middle; margin-right: 6px;
+}
+
+/* ── Dashboard summary ──────────────────────────────────────── */
+.app-summary {
+  margin: -4px 0 20px;
+  padding: 12px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  font-size: .84rem;
+  line-height: 1.65;
+  color: var(--text-2);
+}
+.app-summary p { margin: 0; }
+
+/* ── Ranking crop UI ────────────────────────────────────────── */
+.rk-crop-wrap {
+  margin-top: 8px;
+  padding: 8px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+}
+.rk-crop-hidden { display: none !important; }
+.rk-cropbox {
+  position: relative;
+  cursor: crosshair;
+  display: inline-block;
+  line-height: 0;
+  border-radius: 4px;
+  overflow: hidden;
+  max-width: 240px;
+  user-select: none;
+}
+.rk-crop-img {
+  display: block;
+  width: 100%;
+  max-width: 240px;
+  height: auto;
+  border-radius: 4px;
+}
+.rk-crop-ind {
+  position: absolute;
+  border: 2px solid var(--accent);
+  background: rgba(59,130,246,.18);
+  box-shadow: 0 0 0 1px rgba(0,0,0,.4);
+  pointer-events: none;
+  transition: left .12s, top .12s, width .12s, height .12s;
+}
+.rk-crop-hint {
+  display: block;
+  font-size: .72rem;
+  color: var(--text-2);
+  margin-top: 5px;
+}
