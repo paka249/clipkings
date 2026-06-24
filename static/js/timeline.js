@@ -5,15 +5,13 @@ function initTimelineSlider(duration) {
   const dur = Math.floor(duration) || 600;
   document.getElementById('clip-dur-label').textContent = duration
     ? `Video length: ${fmtTS(duration)} · drag the handles to pick a segment`
-    : 'Drag handles to set start/end (type timestamps below for precision)';
+    : 'Drag handles to set start/end, or use the pickers below';
   const rs = document.getElementById('range-start');
   const re = document.getElementById('range-end');
-  rs.max = dur;
-  re.max = dur;
-  rs.value = 0;
-  re.value = dur;
-  document.getElementById('clip-start').value = fmtTS(0);
-  document.getElementById('clip-end').value   = fmtTS(dur);
+  rs.max = dur; re.max = dur;
+  rs.value = 0; re.value = dur;
+  twSetSecs('clip-start', 0);
+  twSetSecs('clip-end', dur);
   updateDualFill();
 }
 
@@ -22,7 +20,7 @@ function onRangeStart(val) {
   const endV = parseInt(document.getElementById('range-end').value);
   val = Math.min(parseInt(val), endV - 1, dur - 1);
   document.getElementById('range-start').value = val;
-  document.getElementById('clip-start').value  = fmtTS(val);
+  twSetSecs('clip-start', val);
   updateDualFill();
 }
 
@@ -32,14 +30,14 @@ function onRangeEnd(val) {
   val = Math.max(parseInt(val), startV + 1);
   val = Math.min(val, dur);
   document.getElementById('range-end').value = val;
-  document.getElementById('clip-end').value  = fmtTS(val);
+  twSetSecs('clip-end', val);
   updateDualFill();
 }
 
 function updateDualFill() {
-  const dur = parseInt(document.getElementById('range-end').max) || 600;
-  const start   = parseInt(document.getElementById('range-start').value) || 0;
-  const end     = parseInt(document.getElementById('range-end').value)   || dur;
+  const dur    = parseInt(document.getElementById('range-end').max) || 600;
+  const start  = parseInt(document.getElementById('range-start').value) || 0;
+  const end    = parseInt(document.getElementById('range-end').value)   || dur;
   const leftPct = (start / dur) * 100;
   const wPct    = Math.max(0, (end / dur) * 100 - leftPct);
   const fill    = document.getElementById('dual-fill');
@@ -51,44 +49,33 @@ function updateDualFill() {
 
 function syncInputToSlider(type) {
   if (!S.primaryDuration) return;
-  const inputId = type === 'start' ? 'clip-start' : 'clip-end';
+  const twId    = type === 'start' ? 'clip-start' : 'clip-end';
   const rangeId = type === 'start' ? 'range-start' : 'range-end';
-  const secs = parseTS(document.getElementById(inputId).value);
-  if (secs !== null) {
-    document.getElementById(rangeId).value = Math.min(Math.floor(secs), Math.floor(S.primaryDuration));
-    updateDualFill();
-  }
+  const secs = twGetSecs(twId);
+  document.getElementById(rangeId).value = Math.min(Math.floor(secs), Math.floor(S.primaryDuration));
+  updateDualFill();
 }
 
-function addClipFromSlider() {
-  addClip();
-}
+function addClipFromSlider() { addClip(); }
 
 function addClip() {
-  const start = document.getElementById('clip-start').value.trim();
-  const end   = document.getElementById('clip-end').value.trim();
-  const errEl = document.getElementById('clip-error');
+  const startSec = twGetSecs('clip-start');
+  const endSec   = twGetSecs('clip-end');
+  const errEl    = document.getElementById('clip-error');
 
-  const startSec = parseTS(start);
-  const endSec   = parseTS(end);
-
-  if (!start || !end)     { showClipErr('Fill both start and end times.'); return; }
-  if (startSec === null)  { showClipErr(`Cannot parse start: "${start}"`); return; }
-  if (endSec === null)    { showClipErr(`Cannot parse end: "${end}"`); return; }
-  if (endSec <= startSec) { showClipErr('End must be after start.'); return; }
+  if (endSec <= startSec) { showClipErr('End time must be after start time.'); return; }
 
   const maxDur = S.primaryDuration;
   if (maxDur > 0 && startSec >= maxDur) {
     showClipErr(`Start ${fmtTS(startSec)} is past the end of the video (${fmtTS(maxDur)}).`);
     return;
   }
-  const clampedEnd   = maxDur > 0 ? Math.min(endSec, maxDur) : endSec;
-  const clampedLabel = maxDur > 0 ? fmtTS(clampedEnd) : end;
+  const clampedEnd = maxDur > 0 ? Math.min(endSec, maxDur) : endSec;
 
   errEl.style.display = 'none';
-  S.clips.push({ start, end: clampedLabel, startSec, endSec: clampedEnd });
-  document.getElementById('clip-start').value = '';
-  document.getElementById('clip-end').value   = '';
+  S.clips.push({ start: twGetVal('clip-start'), end: fmtTS(clampedEnd), startSec, endSec: clampedEnd });
+  twSetSecs('clip-start', 0);
+  twSetSecs('clip-end', 0);
   renderClips();
   checkReady();
 }

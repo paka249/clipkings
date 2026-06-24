@@ -1,52 +1,149 @@
 <!-- Templates ───────────────────────────────────────────── -->
 <div id="page-templates" class="page active">
 
-  <!-- ── VIEW 1: Card picker ──────────────────────────── -->
+  <!-- ── VIEW 1: Dramatic hero picker ───────────────── -->
   <div id="tmpl-picker-view">
-    <div class="tmpl-picker-hdr">
-      <h1>Templates</h1>
-      <p class="tmpl-picker-sub">Choose a format to get started.</p>
+
+    <div class="ck-hero">
+      <p class="ck-hero-eyebrow">ClipKings Studio</p>
+      <h1 class="ck-hero-title">What are you<br>creating today?</h1>
+      <p class="ck-hero-sub">Four tools. Viral-ready output. No editing experience needed.</p>
     </div>
 
-    <div class="tmpl-card-grid">
+    <div class="ck-feat-grid">
 
-      <button class="tmpl-picker-card" type="button" onclick="showPage('clipstudio')">
-        <div class="tmpl-picker-thumb" style="background:linear-gradient(160deg,#0f2027,#203a43,#2c5364)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.9)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="width:56px;height:56px"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M7 9l2 2-2 2"/><line x1="11" y1="11" x2="15" y2="11"/></svg>
+      <!-- ── Clip Studio ──────────────────────────── -->
+      <button class="ck-feat-card" type="button" onclick="showPage('clipstudio')" style="--glow:99,202,183">
+        <div class="ck-feat-art" style="background:linear-gradient(150deg,#040e12 0%,#0c2233 55%,#163a52 100%)">
+          <!-- Phone mockup -->
+          <div class="ck-phone">
+            <div class="ck-phone-notch"></div>
+            <div class="ck-phone-screen">
+              <!-- Film frames -->
+              <div style="display:flex;gap:3px;margin-bottom:8px">
+                <div style="flex:1;height:28px;border-radius:3px;background:rgba(99,202,183,.12);border:1px solid rgba(99,202,183,.2)"></div>
+                <div style="flex:1;height:28px;border-radius:3px;background:rgba(99,202,183,.3);border:1px solid rgba(99,202,183,.5)"></div>
+                <div style="flex:1;height:28px;border-radius:3px;background:rgba(99,202,183,.1);border:1px solid rgba(99,202,183,.15)"></div>
+              </div>
+              <!-- Timeline with selection -->
+              <div style="position:relative;height:6px;background:rgba(255,255,255,.08);border-radius:3px;margin-bottom:10px">
+                <div style="position:absolute;left:25%;right:28%;height:100%;background:rgba(99,202,183,.7);border-radius:3px"></div>
+                <div style="position:absolute;left:calc(25% - 3px);top:-5px;width:5px;height:16px;background:#63cab7;border-radius:3px"></div>
+                <div style="position:absolute;right:calc(28% - 3px);top:-5px;width:5px;height:16px;background:#63cab7;border-radius:3px"></div>
+              </div>
+              <!-- Caption bar -->
+              <div style="height:7px;background:rgba(99,202,183,.2);border-radius:4px;width:80%;margin:0 auto"></div>
+            </div>
+          </div>
+          <div class="ck-feat-badge" style="color:#63cab7;border-color:rgba(99,202,183,.3);background:rgba(99,202,183,.1)">TRIM · CROP · EXPORT</div>
         </div>
-        <div class="tmpl-picker-footer">
-          <span class="tmpl-picker-name">Clip Studio</span>
-          <span class="tmpl-picker-tag">Trim · Crop</span>
+        <div class="ck-feat-info">
+          <div class="ck-feat-name">Clip Studio</div>
+          <div class="ck-feat-desc">Trim, center-crop or split-screen any video from a URL or file upload into a vertical short.</div>
+          <div class="ck-feat-cta">Start creating <span class="ck-arrow">→</span></div>
         </div>
       </button>
 
-      <button class="tmpl-picker-card" type="button" onclick="showPage('splitscreen')">
-        <div class="tmpl-picker-thumb" style="background:linear-gradient(160deg,#0a3d0a,#155724,#0d3b2e)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.9)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="width:56px;height:56px"><rect x="2" y="7" width="20" height="11" rx="5"/><path d="M6 10v4M8 12H4"/><circle cx="15" cy="10.5" r=".9" fill="rgba(255,255,255,.9)" stroke="none"/><circle cx="17.5" cy="12" r=".9" fill="rgba(255,255,255,.9)" stroke="none"/><circle cx="15" cy="13.5" r=".9" fill="rgba(255,255,255,.9)" stroke="none"/><circle cx="12.5" cy="12" r=".9" fill="rgba(255,255,255,.9)" stroke="none"/></svg>
+      <!-- ── Gaming BG ─────────────────────────────── -->
+      <button class="ck-feat-card" type="button" onclick="showPage('splitscreen')" style="--glow:74,222,128">
+        <div class="ck-feat-art" style="background:linear-gradient(150deg,#030a03 0%,#0a240a 55%,#0d3b18 100%)">
+          <div class="ck-phone">
+            <div class="ck-phone-notch"></div>
+            <div class="ck-phone-screen" style="padding:0;overflow:hidden">
+              <!-- Top half: your video -->
+              <div style="flex:1;background:linear-gradient(135deg,#0c1e35,#1a3a5c);display:flex;align-items:center;justify-content:center;gap:5px">
+                <div style="width:20px;height:20px;border-radius:50%;background:rgba(120,180,255,.35);border:1px solid rgba(120,180,255,.4)"></div>
+                <div style="display:flex;flex-direction:column;gap:2px">
+                  <div style="width:28px;height:3px;background:rgba(120,180,255,.3);border-radius:2px"></div>
+                  <div style="width:20px;height:3px;background:rgba(120,180,255,.2);border-radius:2px"></div>
+                </div>
+              </div>
+              <!-- Glowing split line -->
+              <div style="height:2px;background:linear-gradient(90deg,transparent,#4ade80,#4ade80,transparent);box-shadow:0 0 8px rgba(74,222,128,.8),0 0 20px rgba(74,222,128,.3);flex-shrink:0"></div>
+              <!-- Bottom half: game -->
+              <div style="flex:1;background:linear-gradient(135deg,#061206,#0a2a0a);display:flex;align-items:center;justify-content:center;gap:3px;flex-wrap:wrap;padding:6px">
+                <div style="width:10px;height:10px;background:rgba(74,222,128,.35);border:1px solid rgba(74,222,128,.4)"></div>
+                <div style="width:10px;height:10px;background:rgba(74,222,128,.25);border:1px solid rgba(74,222,128,.3)"></div>
+                <div style="width:10px;height:10px;background:rgba(74,222,128,.45);border:1px solid rgba(74,222,128,.5)"></div>
+                <div style="width:10px;height:10px;background:rgba(74,222,128,.2);border:1px solid rgba(74,222,128,.25)"></div>
+                <div style="width:10px;height:10px;background:rgba(74,222,128,.4);border:1px solid rgba(74,222,128,.45)"></div>
+                <div style="width:10px;height:10px;background:rgba(74,222,128,.15);border:1px solid rgba(74,222,128,.2)"></div>
+              </div>
+            </div>
+          </div>
+          <div class="ck-feat-badge" style="color:#4ade80;border-color:rgba(74,222,128,.3);background:rgba(74,222,128,.1)">SPLITSCREEN · LOOPING BG</div>
         </div>
-        <div class="tmpl-picker-footer">
-          <span class="tmpl-picker-name">Gaming BG</span>
-          <span class="tmpl-picker-tag">Splitscreen</span>
+        <div class="ck-feat-info">
+          <div class="ck-feat-name">Gaming BG</div>
+          <div class="ck-feat-desc">Layer your face-cam or podcast clip over a looping gaming background for maximum retention.</div>
+          <div class="ck-feat-cta">Start creating <span class="ck-arrow">→</span></div>
         </div>
       </button>
 
-      <button class="tmpl-picker-card" type="button" onclick="showPage('aistudio')">
-        <div class="tmpl-picker-thumb" style="background:linear-gradient(160deg,#1a0a40,#2d1b6e,#1e1b4b)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.9)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="width:56px;height:56px"><path d="M12 2a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3z"/><path d="M19 10a7 7 0 0 1-14 0"/><line x1="12" y1="17" x2="12" y2="21"/><line x1="8" y1="21" x2="16" y2="21"/></svg>
+      <!-- ── AI Studio ──────────────────────────────── -->
+      <button class="ck-feat-card" type="button" onclick="showPage('aistudio')" style="--glow:167,139,250">
+        <div class="ck-feat-art" style="background:linear-gradient(150deg,#06030f 0%,#130830 55%,#1e0f48 100%)">
+          <div class="ck-ai-visual">
+            <!-- Waveform bars -->
+            <div class="ck-wave-wrap">
+              <div class="ck-wave-bar" style="height:18px;animation-delay:0s"></div>
+              <div class="ck-wave-bar" style="height:32px;animation-delay:.1s"></div>
+              <div class="ck-wave-bar" style="height:24px;animation-delay:.2s"></div>
+              <div class="ck-wave-bar" style="height:44px;animation-delay:.05s"></div>
+              <div class="ck-wave-bar" style="height:28px;animation-delay:.15s"></div>
+              <div class="ck-wave-bar" style="height:52px;animation-delay:.25s"></div>
+              <div class="ck-wave-bar" style="height:36px;animation-delay:.08s"></div>
+              <div class="ck-wave-bar" style="height:20px;animation-delay:.18s"></div>
+              <div class="ck-wave-bar" style="height:40px;animation-delay:.12s"></div>
+              <div class="ck-wave-bar" style="height:30px;animation-delay:.22s"></div>
+              <div class="ck-wave-bar" style="height:48px;animation-delay:.04s"></div>
+              <div class="ck-wave-bar" style="height:22px;animation-delay:.16s"></div>
+            </div>
+            <!-- Subtitle pill -->
+            <div class="ck-subtitle-pill">
+              <span class="ck-sub-cursor"></span> "This goes viral…"
+            </div>
+          </div>
+          <div class="ck-feat-badge" style="color:#a78bfa;border-color:rgba(167,139,250,.3);background:rgba(167,139,250,.1)">AI VOICE · AUTO-SUBS</div>
         </div>
-        <div class="tmpl-picker-footer">
-          <span class="tmpl-picker-name">AI Studio</span>
-          <span class="tmpl-picker-tag">TTS · Subs</span>
+        <div class="ck-feat-info">
+          <div class="ck-feat-name">AI Studio</div>
+          <div class="ck-feat-desc">Auto-generate subtitles and AI voiceover for any video. Your content, spoken louder.</div>
+          <div class="ck-feat-cta">Start creating <span class="ck-arrow">→</span></div>
         </div>
       </button>
 
-      <button class="tmpl-picker-card" type="button" onclick="showPage('ranking')">
-        <div class="tmpl-picker-thumb" style="background:linear-gradient(160deg,#3b0764,#5b1dab,#2d0f4e)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.9)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="width:56px;height:56px"><use href="#i-ranking"/></svg>
+      <!-- ── Ranking ────────────────────────────────── -->
+      <button class="ck-feat-card" type="button" onclick="showPage('ranking')" style="--glow:250,204,21">
+        <div class="ck-feat-art" style="background:linear-gradient(150deg,#080210 0%,#160535 55%,#220850 100%)">
+          <div class="ck-rank-visual">
+            <div class="ck-rank-item" style="--bar-w:100%;--bar-c:rgba(250,204,21,.75)">
+              <span class="ck-rank-num" style="color:#fbbf24">#1</span>
+              <div class="ck-rank-bar" style="width:var(--bar-w);background:var(--bar-c);box-shadow:0 0 14px rgba(250,204,21,.4)"></div>
+            </div>
+            <div class="ck-rank-item" style="--bar-w:82%;--bar-c:rgba(192,192,220,.45)">
+              <span class="ck-rank-num">#2</span>
+              <div class="ck-rank-bar" style="width:var(--bar-w);background:var(--bar-c)"></div>
+            </div>
+            <div class="ck-rank-item" style="--bar-w:66%;--bar-c:rgba(180,120,60,.4)">
+              <span class="ck-rank-num">#3</span>
+              <div class="ck-rank-bar" style="width:var(--bar-w);background:var(--bar-c)"></div>
+            </div>
+            <div class="ck-rank-item" style="--bar-w:50%;--bar-c:rgba(167,139,250,.3)">
+              <span class="ck-rank-num">#4</span>
+              <div class="ck-rank-bar" style="width:var(--bar-w);background:var(--bar-c)"></div>
+            </div>
+            <div class="ck-rank-item" style="--bar-w:36%;--bar-c:rgba(167,139,250,.2)">
+              <span class="ck-rank-num">#5</span>
+              <div class="ck-rank-bar" style="width:var(--bar-w);background:var(--bar-c)"></div>
+            </div>
+          </div>
+          <div class="ck-feat-badge" style="color:#fbbf24;border-color:rgba(250,204,21,.3);background:rgba(250,204,21,.1)">COUNTDOWN · REVEAL</div>
         </div>
-        <div class="tmpl-picker-footer">
-          <span class="tmpl-picker-name">Ranking</span>
-          <span class="tmpl-picker-tag">Countdown</span>
+        <div class="ck-feat-info">
+          <div class="ck-feat-name">Ranking</div>
+          <div class="ck-feat-desc">Build dramatic countdown videos with animated rank reveals. Clips play in order as each position drops.</div>
+          <div class="ck-feat-cta">Start creating <span class="ck-arrow">→</span></div>
         </div>
       </button>
 

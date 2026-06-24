@@ -125,19 +125,21 @@
           </div>
         </div>
 
-        <div class="clip-manual-hdr">Or type manually</div>
-        <div class="clip-add-row">
-          <input id="clip-start" type="text" class="text-input"
-                 placeholder="Start: 00:01:30"
-                 oninput="syncInputToSlider('start')"
-                 onkeydown="if(event.key==='Enter') addClip()">
-          <input id="clip-end" type="text" class="text-input"
-                 placeholder="End: 00:03:45"
-                 oninput="syncInputToSlider('end')"
-                 onkeydown="if(event.key==='Enter') addClip()">
-          <button class="btn-ghost" onclick="addClip()">
-            <svg class="icon icon-sm"><use href="#i-plus"/></svg> Add
-          </button>
+        <div class="clip-manual-hdr">Or set times manually</div>
+        <div class="tw-row-pair">
+          <div>
+            <label class="field-label">Start</label>
+            <div id="clip-start" class="tw-wrap tw-compact" data-secs="0" data-onchange="syncInputToSlider('start')"></div>
+          </div>
+          <div>
+            <label class="field-label">End</label>
+            <div id="clip-end" class="tw-wrap tw-compact" data-secs="5" data-onchange="syncInputToSlider('end')"></div>
+          </div>
+          <div class="tw-add-col">
+            <button class="btn-ghost tw-add-btn" onclick="addClip()">
+              <svg class="icon icon-sm"><use href="#i-plus"/></svg> Add Clip
+            </button>
+          </div>
         </div>
         <div id="clip-error" class="error-msg" style="display:none"></div>
         <div id="clip-list"></div>
