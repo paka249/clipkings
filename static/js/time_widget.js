@@ -27,9 +27,9 @@ function twGetVal(id) {
 function twGetSecs(id) {
   const el = document.getElementById(id);
   if (!el) return 0;
-  const h = parseInt(el.querySelector('.tw-h')?.value) || 0;
-  const m = parseInt(el.querySelector('.tw-m')?.value) || 0;
-  const s = parseInt(el.querySelector('.tw-s')?.value) || 0;
+  const h = Math.min(99, parseInt(el.querySelector('.tw-h')?.value) || 0);
+  const m = Math.min(59, parseInt(el.querySelector('.tw-m')?.value) || 0);
+  const s = Math.min(59, parseInt(el.querySelector('.tw-s')?.value) || 0);
   return h * 3600 + m * 60 + s;
 }
 
@@ -43,7 +43,7 @@ function twSetSecs(id, total) {
   const hEl = el.querySelector('.tw-h');
   const mEl = el.querySelector('.tw-m');
   const sEl = el.querySelector('.tw-s');
-  if (hEl) hEl.value = h;
+  if (hEl) hEl.value = String(Math.min(99, h)).padStart(2, '0');
   if (mEl) mEl.value = String(m).padStart(2, '0');
   if (sEl) sEl.value = String(s).padStart(2, '0');
   const cb = el.dataset.onchange;
@@ -62,15 +62,16 @@ function twBuild(el) {
   const s = secs % 60;
   const id = el.id;
 
+  // type="text" + inputmode="numeric" lets us enforce maxlength="2" and clamp properly.
+  // type="number" ignores maxlength and lets the browser silently accept out-of-range values.
+  const chevUp = `<svg viewBox="0 0 10 6" width="10" height="6"><polyline points="1,5 5,1 9,5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  const chevDn = `<svg viewBox="0 0 10 6" width="10" height="6"><polyline points="1,1 5,5 9,1" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
   const seg = (cls, val, inc) =>
     `<div class="tw-field">
-       <button class="tw-chevron tw-up" type="button" tabindex="-1" onclick="twAdj('${id}',${inc})">
-         <svg viewBox="0 0 10 6" width="10" height="6"><polyline points="1,5 5,1 9,5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-       </button>
-       <input class="tw-seg ${cls}" type="number" min="0" max="${inc===3600?99:59}" value="${String(val).padStart(2,'0')}">
-       <button class="tw-chevron tw-dn" type="button" tabindex="-1" onclick="twAdj('${id}',${-inc})">
-         <svg viewBox="0 0 10 6" width="10" height="6"><polyline points="1,1 5,5 9,1" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-       </button>
+       <button class="tw-chevron tw-up" type="button" tabindex="-1" onclick="twAdj('${id}',${inc})">${chevUp}</button>
+       <input class="tw-seg ${cls}" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" value="${String(val).padStart(2,'0')}">
+       <button class="tw-chevron tw-dn" type="button" tabindex="-1" onclick="twAdj('${id}',${-inc})">${chevDn}</button>
      </div>`;
 
   el.innerHTML = `
@@ -90,24 +91,60 @@ function twBuild(el) {
     </div>`}
   `;
 
-  const segs = [...el.querySelectorAll('.tw-seg')];
-  segs.forEach((inp, i) => {
-    const step = inp.classList.contains('tw-h') ? 3600 : inp.classList.contains('tw-m') ? 60 : 1;
+  const segs    = [...el.querySelectorAll('.tw-seg')];
+  const maxVals = [99, 59, 59]; // HH, MM, SS
+  const steps   = [3600, 60, 1];
 
+  segs.forEach((inp, i) => {
+    const max  = maxVals[i];
+    const step = steps[i];
+
+    // Select all text on focus so typing replaces the current value
+    inp.addEventListener('focus', () => inp.select());
+
+    // Strip non-digits, clamp to max, auto-advance after 2 digits typed
+    inp.addEventListener('input', () => {
+      let raw = inp.value.replace(/\D/g, '').slice(0, 2);
+      if (raw.length > 0) {
+        const n = parseInt(raw);
+        // If first digit alone already exceeds max's tens place, pad immediately
+        // e.g. typing "7" in seconds (max 59) → "07", then advance
+        if (raw.length === 1 && n * 10 > max) {
+          inp.value = String(n).padStart(2, '0');
+          if (i < segs.length - 1) setTimeout(() => { segs[i+1].focus(); segs[i+1].select(); }, 0);
+          return;
+        }
+        if (raw.length === 2) {
+          inp.value = String(Math.min(max, n)).padStart(2, '0');
+          if (i < segs.length - 1) setTimeout(() => { segs[i+1].focus(); segs[i+1].select(); }, 0);
+          return;
+        }
+      }
+      inp.value = raw;
+    });
+
+    // Normalise and zero-pad when leaving the field
+    inp.addEventListener('blur', () => {
+      const n = Math.min(max, Math.max(0, parseInt(inp.value) || 0));
+      inp.value = String(n).padStart(2, '0');
+    });
+
+    // Scroll wheel changes value
     inp.addEventListener('wheel', e => {
       e.preventDefault();
       twAdj(id, e.deltaY < 0 ? step : -step);
     }, { passive: false });
 
     inp.addEventListener('keydown', e => {
+      // ↑ / ↓ → increment / decrement
       if (e.key === 'ArrowUp')   { e.preventDefault(); twAdj(id,  step); }
       if (e.key === 'ArrowDown') { e.preventDefault(); twAdj(id, -step); }
-      if (e.key === 'ArrowLeft'  && i > 0)            { e.preventDefault(); segs[i-1].focus(); segs[i-1].select(); }
-      if (e.key === 'ArrowRight' && i < segs.length-1){ e.preventDefault(); segs[i+1].focus(); segs[i+1].select(); }
+      // ← / → → jump to previous / next segment
+      if (e.key === 'ArrowLeft'  && i > 0)             { e.preventDefault(); segs[i-1].focus(); segs[i-1].select(); }
+      if (e.key === 'ArrowRight' && i < segs.length-1) { e.preventDefault(); segs[i+1].focus(); segs[i+1].select(); }
+      // Backspace on empty field → go back
+      if (e.key === 'Backspace' && inp.value === '' && i > 0) { segs[i-1].focus(); segs[i-1].select(); }
     });
-
-    inp.addEventListener('focus', () => inp.select());
-    inp.addEventListener('change', () => twSetSecs(id, twGetSecs(id)));
   });
 }
 
