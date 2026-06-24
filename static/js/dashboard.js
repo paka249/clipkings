@@ -164,7 +164,10 @@ function bgCardHover(card, enter) {
 
 function dsCarScroll(dir) {
   const el = document.getElementById('ds-bg-grid');
-  if (el) el.scrollBy({ left: dir * 250, behavior: 'smooth' });
+  if (!el) return;
+  const card = el.querySelector('.ds-bg-card');
+  const cardW = card ? card.offsetWidth + 10 : 120;
+  el.scrollBy({ left: dir * cardW * 2, behavior: 'smooth' });
 }
 
 function dsCheckBgTemplates() {

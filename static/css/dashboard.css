@@ -483,14 +483,15 @@
 
 .ds-hcar-nav {
   flex-shrink: 0;
-  width: 28px; height: 52px;
+  width: 36px; height: 60px;
   display: flex; align-items: center; justify-content: center;
   background: var(--surface-2); border: 1px solid var(--border);
-  border-radius: var(--r); color: var(--text-2); font-size: 18px; font-weight: 700;
-  cursor: pointer; transition: background var(--t), color var(--t);
-  line-height: 1;
+  border-radius: var(--r); color: var(--text); font-size: 22px; font-weight: 400;
+  cursor: pointer; transition: background var(--t), color var(--t), border-color var(--t), transform 80ms;
+  line-height: 1; user-select: none;
 }
-.ds-hcar-nav:hover { background: var(--accent-dim); color: var(--accent); border-color: var(--accent); }
+.ds-hcar-nav:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+.ds-hcar-nav:active { transform: scale(.93); }
 
 .ds-bg-card {
   flex-shrink: 0;

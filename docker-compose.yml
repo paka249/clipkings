@@ -4,9 +4,10 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - ./data:/app/data          # SQLite DB persistence
-      - ./exports:/app/exports    # rendered video files
-      - ./uploads:/app/uploads    # user uploads
+      - ./data:/app/data              # SQLite DB persistence
+      - ./exports:/app/exports        # rendered video files
+      - ./uploads:/app/uploads        # user uploads
+      - ./bg_templates:/app/bg_templates  # gaming background clips (download once)
     environment:
       - DATABASE_URL=sqlite:////app/data/app.db
     restart: unless-stopped

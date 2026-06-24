@@ -5,8 +5,7 @@
     <p class="page-sub">Add video clips in rank order. Labels reveal as each clip plays.</p>
   </div>
 
-  <div class="feature-layout">
-  <div class="feature-col-main">
+  <div>
 
   <!-- Title & Style -->
   <div class="section-hdr"><h2>Title &amp; Style</h2></div>
@@ -84,35 +83,14 @@
     </button>
   </div>
 
-  </div><!-- /feature-col-main -->
-
-  <div class="feat-resize-handle" onmousedown="featResizeStart(event,this)"></div>
-
-  <!-- ── Right: preview ────────────────────────────── -->
-  <div class="feature-col-preview">
-    <div class="feat-preview-panel">
-      <div class="feat-preview-hdr">
-        <svg class="icon icon-sm"><use href="#i-film"/></svg> Preview
-        <button class="feat-expand-btn" onclick="featExpandPreview(this)" title="Expand preview">
-          <svg class="icon icon-sm"><use href="#i-expand"/></svg>
-        </button>
-      </div>
-      <div class="feat-preview-area" id="rk-preview-area">
-        <div id="rk-preview-ph" class="feat-preview-ph">
-          <svg class="icon" style="width:32px;height:32px;color:var(--text-3)"><use href="#i-film"/></svg>
-          <p style="color:var(--text-3);font-size:.8rem;margin:8px 0 0;text-align:center">Output appears<br>here after generation</p>
-        </div>
-      </div>
-      <div id="rk-log-wrap" style="display:none;padding:14px 14px 0">
-        <div class="progress-bar-wrap"><div class="progress-bar-fill" id="rk-progress-fill" style="width:0%"></div></div>
-        <span class="progress-label" id="rk-progress-label">0% — queued</span>
-        <div class="log-box" id="rk-log-box" style="margin-top:8px"></div>
-      </div>
-      <div class="export-card" id="rk-export-card" style="display:none;padding:14px">
-        <div id="rk-export-result"></div>
-      </div>
-    </div>
+  <div id="rk-log-wrap" style="display:none;margin-top:16px">
+    <div class="progress-bar-wrap"><div class="progress-bar-fill" id="rk-progress-fill" style="width:0%"></div></div>
+    <span class="progress-label" id="rk-progress-label">0% — queued</span>
+    <div class="log-box" id="rk-log-box" style="margin-top:8px"></div>
+  </div>
+  <div class="export-card" id="rk-export-card" style="display:none;margin-top:16px">
+    <div id="rk-export-result"></div>
   </div>
 
-  </div><!-- /feature-layout -->
+  </div>
 </div><!-- /page-ranking -->

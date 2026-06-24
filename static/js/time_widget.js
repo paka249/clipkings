@@ -61,12 +61,18 @@ function twBuild(el) {
   const m = Math.floor((secs % 3600) / 60);
   const s = secs % 60;
   const id = el.id;
+
   const seg = (cls, val, inc) =>
     `<div class="tw-field">
-       <button class="tw-step" type="button" tabindex="-1" onclick="twAdj('${id}',${-inc})">−</button>
+       <button class="tw-chevron tw-up" type="button" tabindex="-1" onclick="twAdj('${id}',${inc})">
+         <svg viewBox="0 0 10 6" width="10" height="6"><polyline points="1,5 5,1 9,5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+       </button>
        <input class="tw-seg ${cls}" type="number" min="0" max="${inc===3600?99:59}" value="${String(val).padStart(2,'0')}">
-       <button class="tw-step" type="button" tabindex="-1" onclick="twAdj('${id}',${inc})">+</button>
+       <button class="tw-chevron tw-dn" type="button" tabindex="-1" onclick="twAdj('${id}',${-inc})">
+         <svg viewBox="0 0 10 6" width="10" height="6"><polyline points="1,1 5,5 9,1" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+       </button>
      </div>`;
+
   el.innerHTML = `
     <div class="tw-display">
       ${seg('tw-h', h, 3600)}
@@ -83,12 +89,24 @@ function twBuild(el) {
       <button class="tw-preset" type="button" onclick="twAdj('${id}',300)">+5m</button>
     </div>`}
   `;
-  el.querySelectorAll('.tw-seg').forEach(inp => {
+
+  const segs = [...el.querySelectorAll('.tw-seg')];
+  segs.forEach((inp, i) => {
+    const step = inp.classList.contains('tw-h') ? 3600 : inp.classList.contains('tw-m') ? 60 : 1;
+
     inp.addEventListener('wheel', e => {
       e.preventDefault();
-      const step = inp.classList.contains('tw-h') ? 3600 : inp.classList.contains('tw-m') ? 60 : 1;
       twAdj(id, e.deltaY < 0 ? step : -step);
     }, { passive: false });
+
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'ArrowUp')   { e.preventDefault(); twAdj(id,  step); }
+      if (e.key === 'ArrowDown') { e.preventDefault(); twAdj(id, -step); }
+      if (e.key === 'ArrowLeft'  && i > 0)            { e.preventDefault(); segs[i-1].focus(); segs[i-1].select(); }
+      if (e.key === 'ArrowRight' && i < segs.length-1){ e.preventDefault(); segs[i+1].focus(); segs[i+1].select(); }
+    });
+
+    inp.addEventListener('focus', () => inp.select());
     inp.addEventListener('change', () => twSetSecs(id, twGetSecs(id)));
   });
 }

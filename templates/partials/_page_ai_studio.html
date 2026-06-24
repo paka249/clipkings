@@ -5,10 +5,9 @@
     <p class="page-sub">Add AI subtitles and voiceover to any video.</p>
   </div>
 
-  <div class="feature-layout">
+  <div>
 
-    <!-- ── Left: controls ─────────────────────────────── -->
-    <div class="feature-col-main">
+    <div>
 
       <!-- Source -->
       <div class="card">
@@ -158,34 +157,15 @@
         </button>
       </div>
 
-    </div>
-
-    <div class="feat-resize-handle" onmousedown="featResizeStart(event,this)"></div>
-
-    <!-- ── Right: preview ─────────────────────────────── -->
-    <div class="feature-col-preview">
-      <div class="feat-preview-panel">
-        <div class="feat-preview-hdr">
-          <svg class="icon icon-sm"><use href="#i-film"/></svg> Preview
-          <button class="feat-expand-btn" onclick="featExpandPreview(this)" title="Expand preview">
-            <svg class="icon icon-sm"><use href="#i-expand"/></svg>
-          </button>
-        </div>
-        <div class="feat-preview-area" id="ais-preview-area">
-          <div id="ais-preview-ph" class="feat-preview-ph">
-            <svg class="icon" style="width:32px;height:32px;color:var(--text-3)"><use href="#i-film"/></svg>
-            <p style="color:var(--text-3);font-size:.8rem;margin:8px 0 0;text-align:center">Output appears<br>here after generation</p>
-          </div>
-        </div>
-        <div id="ais-log-wrap" style="display:none;padding:14px 14px 0">
-          <div class="progress-bar-wrap"><div class="progress-bar-fill" id="ais-progress-fill" style="width:0%"></div></div>
-          <span class="progress-label" id="ais-progress-label">0% — queued</span>
-          <div class="log-box" id="ais-log-box" style="margin-top:8px"></div>
-        </div>
-        <div class="export-card" id="ais-export-card" style="display:none;padding:14px">
-          <div id="ais-export-result"></div>
-        </div>
+      <div id="ais-log-wrap" style="display:none;margin-top:16px">
+        <div class="progress-bar-wrap"><div class="progress-bar-fill" id="ais-progress-fill" style="width:0%"></div></div>
+        <span class="progress-label" id="ais-progress-label">0% — queued</span>
+        <div class="log-box" id="ais-log-box" style="margin-top:8px"></div>
       </div>
+      <div class="export-card" id="ais-export-card" style="display:none;margin-top:16px">
+        <div id="ais-export-result"></div>
+      </div>
+
     </div>
 
   </div>

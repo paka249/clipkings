@@ -3,23 +3,34 @@
 Download and trim pre-baked gaming background clips for ClipKings.
 
 Usage:
-  python download_bg_templates.py <name> <YouTube-URL>
+  python scripts/download_bg_templates.py <name> <YouTube-URL>
 
-Valid names:
-  subway_surfers        https://www.youtube.com/watch?v=<original>
-  subway_surfers_2      https://www.youtube.com/watch?v=Jb-fAwCiSLs
-  minecraft_parkour     https://www.youtube.com/watch?v=<original>
-  minecraft_parkour_2   https://www.youtube.com/watch?v=nk0Ka2PUpKQ
-  gta                   https://www.youtube.com/watch?v=<original>
-  gta_2                 https://www.youtube.com/watch?v=weAUrmRLpnk
+  Pass any YouTube URL that has the gameplay you want for that slot.
 
-Each clip is trimmed to 60 seconds and muted, then saved to bg_templates/.
+Valid slot names (any YouTube URL works):
+  subway_surfers
+  subway_surfers_2
+  minecraft_parkour
+  minecraft_parkour_2
+  gta
+  gta_2
+  satisfying
+  satisfying_2
+
+Each clip is trimmed to 60 seconds, muted, then saved to bg_templates/.
 The 60-second clip loops automatically in the generated video.
 
-To download all new variant 2 clips at once:
-  python download_bg_templates.py subway_surfers_2   https://www.youtube.com/watch?v=Jb-fAwCiSLs
-  python download_bg_templates.py minecraft_parkour_2 https://www.youtube.com/watch?v=nk0Ka2PUpKQ
-  python download_bg_templates.py gta_2              https://www.youtube.com/watch?v=weAUrmRLpnk
+--- Running inside Docker (recommended — no local yt-dlp needed) ---
+  docker compose exec app python scripts/download_bg_templates.py subway_surfers   <URL>
+  docker compose exec app python scripts/download_bg_templates.py subway_surfers_2 <URL>
+  docker compose exec app python scripts/download_bg_templates.py minecraft_parkour   <URL>
+  docker compose exec app python scripts/download_bg_templates.py minecraft_parkour_2 <URL>
+  docker compose exec app python scripts/download_bg_templates.py gta               <URL>
+  docker compose exec app python scripts/download_bg_templates.py gta_2             <URL>
+  docker compose exec app python scripts/download_bg_templates.py satisfying         <URL>
+  docker compose exec app python scripts/download_bg_templates.py satisfying_2       <URL>
+
+Files land in bg_templates/ on your host (mounted volume) — restart not required.
 """
 import shutil
 import subprocess
