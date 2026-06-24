@@ -101,7 +101,7 @@ function showPage(name, _fromHistory = false) {
   if (name === 'exports')     loadExportsPage();
   if (name === 'account')     loadAccountPage();
   if (name === 'templates')   loadGamingTemplateStatus();
-  if (name === 'splitscreen') dsCheckBgTemplates();
+  if (name === 'splitscreen') { dsCheckBgTemplates(); twInitAll(); }
   if (name === 'ranking')  { if (RKS.items.length === 0) { addRankingItem(); addRankingItem(); addRankingItem(); } else { _renderRankingItems(); } }
   if (name === 'aistudio')    aisLoadUploads();
   if (name === 'editor')      { vedRenderPhotoTrack(); vedRenderAudioTrack(); }
@@ -1185,8 +1185,8 @@ function _readRankingItemsFromDOM() {
     const cropBox  = row.querySelector('.rk-cropbox');
     return {
       url:    row.querySelector('.rk-url').value.trim(),
-      start:  row.querySelector('.rk-start').value.trim() || '0:00',
-      end:    row.querySelector('.rk-end').value.trim(),
+      start:  twGetVal(`tw-rk-start-${i}`) || '0:00',
+      end:    twGetVal(`tw-rk-end-${i}`),
       label:  row.querySelector('.rk-label').value.trim(),
       color:  row.querySelector('.rk-color').value,
       font:   (row.querySelector('.rk-font-sel') || {}).value || 'DejaVu Sans Bold',
@@ -1225,12 +1225,10 @@ function _renderRankingItems() {
           </select>
         </div>
         <div class="rk-row-bot">
-          <span class="field-label" style="margin:0">Clip from</span>
-          <input class="text-input rk-start" type="text" placeholder="0:00"
-            value="${esc(item.start)}" oninput="RKS.items[${i}].start=this.value">
-          <span class="field-label" style="margin:0">to</span>
-          <input class="text-input rk-end" type="text" placeholder="0:10"
-            value="${esc(item.end)}" oninput="RKS.items[${i}].end=this.value;_checkRankingReady()">
+          <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
+            <div><label class="field-label" style="margin-bottom:4px">Start</label><div id="tw-rk-start-${i}" class="tw-wrap tw-compact" data-secs="${twParse(item.start)}" data-onchange="RKS.items[${i}].start=twGetVal('tw-rk-start-${i}')"></div></div>
+            <div><label class="field-label" style="margin-bottom:4px">End</label><div id="tw-rk-end-${i}" class="tw-wrap tw-compact" data-secs="${twParse(item.end)}" data-onchange="RKS.items[${i}].end=twGetVal('tw-rk-end-${i}');_checkRankingReady()"></div></div>
+          </div>
           <select class="text-input rk-fit" title="Fit mode for this clip"
             onchange="RKS.items[${i}].fit=this.value;_rkToggleCropUI(${i})">
             <option value="crop"${item.fit==='crop'?' selected':''}>Crop</option>
@@ -1261,6 +1259,7 @@ function _renderRankingItems() {
 
   const addBtn = document.getElementById('rk-add-btn');
   if (addBtn) addBtn.disabled = RKS.items.length >= 20;
+  twInitAll();
 }
 
 function _checkRankingReady() {
@@ -1618,6 +1617,109 @@ function aisSourceTab(type) {
   document.getElementById('ais-upload-panel').style.display = type === 'upload' ? '' : 'none';
   aisCheckReady();
 }
+
+/* ── Time Widget ─────────────────────────────────────────────
+   Shared HH:MM:SS picker used across Gaming BG, Ranking, etc.
+   Each widget is a .tw-wrap div with id="tw-{id}" and data-secs.
+   Call twInitAll() after injecting HTML to activate all widgets.
+──────────────────────────────────────────────────────────── */
+function twParse(val) {
+  if (!val) return 0;
+  const parts = String(val).split(':').map(Number).reverse();
+  return (parts[0] || 0) + (parts[1] || 0) * 60 + (parts[2] || 0) * 3600;
+}
+
+function twFormat(total) {
+  total = Math.max(0, Math.round(total));
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = total % 60;
+  return `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+
+function twGetVal(id) {
+  return twFormat(twGetSecs(id));
+}
+
+function twGetSecs(id) {
+  const el = document.getElementById(id);
+  if (!el) return 0;
+  const h = parseInt(el.querySelector('.tw-h')?.value) || 0;
+  const m = parseInt(el.querySelector('.tw-m')?.value) || 0;
+  const s = parseInt(el.querySelector('.tw-s')?.value) || 0;
+  return h * 3600 + m * 60 + s;
+}
+
+function twSetSecs(id, total) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  total = Math.max(0, Math.round(total));
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = total % 60;
+  const hEl = el.querySelector('.tw-h');
+  const mEl = el.querySelector('.tw-m');
+  const sEl = el.querySelector('.tw-s');
+  if (hEl) hEl.value = h;
+  if (mEl) mEl.value = String(m).padStart(2, '0');
+  if (sEl) sEl.value = String(s).padStart(2, '0');
+  /* fire onchange callback if set */
+  const cb = el.dataset.onchange;
+  if (cb) { try { eval(cb); } catch(e){} }
+}
+
+function twAdj(id, delta) {
+  twSetSecs(id, twGetSecs(id) + delta);
+}
+
+function twBuild(el) {
+  const secs    = parseInt(el.dataset.secs) || 0;
+  const compact = el.classList.contains('tw-compact');
+  const h = Math.floor(secs / 3600);
+  const m = Math.floor((secs % 3600) / 60);
+  const s = secs % 60;
+  const id = el.id;
+  const seg = (cls, val, inc) =>
+    `<div class="tw-field">
+       <button class="tw-step" type="button" tabindex="-1" onclick="twAdj('${id}',${-inc})">−</button>
+       <input class="tw-seg ${cls}" type="number" min="0" max="${inc===3600?99:59}" value="${String(val).padStart(2,'0')}">
+       <button class="tw-step" type="button" tabindex="-1" onclick="twAdj('${id}',${inc})">+</button>
+     </div>`;
+  el.innerHTML = `
+    <div class="tw-display">
+      ${seg('tw-h', h, 3600)}
+      <span class="tw-colon">:</span>
+      ${seg('tw-m', m, 60)}
+      <span class="tw-colon">:</span>
+      ${seg('tw-s', s, 1)}
+    </div>
+    ${compact ? '' : `<div class="tw-presets">
+      <button class="tw-preset" type="button" onclick="twAdj('${id}',5)">+5s</button>
+      <button class="tw-preset" type="button" onclick="twAdj('${id}',10)">+10s</button>
+      <button class="tw-preset" type="button" onclick="twAdj('${id}',30)">+30s</button>
+      <button class="tw-preset" type="button" onclick="twAdj('${id}',60)">+1m</button>
+      <button class="tw-preset" type="button" onclick="twAdj('${id}',300)">+5m</button>
+    </div>`}
+  `;
+  /* wheel scroll on each segment */
+  el.querySelectorAll('.tw-seg').forEach(inp => {
+    inp.addEventListener('wheel', e => {
+      e.preventDefault();
+      const step = inp.classList.contains('tw-h') ? 3600 : inp.classList.contains('tw-m') ? 60 : 1;
+      twAdj(id, e.deltaY < 0 ? step : -step);
+    }, { passive: false });
+    /* clamp on manual edit */
+    inp.addEventListener('change', () => twSetSecs(id, twGetSecs(id)));
+  });
+}
+
+function twInitAll() {
+  document.querySelectorAll('.tw-wrap').forEach(el => {
+    if (!el.querySelector('.tw-display')) twBuild(el);
+  });
+}
+
+document.addEventListener('DOMContentLoaded', twInitAll);
 
 function aisToggleSection(section, enabled) {
   const card = document.getElementById(`ais-${section}-card`);
@@ -3509,6 +3611,7 @@ function dashSelectBg(slug) {
 }
 
 function bgCardHover(card, enter) {
+  if (card.classList.contains('ds-bg-unavailable')) return;
   const vid = card.querySelector('.ds-bg-video');
   if (!vid) return;
   if (enter) {
@@ -3521,16 +3624,29 @@ function bgCardHover(card, enter) {
 
 function dsCarScroll(dir) {
   const el = document.getElementById('ds-bg-grid');
-  if (el) el.scrollBy({ left: dir * 240, behavior: 'smooth' });
+  if (el) el.scrollBy({ left: dir * 250, behavior: 'smooth' });
+}
+
+function dsCheckBgTemplates() {
+  fetch('/api/bg-templates')
+    .then(r => r.json())
+    .then(list => {
+      list.forEach(({ name, ready }) => {
+        const card = document.getElementById(`ds-bg-${name}`);
+        if (!card) return;
+        card.classList.toggle('ds-bg-unavailable', !ready);
+      });
+    })
+    .catch(() => {});
 }
 
 function dashAddClip() {
-  const start = document.getElementById('ds-ts-start').value.trim();
-  const end   = document.getElementById('ds-ts-end').value.trim();
-  if (!start || !end) return;
+  const start = twGetVal('tw-ds-start');
+  const end   = twGetVal('tw-ds-end');
+  if (!start || !end || start === end) return;
   DASH.clips.push({ start, end });
-  document.getElementById('ds-ts-start').value = '';
-  document.getElementById('ds-ts-end').value   = '';
+  twSetSecs('tw-ds-start', 0);
+  twSetSecs('tw-ds-end', 5);
   _dashRenderClips();
   dashSplitCheckReady();
 }

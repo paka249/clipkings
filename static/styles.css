@@ -2942,6 +2942,7 @@ kbd {
   scrollbar-width: thin;
   scrollbar-color: var(--border) transparent;
   flex: 1;
+  min-width: 0; /* lets flex item shrink below content size so overflow-x works */
 }
 .ds-hcar-scroll::-webkit-scrollbar { height: 4px; }
 .ds-hcar-scroll::-webkit-scrollbar-track { background: transparent; }
@@ -2977,6 +2978,7 @@ kbd {
 .ds-bg-poster {
   width: 100%; aspect-ratio: 9/16; object-fit: cover; display: block;
   transition: opacity 200ms;
+  background: var(--surface-2); /* fallback bg while loading or on error */
 }
 /* Video (overlaid, fades in on hover) */
 .ds-bg-video {
@@ -2987,8 +2989,21 @@ kbd {
   transition: opacity 200ms;
   pointer-events: none;
 }
-.ds-bg-card:hover .ds-bg-poster { opacity: 0; }
-.ds-bg-card:hover .ds-bg-video  { opacity: 1; }
+.ds-bg-card:not(.ds-bg-unavailable):hover .ds-bg-poster { opacity: 0; }
+.ds-bg-card:not(.ds-bg-unavailable):hover .ds-bg-video  { opacity: 1; }
+
+/* Unavailable / not-yet-downloaded card */
+.ds-bg-unavailable { cursor: default; pointer-events: none; }
+.ds-bg-unavailable::after {
+  content: 'Not downloaded';
+  position: absolute; inset: 0; z-index: 3;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .58rem; font-weight: 700; color: rgba(255,255,255,.6);
+  text-transform: uppercase; letter-spacing: .06em;
+  background: rgba(0,0,0,.55);
+  pointer-events: none;
+}
+.ds-bg-unavailable .ds-bg-poster { opacity: .35; filter: grayscale(1); }
 
 .ds-bg-name {
   position: absolute; bottom: 0; left: 0; right: 0;
@@ -3162,6 +3177,71 @@ kbd {
 }
 
 /* Timeline clip row */
+/* ── Time Widget ──────────────────────────────────────────── */
+.tw-wrap { display: inline-block; user-select: none; }
+
+/* Main display: [−] HH : [−] MM : [−] SS and +/- on each side */
+.tw-display {
+  display: inline-flex; align-items: center; gap: 0;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 4px 10px;
+  gap: 2px;
+}
+.tw-field {
+  display: flex; align-items: center; gap: 3px;
+}
+.tw-step {
+  width: 20px; height: 20px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 6px; color: var(--text-2);
+  font-size: .75rem; font-weight: 700; line-height: 1;
+  cursor: pointer; flex-shrink: 0;
+  transition: background var(--t), color var(--t), border-color var(--t);
+}
+.tw-step:hover { background: var(--accent-dim); color: var(--accent); border-color: var(--accent); }
+
+.tw-seg {
+  width: 32px; text-align: center;
+  background: none; border: none; color: var(--text);
+  font-size: 1.05rem; font-weight: 700; font-variant-numeric: tabular-nums;
+  letter-spacing: .02em;
+  padding: 2px 0; outline: none;
+  -moz-appearance: textfield;
+}
+.tw-seg::-webkit-inner-spin-button,
+.tw-seg::-webkit-outer-spin-button { -webkit-appearance: none; }
+.tw-seg:focus { color: var(--accent); }
+
+.tw-colon { color: var(--text-3); font-weight: 700; font-size: 1rem; margin: 0 2px; }
+.tw-unit  { font-size: .55rem; color: var(--text-3); text-transform: uppercase; letter-spacing: .05em; }
+
+.tw-presets {
+  display: flex; flex-wrap: wrap; gap: 4px; margin-top: 7px;
+}
+.tw-preset {
+  font-size: .7rem; font-weight: 600; padding: 3px 9px;
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: 20px; color: var(--text-2); cursor: pointer;
+  transition: background var(--t), color var(--t), border-color var(--t);
+}
+.tw-preset:hover { background: var(--accent-dim); color: var(--accent); border-color: var(--accent); }
+
+/* Pair layout for start+end in Gaming BG */
+.tw-row-pair {
+  display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-end;
+  margin-bottom: 12px;
+}
+.tw-add-col { display: flex; align-items: flex-end; }
+.tw-add-btn { height: 38px; white-space: nowrap; }
+
+/* Compact variant (ranking items — no presets, smaller) */
+.tw-compact .tw-display { padding: 3px 7px; }
+.tw-compact .tw-seg { font-size: .85rem; width: 26px; }
+.tw-compact .tw-step { width: 17px; height: 17px; font-size: .65rem; }
+
 .ds-ts-row { display: flex; gap: 6px; align-items: center; }
 
 .ds-clip-list { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }

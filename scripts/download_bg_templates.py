@@ -21,6 +21,7 @@ To download all new variant 2 clips at once:
   python download_bg_templates.py minecraft_parkour_2 https://www.youtube.com/watch?v=nk0Ka2PUpKQ
   python download_bg_templates.py gta_2              https://www.youtube.com/watch?v=weAUrmRLpnk
 """
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -40,10 +41,18 @@ VALID = {
 BG_DIR = Path(__file__).resolve().parent.parent / "bg_templates"
 BG_DIR.mkdir(exist_ok=True)
 
-# Resolve yt-dlp relative to the running Python interpreter's bin dir
-_BIN = Path(sys.executable).parent
-YTDLP  = str(_BIN / "yt-dlp")
-FFMPEG = "ffmpeg"
+# Find yt-dlp: prefer venv alongside this repo, then PATH
+_REPO = Path(__file__).resolve().parent.parent
+_YTDLP_VENV = _REPO / "venv" / "bin" / "yt-dlp"
+if _YTDLP_VENV.exists():
+    YTDLP = str(_YTDLP_VENV)
+elif shutil.which("yt-dlp"):
+    YTDLP = "yt-dlp"
+else:
+    print("[ERROR] yt-dlp not found. Install it with:  pip install yt-dlp")
+    sys.exit(1)
+
+FFMPEG = shutil.which("ffmpeg") or "ffmpeg"
 
 
 def download_and_trim(name: str, url: str):
