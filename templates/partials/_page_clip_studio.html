@@ -1,0 +1,232 @@
+<!-- Clip Studio ─────────────────────────────────────────────── -->
+<div id="page-clipstudio" class="page">
+  <div class="editor-header">
+    <div>
+      <h1>Clip Studio</h1>
+      <p class="sub">Clip, crop and render vertical shorts from any URL or uploaded file.</p>
+    </div>
+    <div class="badges">
+      <span class="badge">FFmpeg</span>
+      <span class="badge">yt-dlp</span>
+      <span class="badge">1080×1920</span>
+    </div>
+  </div>
+
+  <div class="editor-cols">
+    <!-- Left column -->
+    <div class="editor-left">
+
+      <div class="card">
+        <div class="card-title">Media Ingestion</div>
+
+        <div class="ais-tab-row" style="margin-bottom:12px">
+          <button class="ais-tab active" id="ed-tab-url" onclick="edSourceTab('url')">URL</button>
+          <button class="ais-tab" id="ed-tab-upload" onclick="edSourceTab('upload')">Upload</button>
+        </div>
+
+        <div id="ed-url-section">
+          <p class="card-hint" style="margin-top:0">Works with YouTube, TikTok, Instagram, X (Twitter), Vimeo, and thousands of other sites via yt-dlp. Preview checks the URL without downloading.</p>
+          <label class="field-label">Primary Video URL</label>
+          <div class="url-row">
+            <input id="primary-url" type="text" class="text-input"
+                   placeholder="https://www.youtube.com/watch?v=..."
+                   oninput="checkReady()">
+            <button class="btn-outline" onclick="previewURL('primary')">
+              <svg class="icon icon-sm"><use href="#i-eye"/></svg> Preview
+            </button>
+          </div>
+          <div id="primary-preview" class="preview-info" style="display:none"></div>
+        </div>
+
+        <div id="ed-upload-section" style="display:none">
+          <p class="card-hint" style="margin-top:0">Upload a video file from your computer. Supports MP4, MOV, MKV, WebM and more. Max 500 MB.</p>
+          <input id="ed-file-input" type="file" style="display:none"
+                 accept=".mp4,.mov,.mkv,.webm,.avi,.m4v,.ts,.flv,video/*"
+                 onchange="edFileChosen(this.files[0])">
+          <label for="ed-file-input" class="ais-dropzone" id="ed-dropzone"
+                 ondragover="event.preventDefault()" ondrop="edDropFile(event)">
+            <svg class="icon icon-xl" style="color:var(--text-3)"><use href="#i-upload"/></svg>
+            <div style="font-size:.85rem;color:var(--text-2);margin-top:6px">Drop video here or <span style="color:var(--accent)">browse</span></div>
+            <div style="font-size:.75rem;color:var(--text-3);margin-top:2px">MP4 · MOV · MKV · WebM · AVI</div>
+          </label>
+          <div id="ed-upload-status" style="display:none;margin-top:8px" class="preview-info"></div>
+        </div>
+
+        <div id="bg-url-section">
+          <label class="field-label" style="margin-top:14px">
+            Background Video <span class="muted">(Template 2 only)</span>
+          </label>
+
+          <div id="bg-template-badge" class="bg-template-badge" style="display:none">
+            <svg class="icon icon-sm"><use href="#i-film"/></svg>
+            <span id="bg-template-name"></span>
+            <button class="btn-icon" title="Remove" onclick="clearGamingTemplate()" style="margin-left:auto">
+              <svg class="icon icon-sm"><use href="#i-x"/></svg>
+            </button>
+          </div>
+
+          <div id="bg-source-tabs">
+            <div class="ais-tab-row" style="margin:8px 0">
+              <button class="ais-tab active" id="bg-tab-url" onclick="bgSourceTab('url')">URL</button>
+              <button class="ais-tab" id="bg-tab-upload" onclick="bgSourceTab('upload')">Upload</button>
+            </div>
+
+            <div id="bg-url-input-area">
+              <div id="bg-url-input-row" class="url-row">
+                <input id="bg-url" type="text" class="text-input"
+                       placeholder="https://www.youtube.com/watch?v=..."
+                       oninput="checkReady()">
+                <button class="btn-outline" onclick="previewURL('bg')">
+                  <svg class="icon icon-sm"><use href="#i-eye"/></svg> Preview
+                </button>
+              </div>
+              <div id="bg-preview" class="preview-info" style="display:none"></div>
+            </div>
+
+            <div id="bg-upload-area" style="display:none">
+              <input id="bg-file-input" type="file" style="display:none"
+                     accept=".mp4,.mov,.mkv,.webm,.avi,.m4v,.ts,.flv,video/*"
+                     onchange="bgFileChosen(this.files[0])">
+              <label for="bg-file-input" class="ais-dropzone" id="bg-dropzone"
+                     ondragover="event.preventDefault()" ondrop="bgDropFile(event)">
+                <svg class="icon icon-xl" style="color:var(--text-3)"><use href="#i-upload"/></svg>
+                <div style="font-size:.85rem;color:var(--text-2);margin-top:6px">Drop background video or <span style="color:var(--accent)">browse</span></div>
+              </label>
+              <div id="bg-upload-status" style="display:none;margin-top:8px" class="preview-info"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:14px">
+        <div class="card-title">Multi-Clip Timeline</div>
+        <p class="card-hint">Drag the handles to select a segment, or type timestamps manually below.</p>
+
+        <div id="clip-slider-wrap">
+          <div class="slider-header">
+            <span id="clip-dur-label" class="muted-text"></span>
+            <button class="btn-sm" onclick="addClipFromSlider()">
+              <svg class="icon icon-sm"><use href="#i-plus"/></svg> Add Range
+            </button>
+          </div>
+          <div class="dual-range">
+            <div class="dual-range-track">
+              <div class="dual-range-fill" id="dual-fill"></div>
+            </div>
+            <input type="range" id="range-start" class="dual-thumb" min="0" max="100" value="0" step="1"
+                   oninput="onRangeStart(this.value)">
+            <input type="range" id="range-end" class="dual-thumb" min="0" max="100" value="100" step="1"
+                   oninput="onRangeEnd(this.value)">
+          </div>
+          <div class="dual-range-vals">
+            <span id="rng-start-lbl" class="rng-lbl">0:00</span>
+            <span class="rng-lbl" style="color:var(--text-3);font-family:var(--font)">drag to select</span>
+            <span id="rng-end-lbl" class="rng-lbl" style="text-align:right">0:00</span>
+          </div>
+        </div>
+
+        <div class="clip-manual-hdr">Or type manually</div>
+        <div class="clip-add-row">
+          <input id="clip-start" type="text" class="text-input"
+                 placeholder="Start: 00:01:30"
+                 oninput="syncInputToSlider('start')"
+                 onkeydown="if(event.key==='Enter') addClip()">
+          <input id="clip-end" type="text" class="text-input"
+                 placeholder="End: 00:03:45"
+                 oninput="syncInputToSlider('end')"
+                 onkeydown="if(event.key==='Enter') addClip()">
+          <button class="btn-ghost" onclick="addClip()">
+            <svg class="icon icon-sm"><use href="#i-plus"/></svg> Add
+          </button>
+        </div>
+        <div id="clip-error" class="error-msg" style="display:none"></div>
+        <div id="clip-list"></div>
+        <div id="clip-total" style="display:none" class="clip-total"></div>
+        <button id="clear-timeline-btn" class="btn-danger" style="display:none;margin-top:10px"
+                onclick="clearTimeline()">
+          <svg class="icon icon-sm"><use href="#i-trash"/></svg> Clear Timeline
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Right column -->
+    <div class="editor-right">
+
+      <div class="card">
+        <div class="card-title">Template</div>
+        <select id="template-select" class="select-input" onchange="onTemplateChange()">
+          <option value="center_crop">Vertical Center-Crop (Primary only)</option>
+          <option value="split_screen">Split-Screen Stack (Primary + Background)</option>
+        </select>
+        <div id="template-desc" class="template-desc"></div>
+      </div>
+
+      <div class="card" style="margin-top:14px">
+        <div class="card-title">Render Engine</div>
+
+        <div class="output-options-hdr">Output Settings</div>
+        <div class="output-options">
+          <div class="output-opt">
+            <label class="field-label">Resolution</label>
+            <select id="opt-resolution" class="select-input">
+              <option value="1080x1920">1080×1920</option>
+              <option value="720x1280">720×1280</option>
+              <option value="540x960">540×960</option>
+            </select>
+          </div>
+          <div class="output-opt">
+            <label class="field-label">Format</label>
+            <select id="opt-codec" class="select-input">
+              <option value="h264">MP4 H.264</option>
+              <option value="h265">MP4 H.265</option>
+              <option value="vp9">WebM VP9</option>
+            </select>
+          </div>
+          <div class="output-opt">
+            <label class="field-label">Crop style</label>
+            <select id="opt-fit" class="select-input">
+              <option value="crop">Center Crop</option>
+              <option value="blur">Blur Background</option>
+            </select>
+          </div>
+          <div class="output-opt">
+            <label class="field-label">Audio</label>
+            <label class="mute-checkbox-label" title="Uncheck to produce silent output">
+              <input type="checkbox" id="opt-audio" checked onchange="S.mute = !this.checked">
+              <span>Include audio</span>
+            </label>
+          </div>
+        </div>
+
+        <div id="ready-status" class="status-missing">
+          <svg class="icon icon-sm"><use href="#i-warn"/></svg>
+          Fill in the form on the left to enable generation.
+        </div>
+        <button id="gen-btn" class="btn-primary btn-generate" onclick="generate()" disabled>
+          <svg class="icon icon-sm"><use href="#i-zap"/></svg> Generate Video
+        </button>
+
+        <div id="progress-wrap" style="display:none">
+          <div class="progress-bar">
+            <div id="progress-fill" class="progress-fill" style="width:0%"></div>
+          </div>
+          <div id="progress-label" class="progress-label">Starting…</div>
+        </div>
+
+        <div id="log-box" class="log-box" style="display:none"></div>
+      </div>
+
+      <div class="card" id="export-card" style="margin-top:14px;display:none">
+        <div class="card-title">Export</div>
+        <div id="export-result"></div>
+      </div>
+
+      <div class="card" style="margin-top:14px">
+        <div class="card-title">Past Exports</div>
+        <div id="exports-list"><p class="muted-text">Loading…</p></div>
+      </div>
+
+    </div>
+  </div>
+</div>

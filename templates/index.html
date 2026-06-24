@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ClipKings</title>
+  <link rel="stylesheet" href="/static/styles.css?v=17">
+</head>
+<body>
+
+{% include "partials/_icons.html" %}
+
+<div class="app">
+
+  {% include "partials/_nav.html" %}
+
+  <!-- ── Main ───────────────────────────────────────────────── -->
+  <main class="main">
+    <button class="upgrade-float-btn" onclick="showPage('upgrade')" title="View plans">
+      ✦ Free Plan
+    </button>
+
+    {% include "partials/_page_templates.html" %}
+    {% include "partials/_page_dashboard.html" %}
+    {% include "partials/_page_gaming.html" %}
+    {% include "partials/_page_templates_old.html" %}
+    {% include "partials/_page_clip_studio.html" %}
+    {% include "partials/_page_editor.html" %}
+    {% include "partials/_page_exports.html" %}
+    {% include "partials/_page_account.html" %}
+    {% include "partials/_page_ranking.html" %}
+    {% include "partials/_page_ai_studio.html" %}
+    {% include "partials/_page_docs.html" %}
+    {% include "partials/_page_upgrade.html" %}
+    {% include "partials/_legal.html" %}
+
+  </main>
+</div>
+
+{% include "partials/_modals.html" %}
+
+<script src="/static/app.js?v=17"></script>
+</body>
+</html>

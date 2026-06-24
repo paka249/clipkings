@@ -1,0 +1,67 @@
+<!-- ── Sidebar ─────────────────────────────────────────────── -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-hdr">
+    <div class="logo">
+      <div class="logo-mark">CK</div>
+      <div class="logo-name">ClipKings</div>
+    </div>
+    <button class="sidebar-collapse-btn" id="sidebar-collapse-btn" onclick="toggleSidebar()" title="Collapse sidebar">
+      <svg class="icon icon-sm" id="sidebar-collapse-icon"><use href="#i-chevron-left"/></svg>
+    </button>
+  </div>
+
+  <div class="nav-section">Menu</div>
+  <nav>
+    <a class="nav-item active" data-page="templates" onclick="showPage('templates')">
+      <svg class="icon"><use href="#i-tmpl"/></svg>
+      <span class="nav-item-lbl">Templates</span>
+    </a>
+    <a class="nav-item" data-page="editor" onclick="showPage('editor')">
+      <svg class="icon"><use href="#i-film"/></svg>
+      <span class="nav-item-lbl">Editor</span>
+    </a>
+    <a class="nav-item" data-page="splitscreen" onclick="showPage('splitscreen')">
+      <svg class="icon"><use href="#i-gamepad"/></svg>
+      <span class="nav-item-lbl">Gaming BG</span>
+    </a>
+    <a class="nav-item" data-page="clipstudio" onclick="showPage('clipstudio')">
+      <svg class="icon"><use href="#i-edit"/></svg>
+      <span class="nav-item-lbl">Clip Studio</span>
+    </a>
+    <a class="nav-item" data-page="ranking" onclick="showPage('ranking')">
+      <svg class="icon"><use href="#i-ranking"/></svg>
+      <span class="nav-item-lbl">Ranking</span>
+    </a>
+    <a class="nav-item" data-page="aistudio" onclick="showPage('aistudio')">
+      <svg class="icon"><use href="#i-mic"/></svg>
+      <span class="nav-item-lbl">AI Studio</span>
+    </a>
+    <a class="nav-item" data-page="exports" onclick="showPage('exports')">
+      <svg class="icon"><use href="#i-folder"/></svg>
+      <span class="nav-item-lbl">Exports</span>
+    </a>
+  </nav>
+
+  <div class="nav-section" style="margin-top:8px">Help</div>
+  <nav>
+    <a class="nav-item" data-page="docs" onclick="showPage('docs')">
+      <svg class="icon"><use href="#i-book"/></svg>
+      <span class="nav-item-lbl">Docs &amp; Help</span>
+    </a>
+  </nav>
+
+  <!-- Sidebar footer: account row -->
+  <div class="sidebar-footer">
+    <div class="user-row" onclick="showPage('account')" style="cursor:pointer" title="Account &amp; settings">
+      <div class="user-avatar" id="sidebar-avatar">G</div>
+      <div style="flex:1;min-width:0;overflow:hidden">
+        <div class="user-name" id="sidebar-name">Guest <span class="user-plan">Free</span></div>
+        <div class="user-email" id="sidebar-email">Not signed in</div>
+      </div>
+    </div>
+    <a href="/auth" id="sidebar-signin-link" class="sidebar-signin-link">Sign in / Create account</a>
+  </div>
+</aside>
+
+<!-- Sidebar resize handle -->
+<div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>

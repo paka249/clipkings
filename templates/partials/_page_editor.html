@@ -1,0 +1,231 @@
+<!-- Video Editor ────────────────────────────────────────── -->
+<div id="page-editor" class="page ved-app">
+
+  <!-- File inputs -->
+  <input id="ved-video-input" type="file" style="display:none" multiple
+         accept=".mp4,.mov,.mkv,.webm,.avi,.m4v,.ts,.flv,video/*"
+         onchange="vedAddVideoFiles(this.files)">
+  <input id="ved-audio-input" type="file" style="display:none" multiple
+         accept=".mp3,.aac,.wav,.m4a,.ogg,.flac,audio/*"
+         onchange="vedAddAudioFiles(this.files)">
+  <input id="ved-photo-input" type="file" style="display:none" multiple
+         accept=".jpg,.jpeg,.png,.webp,.gif,.bmp,.tiff,image/*"
+         onchange="vedAddPhotoFiles(this.files)">
+
+  <!-- ── Top bar ── -->
+  <div class="ved-topbar">
+    <div class="ved-topbar-title">
+      <svg class="icon icon-sm" style="color:var(--accent)"><use href="#i-film"/></svg>
+      Video Editor
+    </div>
+    <div id="ved-uploading" class="ved-tb-uploading" style="display:none">
+      <svg class="icon icon-sm"><use href="#i-cpu"/></svg> Uploading…
+    </div>
+    <div class="ved-topbar-end">
+      <span class="badge">FFmpeg</span>
+      <span class="badge">Local</span>
+    </div>
+  </div>
+
+  <!-- ── Workspace ── -->
+  <div class="ved-workspace">
+
+    <!-- Center: Preview canvas -->
+    <div class="ved-preview-center"
+         ondragover="event.preventDefault()" ondrop="vedDropFiles(event)">
+      <button class="ved-expand-btn" onclick="vedExpandCanvas()" title="Expand preview">
+        <svg class="icon icon-sm"><use href="#i-expand"/></svg>
+      </button>
+      <div class="ved-canvas-outer">
+        <div class="ved-canvas-box">
+          <video id="ved-preview-video" preload="auto"
+                 onended="vedPreviewEnded()" ontimeupdate="vedPreviewTimeUpdate()"
+                 onclick="vedTlPlayPause()"
+                 style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;cursor:pointer"></video>
+          <audio id="ved-preview-audio" preload="auto"
+                 onended="vedPreviewAudioEnded()"></audio>
+          <div class="ved-preview-placeholder" id="ved-canvas-placeholder">
+            <svg class="icon icon-xl" style="color:var(--text-3)"><use href="#i-film"/></svg>
+            <div id="ved-canvas-hint" style="margin-top:10px;font-size:.83rem;color:var(--text-2);font-weight:500">Add media to get started</div>
+            <div style="font-size:.72rem;color:var(--text-3);margin-top:4px">Upload video/audio · add to timeline · render</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Properties panel resize handle -->
+    <div id="ved-props-resize-handle" class="ved-props-resize-handle"></div>
+
+    <!-- Right: Inspector + Render -->
+    <div class="ved-side-panel">
+
+      <!-- Clip inspector -->
+      <div id="ved-inspector">
+        <div class="ved-panel-hd">
+          <span id="ved-inspector-title" style="text-transform:none;letter-spacing:0;font-size:.8rem;font-weight:600;color:var(--text)">Properties</span>
+        </div>
+        <div id="ved-inspector-body" class="ved-sp-pad">
+          <div class="ved-insp-empty">
+            <svg class="icon icon-lg" style="color:var(--text-3)"><use href="#i-film"/></svg>
+            <div>Select a clip<br>to edit its properties</div>
+          </div>
+        </div>
+        <div class="ved-side-sep"></div>
+      </div>
+
+      <!-- Render / Export -->
+      <div class="ved-panel-hd">Export</div>
+      <div class="ved-sp-pad">
+        <div class="ved-render-fields">
+          <div class="ved-render-field">
+            <label class="ved-field-lbl">Resolution</label>
+            <select id="ved-resolution" class="select-input">
+              <option value="1080x1920">1080×1920 (9:16)</option>
+              <option value="1920x1080">1920×1080 (16:9)</option>
+              <option value="720x1280">720×1280</option>
+              <option value="1080x1080">1080×1080 (Square)</option>
+            </select>
+          </div>
+          <div class="ved-render-field">
+            <label class="ved-field-lbl">Format</label>
+            <select id="ved-codec" class="select-input">
+              <option value="h264">MP4 H.264</option>
+              <option value="h265">MP4 H.265</option>
+              <option value="vp9">WebM VP9</option>
+            </select>
+          </div>
+          <div class="ved-render-field">
+            <label class="ved-field-lbl">Fit</label>
+            <select id="ved-fit" class="select-input">
+              <option value="crop">Crop to fill</option>
+              <option value="pad">Pad (letterbox)</option>
+            </select>
+          </div>
+        </div>
+        <div id="ved-ready-status" class="status-missing" style="margin:10px 0 8px">
+          <svg class="icon icon-sm"><use href="#i-warn"/></svg> Add at least one clip
+        </div>
+        <button id="ved-render-btn" class="btn-primary btn-generate" disabled onclick="vedRender()">
+          <svg class="icon icon-sm"><use href="#i-zap"/></svg> Generate Video
+        </button>
+        <div id="ved-progress-wrap" style="display:none;margin-top:12px">
+          <div class="progress-bar"><div class="progress-fill" id="ved-progress-fill"></div></div>
+          <div id="ved-progress-label" class="progress-label">Starting…</div>
+        </div>
+        <div id="ved-log-box" class="log-box" style="display:none;margin-top:8px"></div>
+        <div id="ved-export-card" style="display:none;margin-top:10px;flex-direction:column" class="export-success-card">
+          <div style="display:flex;align-items:center;gap:10px">
+            <svg class="icon icon-lg" style="color:#4ade80"><use href="#i-check"/></svg>
+            <div style="flex:1">
+              <div style="font-weight:600;font-size:.88rem">Render complete</div>
+              <div id="ved-export-name" style="font-size:.74rem;color:var(--text-2);margin-top:2px"></div>
+            </div>
+          </div>
+          <div style="display:flex;gap:6px;margin-top:10px">
+            <a id="ved-download-link" href="#" download class="btn-sm" style="text-decoration:none;display:inline-flex;align-items:center;gap:4px">
+              <svg class="icon icon-sm"><use href="#i-dl"/></svg> Download
+            </a>
+            <button class="btn-outline" onclick="showPage('exports')">All exports</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Timeline ── -->
+  <div class="ved-timeline" id="ved-timeline">
+    <div id="ved-tl-resize-handle" class="ved-tl-resize-handle"></div>
+
+    <!-- Controls bar -->
+    <div class="ved-tl-bar">
+      <button class="ved-tl-ctrl-btn" onclick="vedTlSeek(-5)" title="Back 5s">
+        <svg class="icon icon-sm" style="transform:scaleX(-1)"><use href="#i-dl"/></svg>
+      </button>
+      <button class="ved-tl-ctrl-btn" id="ved-tl-play-btn" onclick="vedTlPlayPause()" title="Play / Pause">
+        <svg class="icon icon-sm" id="ved-tl-play-icon"><use href="#i-play"/></svg>
+      </button>
+      <button class="ved-tl-ctrl-btn" onclick="vedTlSeek(5)" title="Forward 5s">
+        <svg class="icon icon-sm"><use href="#i-dl"/></svg>
+      </button>
+      <span class="ved-tl-timecode">
+        <strong id="ved-tl-cur">0:00</strong>
+        <span> / </span>
+        <span id="ved-tl-total">0:00</span>
+      </span>
+      <div style="flex:1"></div>
+      <button class="ved-tl-ctrl-btn" onclick="vedZoom(-1)" title="Zoom out">−</button>
+      <span class="ved-tl-zoom-lbl" id="ved-tl-zoom-lbl">1×</span>
+      <button class="ved-tl-ctrl-btn" onclick="vedZoom(1)" title="Zoom in">+</button>
+    </div>
+
+    <!-- Scrollable timeline canvas -->
+    <div class="ved-tl-canvas">
+
+      <!-- Non-scrolling label column -->
+      <div class="ved-tl-label-col">
+        <div class="ved-tl-label-spacer"></div>
+        <label for="ved-photo-input" class="ved-tl-track-label ved-tl-label-photo" title="Add photo">
+          <svg class="icon icon-sm"><use href="#i-img"/></svg>
+          <span>Photo</span>
+          <span class="ved-tl-label-plus">+</span>
+        </label>
+        <label for="ved-video-input" class="ved-tl-track-label ved-tl-label-video" title="Add video">
+          <svg class="icon icon-sm"><use href="#i-film"/></svg>
+          <span>Video</span>
+          <span class="ved-tl-label-plus">+</span>
+        </label>
+        <label for="ved-audio-input" class="ved-tl-track-label ved-tl-label-audio" title="Add audio">
+          <svg class="icon icon-sm"><use href="#i-vol"/></svg>
+          <span>Audio</span>
+          <span class="ved-tl-label-plus">+</span>
+        </label>
+        <div class="ved-tl-track-label ved-tl-label-caption" onclick="vedAddCaption()" title="Add caption">
+          <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><rect x="2" y="7" width="20" height="10" rx="2"/><line x1="6" y1="11" x2="10" y2="11"/><line x1="6" y1="13.5" x2="14" y2="13.5"/></svg>
+          <span>Caption</span>
+          <span class="ved-tl-label-plus">+</span>
+        </div>
+      </div>
+
+      <!-- Horizontally scrollable tracks -->
+      <div class="ved-tl-scroll" id="ved-tl-scroll"
+           onmousedown="vedTlPointerDown(event)">
+        <div class="ved-tl-inner" id="ved-tl-inner">
+
+          <!-- Ruler -->
+          <div class="ved-tl-ruler" id="ved-tl-ruler"></div>
+
+          <!-- Playhead -->
+          <div class="ved-tl-playhead" id="ved-tl-playhead">
+            <div class="ved-tl-playhead-head"></div>
+            <div class="ved-tl-playhead-line"></div>
+          </div>
+
+          <!-- Photo track -->
+          <div class="ved-tl-track ved-tl-track--photo">
+            <div class="ved-tl-clips" id="ved-tl-photo-row"></div>
+          </div>
+
+          <!-- Video track -->
+          <div class="ved-tl-track">
+            <div class="ved-tl-clips" id="ved-sequence-list"></div>
+          </div>
+
+          <!-- Audio track -->
+          <div class="ved-tl-track ved-tl-track--audio">
+            <div class="ved-tl-clips" id="ved-tl-audio-row"></div>
+          </div>
+
+          <!-- Caption track -->
+          <div class="ved-tl-track ved-tl-track--caption">
+            <div class="ved-tl-clips" id="ved-tl-caption-row"></div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>

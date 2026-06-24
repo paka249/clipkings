@@ -1,0 +1,118 @@
+<!-- Ranking Editor ──────────────────────────────────────── -->
+<div id="page-ranking" class="page">
+  <div class="page-header">
+    <h1>Ranking</h1>
+    <p class="page-sub">Add video clips in rank order. Labels reveal as each clip plays.</p>
+  </div>
+
+  <div class="feature-layout">
+  <div class="feature-col-main">
+
+  <!-- Title & Style -->
+  <div class="section-hdr"><h2>Title &amp; Style</h2></div>
+  <div class="card">
+    <div class="rk-config-grid">
+      <div>
+        <label class="field-label">Ranking keyword</label>
+        <input id="rk-title" type="text" class="text-input" value="RANKING" placeholder="e.g. RANKING">
+      </div>
+      <div>
+        <label class="field-label">Keyword color</label>
+        <input type="color" id="rk-title-color" value="#FFFFFF" style="height:38px;width:100%;border-radius:var(--r);border:1px solid var(--border);cursor:pointer">
+      </div>
+      <div>
+        <label class="field-label">Topic / subtitle</label>
+        <input id="rk-subtitle" type="text" class="text-input" placeholder="e.g. The Best Karen Moments">
+      </div>
+      <div>
+        <label class="field-label">Subtitle color</label>
+        <input type="color" id="rk-subtitle-color" value="#FFD700" style="height:38px;width:100%;border-radius:var(--r);border:1px solid var(--border);cursor:pointer">
+      </div>
+    </div>
+
+    <div class="rk-config-grid" style="margin-top:14px">
+      <div>
+        <label class="field-label">Title font</label>
+        <select id="rk-title-font" class="select-input">
+          <option value="DejaVu Sans Bold">DejaVu Sans Bold</option>
+          <option value="Liberation Sans Bold">Liberation Sans Bold</option>
+          <option value="Ubuntu Bold">Ubuntu Bold</option>
+          <option value="FreeSans Bold">FreeSans Bold</option>
+          <option value="Impact">Impact</option>
+          <option value="Arial Bold">Arial Bold</option>
+        </select>
+      </div>
+      <div>
+        <label class="field-label">Item font size: <span id="rk-font-size-val">60</span>px</label>
+        <input type="range" id="rk-font-size" min="24" max="90" value="60" style="width:100%"
+          oninput="document.getElementById('rk-font-size-val').textContent=this.value">
+      </div>
+      <div>
+        <label class="field-label">Resolution</label>
+        <select id="rk-resolution" class="select-input">
+          <option value="1080x1920">1080 × 1920 (1080p)</option>
+          <option value="720x1280">720 × 1280 (720p)</option>
+          <option value="540x960">540 × 960 (540p)</option>
+        </select>
+      </div>
+      <div>
+        <label class="field-label">Codec</label>
+        <select id="rk-codec" class="select-input">
+          <option value="h264">H.264 (MP4)</option>
+          <option value="h265">H.265 (MP4)</option>
+          <option value="vp9">VP9 (WebM)</option>
+        </select>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;padding-top:22px">
+        <input type="checkbox" id="rk-mute" style="accent-color:var(--success)">
+        <label for="rk-mute" class="field-label" style="margin:0">Mute output</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Clip items -->
+  <div class="section-hdr">
+    <h2>Ranking Items</h2>
+    <button class="btn-sm" id="rk-add-btn" onclick="addRankingItem()">+ Add item</button>
+  </div>
+  <div id="rk-items-list"></div>
+
+  <!-- Generate -->
+  <div style="margin-top:20px">
+    <button class="btn-primary btn-generate" id="rk-generate-btn" onclick="generateRanking()" disabled>
+      <svg class="icon icon-sm"><use href="#i-zap"/></svg> Generate Video
+    </button>
+  </div>
+
+  </div><!-- /feature-col-main -->
+
+  <div class="feat-resize-handle" onmousedown="featResizeStart(event,this)"></div>
+
+  <!-- ── Right: preview ────────────────────────────── -->
+  <div class="feature-col-preview">
+    <div class="feat-preview-panel">
+      <div class="feat-preview-hdr">
+        <svg class="icon icon-sm"><use href="#i-film"/></svg> Preview
+        <button class="feat-expand-btn" onclick="featExpandPreview(this)" title="Expand preview">
+          <svg class="icon icon-sm"><use href="#i-expand"/></svg>
+        </button>
+      </div>
+      <div class="feat-preview-area" id="rk-preview-area">
+        <div id="rk-preview-ph" class="feat-preview-ph">
+          <svg class="icon" style="width:32px;height:32px;color:var(--text-3)"><use href="#i-film"/></svg>
+          <p style="color:var(--text-3);font-size:.8rem;margin:8px 0 0;text-align:center">Output appears<br>here after generation</p>
+        </div>
+      </div>
+      <div id="rk-log-wrap" style="display:none;padding:14px 14px 0">
+        <div class="progress-bar-wrap"><div class="progress-bar-fill" id="rk-progress-fill" style="width:0%"></div></div>
+        <span class="progress-label" id="rk-progress-label">0% — queued</span>
+        <div class="log-box" id="rk-log-box" style="margin-top:8px"></div>
+      </div>
+      <div class="export-card" id="rk-export-card" style="display:none;padding:14px">
+        <div id="rk-export-result"></div>
+      </div>
+    </div>
+  </div>
+
+  </div><!-- /feature-layout -->
+</div><!-- /page-ranking -->

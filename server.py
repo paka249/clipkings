@@ -19,6 +19,7 @@ import uvicorn
 from fastapi import Depends, FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 
 from api.database import Base, engine
@@ -1183,10 +1184,12 @@ def test_auth(current_user: User = Depends(get_current_user)):
     }
 
 
-# ── Static files ─────────────────────────────────────────────
+# ── Static files & templates ─────────────────────────────────
 
 STATIC = Path(__file__).parent / "static"
 app.mount("/static", StaticFiles(directory=str(STATIC)), name="static")
+
+templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
 
 
 @app.get("/auth")
@@ -1202,8 +1205,8 @@ def legal_page(page: str):
     return FileResponse(str(STATIC / "legal" / f"{page}.html"))
 
 @app.get("/{full_path:path}")
-def spa_fallback(full_path: str):
-    return FileResponse(str(STATIC / "index.html"))
+def spa_fallback(request: Request, full_path: str):
+    return templates.TemplateResponse("index.html", {"request": request})
 
 
 # ── Entry point ──────────────────────────────────────────────

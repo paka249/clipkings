@@ -1,0 +1,31 @@
+<!-- Exports ──────────────────────────────────────────────── -->
+<div id="page-exports" class="page">
+  <div class="greeting">
+    <div>
+      <h1><em>Exports</em></h1>
+      <p class="sub">All your generated shorts — download or delete.</p>
+    </div>
+    <div class="stat-chip">
+      <svg class="icon icon-sm"><use href="#i-film"/></svg>
+      <strong id="exports-count-chip">—</strong> total
+    </div>
+  </div>
+  <div class="card">
+    <div class="exports-toolbar">
+      <input type="text" class="text-input" id="exports-search"
+             placeholder="Filter by name…" oninput="filterExports(this.value)"
+             style="max-width:260px">
+    </div>
+    <div id="export-select-bar" class="export-select-bar" style="display:none">
+      <span id="select-count-label">0 selected</span>
+      <button class="btn-sm" onclick="bulkDownload()">
+        <svg class="icon icon-sm"><use href="#i-dl"/></svg> Download
+      </button>
+      <button class="btn-del btn-sm" onclick="bulkDelete()">
+        <svg class="icon icon-sm"><use href="#i-trash"/></svg> Delete
+      </button>
+      <button class="btn-ghost btn-sm" onclick="clearSelection()">Deselect all</button>
+    </div>
+    <div id="exports-page-list"><p class="muted-text">Loading…</p></div>
+  </div>
+</div>

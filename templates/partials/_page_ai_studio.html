@@ -1,0 +1,192 @@
+<!-- AI Studio ───────────────────────────────────────────── -->
+<div id="page-aistudio" class="page">
+  <div class="page-header">
+    <h1>AI Studio</h1>
+    <p class="page-sub">Add AI subtitles and voiceover to any video.</p>
+  </div>
+
+  <div class="feature-layout">
+
+    <!-- ── Left: controls ─────────────────────────────── -->
+    <div class="feature-col-main">
+
+      <!-- Source -->
+      <div class="card">
+        <div class="card-title">Source Video</div>
+        <div class="ais-tab-row" style="margin-bottom:12px">
+          <button class="ais-tab active" id="ais-tab-url" onclick="aisSourceTab('url')">URL</button>
+          <button class="ais-tab" id="ais-tab-upload" onclick="aisSourceTab('upload')">Upload</button>
+        </div>
+        <div id="ais-url-panel">
+          <div class="url-row">
+            <input id="ais-url" type="url" class="text-input" placeholder="https://www.youtube.com/watch?v=…" oninput="aisCheckReady()">
+            <button class="btn-outline" onclick="aisPreviewUrl()"><svg class="icon icon-sm"><use href="#i-eye"/></svg> Preview</button>
+          </div>
+          <div id="ais-url-preview" class="preview-info" style="margin-top:6px"></div>
+        </div>
+        <div id="ais-upload-panel" style="display:none">
+          <input id="ais-file-input" type="file" style="display:none" accept=".mp4,.mov,.mkv,.webm,.avi,.m4v,.ts,.flv,video/*" onchange="aisFileChosen(this.files[0])">
+          <label for="ais-file-input" class="ais-dropzone" id="ais-dropzone" ondragover="event.preventDefault()" ondrop="aisDropFile(event)">
+            <svg class="icon icon-xl" style="color:var(--text-3)"><use href="#i-upload"/></svg>
+            <p style="margin:6px 0 2px;font-weight:500">Drop a video file here</p>
+            <p style="font-size:.78rem;color:var(--text-3)">MP4 · MOV · MKV · WebM · max 500 MB</p>
+          </label>
+          <div id="ais-upload-status" style="margin-top:8px;font-size:.8rem;color:var(--text-2)"></div>
+          <div style="margin-top:14px;font-size:.8rem;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:.05em">Uploads Library</div>
+          <div id="ais-uploads-list" class="ais-uploads-list"></div>
+        </div>
+      </div>
+
+      <!-- Subtitles toggle -->
+      <div class="card feat-toggle-card" style="margin-top:12px">
+        <label class="feat-toggle-hdr">
+          <input type="checkbox" id="ais-do-subs" style="accent-color:var(--accent)" onchange="aisToggleSection('subs',this.checked);aisCheckReady()">
+          <div>
+            <span class="feat-toggle-name">Subtitles</span>
+            <span class="feat-toggle-desc">AI transcription via Whisper — no API key needed</span>
+          </div>
+        </label>
+        <div id="ais-subs-card" style="display:none">
+          <div class="feat-toggle-body">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+              <div>
+                <label class="field-label">Model</label>
+                <select id="ais-sub-model" class="select-input">
+                  <option value="tiny">Tiny — fastest</option>
+                  <option value="base" selected>Base — recommended</option>
+                  <option value="small">Small — accurate</option>
+                  <option value="medium">Medium — best</option>
+                </select>
+              </div>
+              <div>
+                <label class="field-label">Font</label>
+                <select id="ais-sub-font" class="select-input">
+                  <option value="DejaVu Sans Bold" selected>DejaVu Sans Bold</option>
+                  <option value="Liberation Sans Bold">Liberation Sans Bold</option>
+                  <option value="Ubuntu Bold">Ubuntu Bold</option>
+                  <option value="FreeSans Bold">FreeSans Bold</option>
+                </select>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+              <div>
+                <label class="field-label">Size: <span id="ais-sub-size-val">48</span>px</label>
+                <input type="range" id="ais-sub-size" min="20" max="90" value="48" style="width:100%" oninput="document.getElementById('ais-sub-size-val').textContent=this.value">
+              </div>
+              <div>
+                <label class="field-label">Color</label>
+                <input type="color" id="ais-sub-color" value="#FFFFFF" style="height:38px;width:100%;border-radius:var(--r);border:1px solid var(--border);cursor:pointer">
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+              <div>
+                <label class="field-label">Style</label>
+                <div class="ais-style-row">
+                  <label class="ais-style-opt"><input type="radio" name="ais-sub-style" value="shadow" checked> Shadow</label>
+                  <label class="ais-style-opt"><input type="radio" name="ais-sub-style" value="box"> Box</label>
+                </div>
+              </div>
+              <div>
+                <label class="field-label">Position: <span id="ais-sub-pos-val">85</span>%</label>
+                <div class="ais-pos-row">
+                  <span class="ais-pos-lbl">Top</span>
+                  <input type="range" id="ais-sub-pos" min="5" max="95" value="85" style="flex:1" oninput="document.getElementById('ais-sub-pos-val').textContent=this.value">
+                  <span class="ais-pos-lbl">Bot</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Voiceover toggle -->
+      <div class="card feat-toggle-card" style="margin-top:12px">
+        <label class="feat-toggle-hdr">
+          <input type="checkbox" id="ais-do-vo" style="accent-color:var(--accent)" onchange="aisToggleSection('vo',this.checked);aisCheckReady()">
+          <div>
+            <span class="feat-toggle-name">Voiceover</span>
+            <span class="feat-toggle-desc">Neural voice synthesis via edge-tts</span>
+          </div>
+        </label>
+        <div id="ais-vo-card" style="display:none">
+          <div class="feat-toggle-body">
+            <label class="field-label">Script</label>
+            <textarea id="ais-vo-script" class="text-input" rows="4" placeholder="Type the narration…" style="resize:vertical;width:100%;margin-bottom:10px" oninput="aisCheckReady()"></textarea>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+              <div>
+                <label class="field-label">Voice</label>
+                <select id="ais-voice" class="select-input">
+                  <option value="jenny">Jenny — F · US</option>
+                  <option value="guy">Guy — M · US</option>
+                  <option value="aria">Aria — F · US</option>
+                  <option value="sara">Sara — F · US</option>
+                  <option value="ryan">Ryan — M · US</option>
+                  <option value="natasha">Natasha — F · AU</option>
+                </select>
+              </div>
+              <div>
+                <label class="field-label">Original audio</label>
+                <div class="ais-mix-row">
+                  <label class="ais-mix-btn"><input type="radio" name="ais-mix" value="replace" checked> Replace</label>
+                  <label class="ais-mix-btn"><input type="radio" name="ais-mix" value="duck"> Duck</label>
+                  <label class="ais-mix-btn"><input type="radio" name="ais-mix" value="add"> Mix</label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Output + Generate -->
+      <div class="card" style="margin-top:12px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+          <div>
+            <label class="field-label">Codec</label>
+            <select id="ais-codec" class="select-input">
+              <option value="h264">H.264 (MP4)</option>
+              <option value="h265">H.265 (MP4)</option>
+              <option value="vp9">VP9 (WebM)</option>
+            </select>
+          </div>
+          <div>
+            <label class="field-label">Quality (CRF): <span id="ais-crf-val">23</span></label>
+            <input type="range" id="ais-crf" min="18" max="32" value="23" style="width:100%" oninput="document.getElementById('ais-crf-val').textContent=this.value">
+          </div>
+        </div>
+        <button class="btn-primary btn-generate" id="ais-generate-btn" onclick="generateAiStudio()" disabled>
+          <svg class="icon icon-sm"><use href="#i-zap"/></svg> Generate Video
+        </button>
+      </div>
+
+    </div>
+
+    <div class="feat-resize-handle" onmousedown="featResizeStart(event,this)"></div>
+
+    <!-- ── Right: preview ─────────────────────────────── -->
+    <div class="feature-col-preview">
+      <div class="feat-preview-panel">
+        <div class="feat-preview-hdr">
+          <svg class="icon icon-sm"><use href="#i-film"/></svg> Preview
+          <button class="feat-expand-btn" onclick="featExpandPreview(this)" title="Expand preview">
+            <svg class="icon icon-sm"><use href="#i-expand"/></svg>
+          </button>
+        </div>
+        <div class="feat-preview-area" id="ais-preview-area">
+          <div id="ais-preview-ph" class="feat-preview-ph">
+            <svg class="icon" style="width:32px;height:32px;color:var(--text-3)"><use href="#i-film"/></svg>
+            <p style="color:var(--text-3);font-size:.8rem;margin:8px 0 0;text-align:center">Output appears<br>here after generation</p>
+          </div>
+        </div>
+        <div id="ais-log-wrap" style="display:none;padding:14px 14px 0">
+          <div class="progress-bar-wrap"><div class="progress-bar-fill" id="ais-progress-fill" style="width:0%"></div></div>
+          <span class="progress-label" id="ais-progress-label">0% — queued</span>
+          <div class="log-box" id="ais-log-box" style="margin-top:8px"></div>
+        </div>
+        <div class="export-card" id="ais-export-card" style="display:none;padding:14px">
+          <div id="ais-export-result"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

@@ -1,0 +1,152 @@
+<!-- Docs & Help ─────────────────────────────────────────── -->
+<div id="page-docs" class="page">
+  <div class="page-header">
+    <h1><em>Docs</em> &amp; Help</h1>
+    <p class="sub">Everything you need to get the most out of ClipKings.</p>
+  </div>
+
+  <div class="docs-layout">
+    <div class="docs-main">
+
+      <!-- Quick Start -->
+      <div class="docs-section" id="docs-start">
+        <h2 class="docs-h2">Quick Start</h2>
+        <div class="docs-steps">
+          <div class="docs-step"><div class="docs-step-n">1</div><div><strong>Upload or paste</strong> — Use Clip Studio for a single URL/file, or drag files straight into the Video Editor timeline.</div></div>
+          <div class="docs-step"><div class="docs-step-n">2</div><div><strong>Arrange clips</strong> — Drag clips on the timeline to reorder. Drag the edge handles to trim start/end. Use zoom (+ / −) to see fine detail.</div></div>
+          <div class="docs-step"><div class="docs-step-n">3</div><div><strong>Pick a layout</strong> — Choose crop, split-screen, or a custom template from the Templates page. The Editor lets you render free-form.</div></div>
+          <div class="docs-step"><div class="docs-step-n">4</div><div><strong>Render</strong> — Click Render Sequence (Editor) or Generate (Clip Studio / Ranking). FFmpeg runs locally — no cloud, no watermarks.</div></div>
+          <div class="docs-step"><div class="docs-step-n">5</div><div><strong>Download</strong> — Your export appears immediately. Grab it from the Exports page any time within 30 days.</div></div>
+        </div>
+      </div>
+
+      <!-- Video Editor -->
+      <div class="docs-section" id="docs-editor">
+        <h2 class="docs-h2">Video Editor</h2>
+        <p class="docs-p">The Editor is a full multi-track timeline. Three tracks run in parallel: <strong>Photo</strong>, <strong>Video</strong>, and <strong>Audio</strong>. Click the track icon on the left of the timeline to add media to that track.</p>
+        <div class="docs-table-wrap">
+          <table class="docs-table">
+            <thead><tr><th>Element</th><th>What it does</th></tr></thead>
+            <tbody>
+              <tr><td>Timeline clip</td><td>Click to select. Drag left/right edge to trim. Proportional width shows true duration.</td></tr>
+              <tr><td>Playhead</td><td>Vertical orange bar. Click anywhere on the timeline ruler to seek.</td></tr>
+              <tr><td>Zoom (+ / −)</td><td>Makes clips wider/narrower so you can see fine trim detail.</td></tr>
+              <tr><td>Properties panel</td><td>Shows start, end, duration, volume for the selected clip. Drag its left edge to resize.</td></tr>
+              <tr><td>Filmstrip</td><td>Video clips show auto-generated frame thumbnails rendered in the browser.</td></tr>
+              <tr><td>Resize handles</td><td>Drag the bar above the timeline up/down to change its height. Drag the properties panel edge left/right.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="docs-p">Render settings: choose resolution (9:16, 16:9, square), codec (H.264 / H.265 / VP9), and fill mode (crop or letterbox).</p>
+      </div>
+
+      <!-- Clip Studio -->
+      <div class="docs-section" id="docs-clip">
+        <h2 class="docs-h2">Clip Studio</h2>
+        <p class="docs-p">The fastest way to go from a raw video to a ready-to-post short. Paste a URL (YouTube, TikTok, Twitter, Reddit, etc.) or upload a local file. Set in/out points on the timeline slider, pick your template, and hit Generate.</p>
+        <p class="docs-p">The background URL field (for split-screen) is optional. Leave it blank to use a solid background or the center-crop template.</p>
+      </div>
+
+      <!-- Templates -->
+      <div class="docs-section" id="docs-templates">
+        <h2 class="docs-h2">Templates</h2>
+        <div class="docs-table-wrap">
+          <table class="docs-table">
+            <thead><tr><th>Template</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td>Vertical Center-Crop</td><td>Crops a horizontal video to 1080×1920 portrait by centering on the subject. Single track, audio preserved.</td></tr>
+              <tr><td>Split-Screen Stack</td><td>Primary video top half, a looping background (Minecraft, Subway Surfers…) fills the bottom. Great for podcast clips.</td></tr>
+              <tr><td>Gaming Background</td><td>Like split-screen but with a pre-loaded local gaming clip as the background loop.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Ranking -->
+      <div class="docs-section" id="docs-ranking">
+        <h2 class="docs-h2">Ranking</h2>
+        <p class="docs-p">Create a numbered countdown video automatically. Add up to 20 items, each with a title label and a video clip. The Ranking tool stitches them together, overlays the rank number and label, and renders a complete countdown video.</p>
+        <p class="docs-p">Customize: keyword text and color, subtitle, font size, output resolution, and codec. Mute toggle strips audio for a clean background-music-ready output.</p>
+      </div>
+
+      <!-- AI Studio -->
+      <div class="docs-section" id="docs-ai">
+        <h2 class="docs-h2">AI Studio</h2>
+        <p class="docs-p">AI Studio combines two local AI models to enhance your videos without any external API:</p>
+        <ul class="docs-list">
+          <li><strong>Whisper</strong> — OpenAI's speech-recognition model transcribes your video's audio and burns word-level subtitles directly onto the frame. Runs entirely on your machine.</li>
+          <li><strong>edge-tts</strong> — Microsoft's neural text-to-speech engine generates a high-quality voiceover from a script you provide. Choose from dozens of voices and languages. Also runs locally.</li>
+        </ul>
+        <p class="docs-p">You can use subtitles-only, voiceover-only, or both at the same time. The output is a single rendered MP4 ready to post.</p>
+      </div>
+
+      <!-- Exports -->
+      <div class="docs-section" id="docs-exports">
+        <h2 class="docs-h2">Exports</h2>
+        <p class="docs-p">Every render lands in your Exports hub. From there you can preview, download (MP4/WebM), or delete individual files. Exports are stored for up to 30 days then automatically purged — download anything you want to keep.</p>
+        <p class="docs-p">The Exports page includes search and filters so you can find old renders quickly if you have many.</p>
+      </div>
+
+      <!-- Keyboard shortcuts -->
+      <div class="docs-section" id="docs-shortcuts">
+        <h2 class="docs-h2">Keyboard Shortcuts</h2>
+        <div class="docs-table-wrap">
+          <table class="docs-table">
+            <thead><tr><th>Key</th><th>Action</th></tr></thead>
+            <tbody>
+              <tr><td><kbd>Backspace</kbd> / <kbd>Delete</kbd></td><td>Remove the selected timeline clip (Editor)</td></tr>
+              <tr><td>Click on ruler</td><td>Seek playhead to that timestamp (Editor)</td></tr>
+              <tr><td>Drag clip edge</td><td>Trim clip start or end (Editor)</td></tr>
+              <tr><td><kbd>+</kbd> / <kbd>−</kbd> buttons</td><td>Zoom timeline in or out (Editor)</td></tr>
+              <tr><td>Drag resize handle</td><td>Resize timeline height or properties panel width (Editor)</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- FAQ -->
+      <div class="docs-section" id="docs-faq">
+        <h2 class="docs-h2">FAQ</h2>
+        <div class="docs-faq-list">
+          <div class="docs-faq-item">
+            <div class="docs-faq-q">Why does rendering take a while?</div>
+            <div class="docs-faq-a">FFmpeg re-encodes your video entirely on your server's CPU. Longer clips, higher resolutions (1080p vs 720p), or slower hardware will take longer. H.265 is smaller but slower to encode than H.264.</div>
+          </div>
+          <div class="docs-faq-item">
+            <div class="docs-faq-q">Can I use videos I don't own?</div>
+            <div class="docs-faq-a">You are responsible for having the rights to any content you process. See our <a onclick="window.open('/legal/terms','_blank')" style="cursor:pointer;color:var(--accent)">Terms of Service</a> for details.</div>
+          </div>
+          <div class="docs-faq-item">
+            <div class="docs-faq-q">Where are my exports stored?</div>
+            <div class="docs-faq-a">Exports are stored on the server where ClipKings is running, in your account's exports directory. They are accessible only to you. Files are deleted after 30 days.</div>
+          </div>
+          <div class="docs-faq-item">
+            <div class="docs-faq-q">Does AI Studio need an internet connection?</div>
+            <div class="docs-faq-a">Whisper and edge-tts run locally on the server — no internet required after the models are downloaded on first use. No data is sent to third parties.</div>
+          </div>
+          <div class="docs-faq-item">
+            <div class="docs-faq-q">What video formats are supported?</div>
+            <div class="docs-faq-a">Input: MP4, MOV, MKV, WebM, AVI, M4V, TS, FLV, and most formats FFmpeg can read. Output: MP4 (H.264 / H.265) or WebM (VP9).</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Docs sidebar nav -->
+    <nav class="docs-nav">
+      <div class="docs-nav-section">Getting Started</div>
+      <a class="docs-nav-link" href="#docs-start" onclick="event.preventDefault();document.getElementById('docs-start').scrollIntoView({behavior:'smooth'})">Quick Start</a>
+      <div class="docs-nav-section" style="margin-top:10px">Features</div>
+      <a class="docs-nav-link" href="#docs-editor" onclick="event.preventDefault();document.getElementById('docs-editor').scrollIntoView({behavior:'smooth'})">Video Editor</a>
+      <a class="docs-nav-link" href="#docs-clip" onclick="event.preventDefault();document.getElementById('docs-clip').scrollIntoView({behavior:'smooth'})">Clip Studio</a>
+      <a class="docs-nav-link" href="#docs-templates" onclick="event.preventDefault();document.getElementById('docs-templates').scrollIntoView({behavior:'smooth'})">Templates</a>
+      <a class="docs-nav-link" href="#docs-ranking" onclick="event.preventDefault();document.getElementById('docs-ranking').scrollIntoView({behavior:'smooth'})">Ranking</a>
+      <a class="docs-nav-link" href="#docs-ai" onclick="event.preventDefault();document.getElementById('docs-ai').scrollIntoView({behavior:'smooth'})">AI Studio</a>
+      <a class="docs-nav-link" href="#docs-exports" onclick="event.preventDefault();document.getElementById('docs-exports').scrollIntoView({behavior:'smooth'})">Exports</a>
+      <div class="docs-nav-section" style="margin-top:10px">Reference</div>
+      <a class="docs-nav-link" href="#docs-shortcuts" onclick="event.preventDefault();document.getElementById('docs-shortcuts').scrollIntoView({behavior:'smooth'})">Shortcuts</a>
+      <a class="docs-nav-link" href="#docs-faq" onclick="event.preventDefault();document.getElementById('docs-faq').scrollIntoView({behavior:'smooth'})">FAQ</a>
+    </nav>
+  </div>
+</div>

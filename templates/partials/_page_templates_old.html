@@ -1,0 +1,160 @@
+<!-- OLD templates placeholder ──────────────────────────────── -->
+<div id="page-templates-OLD" class="page">
+  <div class="page-header">
+    <h1><em>Templates</em></h1>
+  </div>
+  <div class="tmpl-full-row">
+    <div class="tmpl-full-card">
+      <div class="tmpl-full-thumb" style="background:linear-gradient(160deg,#0D1117,#0D1B2A)">
+        <div class="tmpl-shape-crop" style="width:42px;height:66px;border-radius:8px;opacity:.7"></div>
+      </div>
+      <div class="tmpl-full-body">
+        <div class="tmpl-full-name">Template 1 — Vertical Center-Crop</div>
+        <div class="tmpl-full-desc">
+          Center-crops your primary video to a clean 1080×1920 portrait canvas.
+          Stitches multiple clips back-to-back with hard cuts.
+          Audio from the primary track. No background video required.
+        </div>
+        <div class="tag-row">
+          <span class="tag">1080×1920</span><span class="tag">9:16</span>
+          <span class="tag">Single track</span>
+          <span class="tag cyan">Podcast clips</span>
+          <span class="tag cyan">Commentary</span>
+          <span class="tag cyan">Interviews</span>
+        </div>
+        <button class="btn-primary" onclick="useTemplate('center_crop')">Use Template</button>
+      </div>
+    </div>
+    <div class="tmpl-full-card">
+      <div class="tmpl-full-thumb" style="background:linear-gradient(160deg,#0A1A0D,#0D1B2A)">
+        <div class="tmpl-shape-split" style="width:42px;height:66px;border-radius:8px;opacity:.7"></div>
+      </div>
+      <div class="tmpl-full-body">
+        <div class="tmpl-full-name">Template 2 — Split-Screen Vertical Stack</div>
+        <div class="tmpl-full-desc">
+          Primary video fills the top half (1080×960), background loop fills the bottom.
+          Background is looped to match total clip duration.
+          Audio from the primary track only. Requires a background URL.
+        </div>
+        <div class="tag-row">
+          <span class="tag">1080×1920</span><span class="tag">9:16</span>
+          <span class="tag">Dual track</span>
+          <span class="tag cyan">Minecraft</span>
+          <span class="tag cyan">Subway Surfers</span>
+          <span class="tag cyan">ASMR</span>
+        </div>
+        <button class="btn-primary" onclick="useTemplate('split_screen')">Use Template</button>
+      </div>
+    </div>
+  </div>
+  <div class="tmpl-section-hdr" style="margin-top:28px">Specialty Templates</div>
+  <div class="tmpl-full-row">
+    <div class="tmpl-full-card tmpl-card-ranking">
+      <div class="tmpl-full-thumb" style="background:linear-gradient(160deg,#5B1DAB,#3b0f78);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px">
+        <div style="font-weight:900;font-size:18px;color:#fff;letter-spacing:.5px">RANKING</div>
+        <div style="font-size:11px;font-weight:600;color:#FFD700;letter-spacing:.3px">YOUR TEXT</div>
+        <div style="font-size:9px;color:rgba(255,255,255,.55);margin-top:4px;line-height:1.7;text-align:left;width:60px">
+          <span style="color:#fff">1.</span> item<br>
+          <span style="color:#44FF88">2.</span> item<br>
+          <span style="color:#FFD700">3.</span> item
+        </div>
+      </div>
+      <div class="tmpl-full-body">
+        <div class="tmpl-full-name">Template 3 — Ranking List</div>
+        <div class="tmpl-full-desc">
+          Build a numbered countdown or ranking from multiple video clips.
+          Each item's label is revealed when its clip starts playing.
+          Fully customizable: title, colors, font size, and per-item labels.
+        </div>
+        <div class="tag-row">
+          <span class="tag">1080×1920</span><span class="tag">9:16</span>
+          <span class="tag">Multi-source</span>
+          <span class="tag cyan">Rankings</span>
+          <span class="tag cyan">Countdowns</span>
+          <span class="tag cyan">Compilations</span>
+        </div>
+        <button class="btn-primary" onclick="openRankingTemplate()">Use Template</button>
+      </div>
+    </div>
+    <div class="tmpl-full-card tmpl-card-aistudio">
+      <div class="tmpl-full-thumb" style="background:linear-gradient(160deg,#3730a3,#1e1b4b);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;position:relative">
+        <div style="position:absolute;bottom:18px;left:50%;transform:translateX(-50%);display:flex;align-items:flex-end;gap:3px;height:28px">
+          <div style="width:3px;height:10px;background:rgba(129,140,248,.5);border-radius:2px"></div>
+          <div style="width:3px;height:18px;background:rgba(129,140,248,.6);border-radius:2px"></div>
+          <div style="width:3px;height:24px;background:rgba(129,140,248,.8);border-radius:2px"></div>
+          <div style="width:3px;height:14px;background:rgba(129,140,248,.6);border-radius:2px"></div>
+          <div style="width:3px;height:28px;background:rgba(165,180,252,.9);border-radius:2px"></div>
+          <div style="width:3px;height:20px;background:rgba(129,140,248,.7);border-radius:2px"></div>
+          <div style="width:3px;height:12px;background:rgba(129,140,248,.5);border-radius:2px"></div>
+          <div style="width:3px;height:22px;background:rgba(129,140,248,.65);border-radius:2px"></div>
+          <div style="width:3px;height:8px;background:rgba(129,140,248,.4);border-radius:2px"></div>
+        </div>
+        <div style="font-weight:800;font-size:15px;color:#fff;letter-spacing:.3px;position:relative;z-index:1">AI Studio</div>
+        <div style="font-size:10px;color:rgba(165,180,252,.85);letter-spacing:.2px;position:relative;z-index:1">Subtitles · Voiceover</div>
+      </div>
+      <div class="tmpl-full-body">
+        <div class="tmpl-full-name">Template 4 — AI Studio <span class="tag cyan" style="font-size:10px;margin-left:4px">New</span></div>
+        <div class="tmpl-full-desc">
+          Add AI-generated subtitles and/or a neural voiceover to any video.
+          Whisper transcribes your audio locally; edge-tts reads your script in three voices.
+          No API keys required.
+        </div>
+        <div class="tag-row">
+          <span class="tag">Whisper STT</span><span class="tag">edge-tts</span>
+          <span class="tag cyan">Subtitles</span>
+          <span class="tag cyan">Voiceover</span>
+        </div>
+        <button class="btn-primary" onclick="openAiStudioTemplate()">Use Template</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="tmpl-section-hdr">
+    Gaming Backgrounds
+    <span class="tag">Split-Screen · pre-built bottom half · your video on top</span>
+  </div>
+  <div class="gaming-tmpl-row" id="gaming-tmpl-row">
+    <div class="gaming-tmpl-card" id="gtmpl-subway_surfers" onclick="useGamingTemplate('subway_surfers')">
+      <div class="gaming-tmpl-thumb gtmpl-ss">
+        <video class="gaming-thumb-video" muted loop playsinline preload="auto"
+               onmouseenter="this.play()" onmouseleave="this.pause();this.currentTime=0"
+               src="/api/bg-video/subway_surfers"></video>
+        <div class="gaming-tmpl-label">Subway Surfers</div>
+        <span class="gaming-status-chip gstatus-needed" id="gstatus-subway_surfers">Setup</span>
+      </div>
+      <div class="gaming-tmpl-body">
+        <div class="tmpl-name">Subway Surfers</div>
+        <div class="tmpl-desc">Endless runner gameplay on the bottom half. Your content on top.</div>
+      </div>
+    </div>
+    <div class="gaming-tmpl-card" id="gtmpl-minecraft_parkour" onclick="useGamingTemplate('minecraft_parkour')">
+      <div class="gaming-tmpl-thumb gtmpl-mc">
+        <video class="gaming-thumb-video" muted loop playsinline preload="auto"
+               onmouseenter="this.play()" onmouseleave="this.pause();this.currentTime=0"
+               src="/api/bg-video/minecraft_parkour"></video>
+        <div class="gaming-tmpl-label">Minecraft Parkour</div>
+        <span class="gaming-status-chip gstatus-needed" id="gstatus-minecraft_parkour">Setup</span>
+      </div>
+      <div class="gaming-tmpl-body">
+        <div class="tmpl-name">Minecraft Parkour</div>
+        <div class="tmpl-desc">Satisfying block parkour runs. Drop your content on top.</div>
+      </div>
+    </div>
+    <div class="gaming-tmpl-card" id="gtmpl-gta" onclick="useGamingTemplate('gta')">
+      <div class="gaming-tmpl-thumb gtmpl-gta">
+        <video class="gaming-thumb-video" muted loop playsinline preload="auto"
+               onmouseenter="this.play()" onmouseleave="this.pause();this.currentTime=0"
+               src="/api/bg-video/gta"></video>
+        <div class="gaming-tmpl-label">GTA Gameplay</div>
+        <span class="gaming-status-chip gstatus-needed" id="gstatus-gta">Setup</span>
+      </div>
+      <div class="gaming-tmpl-body">
+        <div class="tmpl-name">GTA Gameplay</div>
+        <div class="tmpl-desc">City driving / action clips. Hooks attention below your content.</div>
+      </div>
+    </div>
+  </div>
+  <p class="muted-text" style="font-size:.76rem;margin-top:4px">
+    Gaming backgrounds marked <strong>Setup</strong> need a one-time download. See instructions below or run <code>download_bg_templates.py</code>.
+  </p>
+</div>

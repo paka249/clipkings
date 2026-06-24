@@ -1,0 +1,57 @@
+<!-- App modal (replaces alert / confirm / prompt) -->
+<div id="sf-modal" class="sfm-backdrop" style="display:none" onclick="_sfModalBgClick(event)">
+  <div class="sfm-card">
+    <div class="sfm-icon-wrap sfm-icon-warn" id="sfm-icon-wrap">
+      <svg style="width:22px;height:22px;flex-shrink:0" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+           id="sfm-icon"><use href="#i-warn"/></svg>
+    </div>
+    <div class="sfm-title" id="sfm-title"></div>
+    <div class="sfm-msg" id="sfm-msg"></div>
+    <div class="sfm-input-wrap" id="sfm-input-wrap" style="display:none">
+      <label class="field-label sfm-input-label" id="sfm-input-label"></label>
+      <input type="text" class="text-input" id="sfm-input" autocomplete="off"
+             onkeydown="if(event.key==='Enter')_sfModalConfirm()">
+    </div>
+    <div class="sfm-btns" id="sfm-btns"></div>
+  </div>
+</div>
+
+<!-- Watch exports modal -->
+<div class="watch-modal" id="watch-modal" style="display:none"
+     onclick="if(event.target===this)closeWatchModal()">
+  <div class="watch-modal-inner">
+    <button class="watch-modal-close" onclick="closeWatchModal()" aria-label="Close">&times;</button>
+    <div id="watch-modal-card">
+      <div id="watch-modal-result"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Canvas expand overlay -->
+<div id="ved-expand-overlay" class="ved-expand-overlay" onclick="vedCollapseCanvas(event)">
+  <div class="ved-expand-box" id="ved-expand-box" onclick="event.stopPropagation()">
+    <video id="ved-expand-video" style="display:none;width:100%;height:100%;object-fit:contain;background:#000"></video>
+    <div id="ved-expand-ph" class="feat-preview-ph" style="height:100%">
+      <svg class="icon" style="width:40px;height:40px;color:var(--text-3)"><use href="#i-film"/></svg>
+      <p style="color:var(--text-3);font-size:.85rem;margin:8px 0 0;text-align:center">No video loaded</p>
+    </div>
+    <button class="ved-expand-close" onclick="vedCollapseCanvas()" title="Close">
+      <svg class="icon icon-sm"><use href="#i-compress"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- Preview expand overlay (for AI Studio / Ranking / etc.) -->
+<div id="feat-expand-overlay" class="ved-expand-overlay" onclick="featCollapsePreview(event)">
+  <div class="ved-expand-box" id="feat-expand-box" onclick="event.stopPropagation()">
+    <video id="feat-expand-video" style="display:none;width:100%;height:100%;object-fit:contain;background:#000"></video>
+    <div id="feat-expand-ph" class="feat-preview-ph" style="height:100%">
+      <svg class="icon" style="width:40px;height:40px;color:var(--text-3)"><use href="#i-film"/></svg>
+      <p style="color:var(--text-3);font-size:.85rem;margin:8px 0 0;text-align:center">Output preview</p>
+    </div>
+    <button class="ved-expand-close" onclick="featCollapsePreview()" title="Close">
+      <svg class="icon icon-sm"><use href="#i-compress"/></svg>
+    </button>
+  </div>
+</div>
