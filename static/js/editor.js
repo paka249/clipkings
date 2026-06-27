@@ -225,6 +225,11 @@ async function _vedUpload(files, track) {
   if (wrap) wrap.style.display = 'block';
 
   for (const file of files) {
+    if (VED.library.length >= _VED_MAX_LIB) {
+      _modal({ icon: 'warn', iconColor: 'danger', title: 'Library full',
+        msg: `Max ${_VED_MAX_LIB} files in the library. Delete unused files to upload more.` });
+      break;
+    }
     const validErr = _vedValidateFile(file, track);
     if (validErr) {
       _modal({ icon: 'warn', iconColor: 'danger', title: 'File rejected', msg: validErr });
@@ -286,6 +291,11 @@ const _VED_PHOTO_DEFAULT_DUR = 3;
 function vedAddPhotoToSeq(uploadId) {
   const entry = VED.library.find(f => f.id === uploadId);
   if (!entry) return;
+  if (VED.photoClips.length >= _VED_MAX_IMG) {
+    _modal({ icon: 'warn', iconColor: 'danger', title: 'Image track full',
+      msg: `Max ${_VED_MAX_IMG} image clips in the timeline. Remove one to add another.` });
+    return;
+  }
   const newUid = Math.random().toString(36).slice(2, 8);
   // Place after the last existing image (or after the video sequence)
   const tStart = (VED.photoClips || []).reduce((m, c) => Math.max(m, c.tEnd ?? 0), _vedSeqTotal());
@@ -300,8 +310,10 @@ function vedAddPhotoToSeq(uploadId) {
     x:        0.5,
     y:        0.5,
     opacity:  1,
+    rotation: 0,
     flipH:    false,
     flipV:    false,
+    cropT: 0, cropR: 0, cropB: 0, cropL: 0,
   });
   _vedRenderRuler();
   vedRenderPhotoTrack();
@@ -437,6 +449,11 @@ function vedRenderPhotoTrack() {
 function vedAddAudioToSeq(uploadId) {
   const entry = VED.library.find(f => f.id === uploadId);
   if (!entry) return;
+  if (VED.audioClips.length >= _VED_MAX_AUDIO) {
+    _modal({ icon: 'warn', iconColor: 'danger', title: 'Audio track full',
+      msg: `Max ${_VED_MAX_AUDIO} audio clips in the timeline. Remove one to add another.` });
+    return;
+  }
   const newUid = Math.random().toString(36).slice(2, 8);
   VED.audioClips.push({
     uid:      newUid,
@@ -541,9 +558,19 @@ function vedRenderAudioTrack() {
 }
 
 // ── Video sequence ────────────────────────────────────────────
+const _VED_MAX_VIDEO = 10;
+const _VED_MAX_AUDIO = 3;
+const _VED_MAX_IMG   = 20;
+const _VED_MAX_LIB   = 30;
+
 function vedAddToSeq(uploadId) {
   const entry = VED.library.find(f => f.id === uploadId);
   if (!entry) return;
+  if (VED.sequence.length >= _VED_MAX_VIDEO) {
+    _modal({ icon: 'warn', iconColor: 'danger', title: 'Video track full',
+      msg: `Max ${_VED_MAX_VIDEO} video clips in the timeline. Remove one to add another.` });
+    return;
+  }
   const newUid = Math.random().toString(36).slice(2, 8);
   VED.sequence.push({
     uid:      newUid,
@@ -742,6 +769,8 @@ function vedSelectClip(uid, track) {
   vedRenderPhotoTrack();
   vedRenderSequence();
   vedRenderAudioTrack();
+  // Refresh overlays so the selected image is immediately visible for editing
+  _vedUpdateImgOverlays(_vedSeqElapsed());
 }
 
 function vedCloseInspector() {
@@ -820,13 +849,14 @@ function _vedSeqElapsed() {
 // ── Canvas image interaction ──────────────────────────────────
 
 function _vedImgApplyStyle(wrap, item) {
-  const scale = item.scale  ?? 1;
-  const fX    = item.flipH  ? -1 : 1;
-  const fY    = item.flipV  ? -1 : 1;
+  const scale = item.scale    ?? 1;
+  const rot   = item.rotation ?? 0;
+  const fX    = item.flipH    ? -1 : 1;
+  const fY    = item.flipV    ? -1 : 1;
   wrap.style.left      = ((item.x ?? 0.5) * 100) + '%';
   wrap.style.top       = ((item.y ?? 0.5) * 100) + '%';
   wrap.style.width     = (scale * 100) + '%';
-  wrap.style.transform = `translate(-50%,-50%) scale(${fX},${fY})`;
+  wrap.style.transform = `translate(-50%,-50%) rotate(${rot}deg) scale(${fX},${fY})`;
   wrap.style.opacity   = item.opacity ?? 1;
 }
 
@@ -852,15 +882,51 @@ function _vedImgCreateOverlay(item) {
     wrap.appendChild(h);
   });
 
-  // Floating toolbar (crop, delete)
+  // Rotation handle (circle above image center, connected by line)
+  const rotHandle = document.createElement('div');
+  rotHandle.className = 'ved-img-rot-handle';
+  rotHandle.title = 'Drag to rotate';
+  rotHandle.innerHTML = '<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.5 2v6h-6"/><path d="M21.34 15.57a10 10 0 1 1-.57-8.38"/></svg>';
+  rotHandle.addEventListener('mousedown', e => {
+    e.preventDefault(); e.stopPropagation();
+    _vedImgRotateStart(e, item);
+  });
+  wrap.appendChild(rotHandle);
+
+  // Floating toolbar (crop, flip H, flip V)
   const tb = document.createElement('div');
   tb.className = 'ved-img-tb';
+
   const cropBtn = document.createElement('button');
-  cropBtn.className   = 'ved-img-tb-btn';
-  cropBtn.title       = 'Crop';
-  cropBtn.innerHTML   = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="6 2 6 18 22 18"/><polyline points="2 6 18 6 18 22"/></svg> Crop';
+  cropBtn.className = 'ved-img-tb-btn'; cropBtn.title = 'Crop';
+  cropBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="6 2 6 18 22 18"/><polyline points="2 6 18 6 18 22"/></svg> Crop';
   cropBtn.addEventListener('click', e => { e.stopPropagation(); _vedImgCropMode(item); });
   tb.appendChild(cropBtn);
+
+  const flipH = document.createElement('button');
+  flipH.className = 'ved-img-tb-btn'; flipH.title = 'Mirror horizontal';
+  flipH.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="2" x2="12" y2="22"/><path d="M20 7L12 2 12 22l8-5V7z" fill="currentColor" opacity=".4"/><path d="M4 7l8-5v20L4 17V7z"/></svg>';
+  flipH.addEventListener('click', e => {
+    e.stopPropagation();
+    item.flipH = !item.flipH;
+    const w = document.getElementById('ved-img-overlays')?.querySelector(`.ved-img-wrap[data-uid="${item.uid}"]`);
+    if (w) _vedImgApplyStyle(w, item);
+    vedRenderInspector();
+  });
+  tb.appendChild(flipH);
+
+  const flipV = document.createElement('button');
+  flipV.className = 'ved-img-tb-btn'; flipV.title = 'Mirror vertical';
+  flipV.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="2" y1="12" x2="22" y2="12"/><path d="M7 20l-5-8 20 0-5 8H7z" fill="currentColor" opacity=".4"/><path d="M7 4l-5 8h20L17 4H7z"/></svg>';
+  flipV.addEventListener('click', e => {
+    e.stopPropagation();
+    item.flipV = !item.flipV;
+    const w = document.getElementById('ved-img-overlays')?.querySelector(`.ved-img-wrap[data-uid="${item.uid}"]`);
+    if (w) _vedImgApplyStyle(w, item);
+    vedRenderInspector();
+  });
+  tb.appendChild(flipV);
+
   wrap.appendChild(tb);
 
   // Body drag = move
@@ -920,6 +986,29 @@ function _vedImgScaleStart(e, item, corner) {
   };
   document.addEventListener('mousemove', onMove);
   document.addEventListener('mouseup', onUp);
+}
+
+function _vedImgRotateStart(e, item) {
+  const c = document.getElementById('ved-img-overlays');
+  if (!c) return;
+  const wrap = c.querySelector(`.ved-img-wrap[data-uid="${item.uid}"]`);
+  if (!wrap) return;
+  const rect = wrap.getBoundingClientRect();
+  const cx   = rect.left + rect.width  / 2;
+  const cy   = rect.top  + rect.height / 2;
+
+  const onMove = ev => {
+    const deg = Math.atan2(ev.clientX - cx, -(ev.clientY - cy)) * 180 / Math.PI;
+    item.rotation = Math.round(deg);
+    _vedImgApplyStyle(wrap, item);
+    vedRenderInspector();
+  };
+  const onUp = () => {
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup',   onUp);
+  };
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup',   onUp);
 }
 
 function _vedImgCropMode(item) {
@@ -1026,17 +1115,22 @@ function _vedUpdateImgOverlays(elapsed) {
   const clips = VED.photoClips || [];
 
   clips.forEach(item => {
-    const tS = item.tStart ?? 0;
-    const tE = item.tEnd   ?? (tS + _VED_PHOTO_DEFAULT_DUR);
-    const vis = elapsed >= tS && elapsed < tE;
+    const tS    = item.tStart ?? 0;
+    const tE    = item.tEnd   ?? (tS + _VED_PHOTO_DEFAULT_DUR);
+    const isSel = item.uid === VED.selectedClip;
+    // Always show the selected clip so the user can edit it regardless of playhead
+    const vis   = (elapsed >= tS && elapsed < tE) || isSel;
 
     let wrap = c.querySelector(`.ved-img-wrap[data-uid="${item.uid}"]`);
     if (!wrap) { wrap = _vedImgCreateOverlay(item); c.appendChild(wrap); }
 
-    wrap.style.display = vis ? '' : 'none';
-    if (vis) _vedImgApplyStyle(wrap, item);
+    wrap.style.display  = vis ? '' : 'none';
+    wrap.style.zIndex   = isSel ? '5' : '1';
+    // Dim the image when it's only shown because it's selected (not in its time window)
+    wrap.style.outline  = isSel && !(elapsed >= tS && elapsed < tE)
+      ? '2px dashed var(--accent)' : '';
 
-    const isSel = item.uid === VED.selectedClip;
+    if (vis) _vedImgApplyStyle(wrap, item);
     wrap.classList.toggle('ved-img-sel', isSel);
 
     // Apply saved crop to img element
@@ -1551,7 +1645,8 @@ async function vedRender() {
         y:          p.y       ?? 0.5,
         opacity:    p.opacity ?? 1,
         flip_h:     p.flipH   ?? false,
-        flip_v:     p.flipV   ?? false,
+        flip_v:     p.flipV    ?? false,
+        rotation:   p.rotation ?? 0,
         crop_t:     p.cropT   ?? 0,
         crop_r:     p.cropR   ?? 0,
         crop_b:     p.cropB   ?? 0,

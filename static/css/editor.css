@@ -223,6 +223,34 @@
   font-family: var(--sans); font-weight: 500;
 }
 .ved-img-tb-btn:hover { background: rgba(255,255,255,.18); }
+/* Rotation handle — circle above image center, rotates with image */
+.ved-img-rot-handle {
+  display: none;
+  position: absolute;
+  top: -52px; left: 50%;
+  transform: translateX(-50%);
+  width: 18px; height: 18px;
+  background: var(--surface);
+  border: 2px solid var(--accent);
+  border-radius: 50%;
+  cursor: grab;
+  z-index: 12;
+  display: none;
+  align-items: center; justify-content: center;
+  color: var(--accent);
+}
+.ved-img-rot-handle:active { cursor: grabbing; }
+/* Connector line from handle down to image top */
+.ved-img-rot-handle::after {
+  content: '';
+  position: absolute;
+  left: 50%; top: 100%;
+  transform: translateX(-50%);
+  width: 1px; height: 34px;
+  background: var(--accent);
+  opacity: .6;
+}
+.ved-img-sel .ved-img-rot-handle { display: flex; }
 /* Crop overlay UI */
 .ved-crop-ui {
   box-sizing: border-box;

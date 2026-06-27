@@ -12,6 +12,7 @@ from .state import (
     _ALLOWED_AUDIO_EXTS,
     _ALLOWED_EXTS,
     _ALLOWED_IMAGE_EXTS,
+    _MAX_LIBRARY_SIZE,
     _MAX_UPLOAD_MB,
     load_uploads,
     save_uploads,
@@ -37,6 +38,13 @@ async def api_upload(file: UploadFile = File(...)):
         # Fall back to any image/* content type
         if not ext and (file.content_type or "").startswith("image/"):
             ext = ".jpg"
+    uploads = load_uploads()
+    if len(uploads) >= _MAX_LIBRARY_SIZE:
+        raise HTTPException(
+            400,
+            detail=f"Library is full ({_MAX_LIBRARY_SIZE} files max). Delete unused files before uploading more.",
+        )
+
     all_allowed = _ALLOWED_EXTS | _ALLOWED_AUDIO_EXTS | _ALLOWED_IMAGE_EXTS
     if ext not in all_allowed:
         raise HTTPException(
@@ -78,7 +86,6 @@ async def api_upload(file: UploadFile = File(...)):
         "path": str(dest),
         "uploaded_at": datetime.now().isoformat(timespec="seconds"),
     }
-    uploads = load_uploads()
     uploads.append(entry)
     save_uploads(uploads)
     return entry
