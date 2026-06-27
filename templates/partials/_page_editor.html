@@ -8,8 +8,8 @@
   <input id="ved-audio-input" type="file" style="display:none" multiple
          accept=".mp3,.aac,.wav,.m4a,.ogg,.flac,audio/*"
          onchange="vedAddAudioFiles(this.files)">
-  <input id="ved-photo-input" type="file" style="display:none" multiple
-         accept=".jpg,.jpeg,.png,.webp,.gif,.bmp,.tiff,image/*"
+  <input id="ved-image-input" type="file" style="display:none" multiple
+         accept=".jpg,.jpeg,.png,.webp,.gif,image/jpeg,image/png,image/webp,image/gif"
          onchange="vedAddPhotoFiles(this.files)">
 
   <!-- ── Top bar ── -->
@@ -44,6 +44,8 @@
                  style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;cursor:pointer"></video>
           <audio id="ved-preview-audio" preload="auto"
                  onended="vedPreviewAudioEnded()"></audio>
+          <!-- Image overlays — shown/hidden based on playhead position -->
+          <div id="ved-img-overlays" style="position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:2"></div>
           <div class="ved-preview-placeholder" id="ved-canvas-placeholder">
             <svg class="icon icon-xl" style="color:var(--text-3)"><use href="#i-film"/></svg>
             <div id="ved-canvas-hint" style="margin-top:10px;font-size:.83rem;color:var(--text-2);font-weight:500">Add media to get started</div>
@@ -165,9 +167,9 @@
       <!-- Non-scrolling label column -->
       <div class="ved-tl-label-col">
         <div class="ved-tl-label-spacer"></div>
-        <label for="ved-photo-input" class="ved-tl-track-label ved-tl-label-photo" title="Add photo">
+        <label for="ved-image-input" class="ved-tl-track-label ved-tl-label-photo" title="Add image">
           <svg class="icon icon-sm"><use href="#i-img"/></svg>
-          <span>Photo</span>
+          <span>Images</span>
           <span class="ved-tl-label-plus">+</span>
         </label>
         <label for="ved-video-input" class="ved-tl-track-label ved-tl-label-video" title="Add video">

@@ -11,6 +11,7 @@ from shortform_studio.config import UPLOADS_DIR
 from .state import (
     _ALLOWED_AUDIO_EXTS,
     _ALLOWED_EXTS,
+    _ALLOWED_IMAGE_EXTS,
     _MAX_UPLOAD_MB,
     load_uploads,
     save_uploads,
@@ -29,14 +30,21 @@ async def api_upload(file: UploadFile = File(...)):
             "video/x-matroska": ".mkv", "video/x-msvideo": ".avi",
             "audio/mpeg": ".mp3", "audio/mp4": ".m4a", "audio/wav": ".wav",
             "audio/ogg": ".ogg", "audio/aac": ".aac",
+            "image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp",
+            "image/gif": ".gif", "image/avif": ".avif",
         }
         ext = ct_map.get(ct, "")
-    all_allowed = _ALLOWED_EXTS | _ALLOWED_AUDIO_EXTS
+        # Fall back to any image/* content type
+        if not ext and (file.content_type or "").startswith("image/"):
+            ext = ".jpg"
+    all_allowed = _ALLOWED_EXTS | _ALLOWED_AUDIO_EXTS | _ALLOWED_IMAGE_EXTS
     if ext not in all_allowed:
         raise HTTPException(
             400,
             detail=f"Unsupported file type '{ext or 'unknown'}'. "
-                   f"Allowed: {', '.join(sorted(all_allowed))}",
+                   f"Allowed video: {', '.join(sorted(_ALLOWED_EXTS))} — "
+                   f"audio: {', '.join(sorted(_ALLOWED_AUDIO_EXTS))} — "
+                   f"images: {', '.join(sorted(_ALLOWED_IMAGE_EXTS))}",
         )
 
     contents = await file.read()
@@ -66,6 +74,7 @@ async def api_upload(file: UploadFile = File(...)):
         "size_mb": round(len(contents) / 1_000_000, 2),
         "duration": duration,
         "is_audio": ext in _ALLOWED_AUDIO_EXTS,
+        "is_image": ext in _ALLOWED_IMAGE_EXTS,
         "path": str(dest),
         "uploaded_at": datetime.now().isoformat(timespec="seconds"),
     }
@@ -89,7 +98,16 @@ def api_stream_upload(uid: str):
     path = Path(entry["path"])
     if not path.exists():
         raise HTTPException(404)
-    media_type = "video/mp4" if entry.get("ext") in (".mp4", ".mov", ".m4v") else "video/webm"
+    _MEDIA_TYPES = {
+        ".mp4": "video/mp4", ".mov": "video/mp4", ".m4v": "video/mp4",
+        ".mkv": "video/webm", ".webm": "video/webm", ".avi": "video/x-msvideo",
+        ".mp3": "audio/mpeg", ".aac": "audio/aac", ".wav": "audio/wav",
+        ".m4a": "audio/mp4", ".ogg": "audio/ogg", ".flac": "audio/flac",
+        ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".jfif": "image/jpeg",
+        ".png": "image/png", ".webp": "image/webp", ".gif": "image/gif",
+        ".avif": "image/avif",
+    }
+    media_type = _MEDIA_TYPES.get(entry.get("ext", ""), "application/octet-stream")
     return FileResponse(str(path), media_type=media_type)
 
 
