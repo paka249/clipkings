@@ -1,16 +1,24 @@
-streamlit>=1.35
+# ── Web framework ─────────────────────────────────────────────
+fastapi>=0.111
+uvicorn[standard]>=0.29
+python-multipart>=0.0.9    # required for FastAPI file uploads
+jinja2>=3.1                # HTML templates
+
+# ── Database / ORM ────────────────────────────────────────────
+sqlalchemy>=2.0            # ORM (used for User model + potential future tables)
+python-dotenv>=1.0         # load DATABASE_URL and SECRET_KEY from .env
+
+# ── Validation ────────────────────────────────────────────────
+pydantic>=2.0
+email-validator>=2.0       # enables EmailStr in pydantic schemas
+
+# ── Media processing ──────────────────────────────────────────
 yt-dlp>=2024.1.1
 ffmpeg-python>=0.2.0
 
-# AI Studio
+# ── AI Studio ─────────────────────────────────────────────────
 faster-whisper>=1.0
 edge-tts>=6.1
 
-# Backend (Supabase cloud) — install when ready to switch from SQLite
-supabase>=2.4
-python-dotenv>=1.0
-
-# SQLAlchemy ORM + FastAPI runtime
-sqlalchemy>=2.0
-uvicorn[standard]>=0.29
-email-validator>=2.0
+# ── Misc ──────────────────────────────────────────────────────
+streamlit>=1.35

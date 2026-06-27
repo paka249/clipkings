@@ -16,8 +16,8 @@ from fastapi.templating import Jinja2Templates
 
 from api.database import Base, engine
 from api.dependencies import get_current_user
-from api.models import User
 from api.routers import ai_studio, auth, editor, exports, jobs, ranking, uploads
+from shortform_studio.auth import AuthUser
 from shortform_studio.config import EXPORTS_DIR, UPLOADS_DIR
 from shortform_studio.db import init_db
 
@@ -58,12 +58,12 @@ def legal_page(page: str):
 
 
 @app.get("/test-auth")
-def test_auth(current_user: User = Depends(get_current_user)):
+def test_auth(current_user: AuthUser = Depends(get_current_user)):
     return {
         "authenticated": True,
         "user_id": current_user.id,
         "email": current_user.email,
-        "is_premium": current_user.is_premium,
+        "username": current_user.username,
     }
 
 
