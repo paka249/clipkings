@@ -86,6 +86,9 @@ const VED = {
   lastOutput:    null,
   _lastLogCount: 0,
   zoom:          1,
+  imgPlayOffset: 0,
+  imgPlayT0:     0,
+  imgRafId:      null,
 };
 
 // ── Dashboard state ───────────────────────────────────────────
