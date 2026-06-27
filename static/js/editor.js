@@ -286,17 +286,17 @@ const _VED_PHOTO_DEFAULT_DUR = 3;
 function vedAddPhotoToSeq(uploadId) {
   const entry = VED.library.find(f => f.id === uploadId);
   if (!entry) return;
-  const newUid  = Math.random().toString(36).slice(2, 8);
-  const dur     = _VED_PHOTO_DEFAULT_DUR;
-  const tStart  = _vedSeqTotal(); // default: appear right after video sequence
+  const newUid = Math.random().toString(36).slice(2, 8);
+  // Place after the last existing image (or after the video sequence)
+  const tStart = (VED.photoClips || []).reduce((m, c) => Math.max(m, c.tEnd ?? 0), _vedSeqTotal());
   VED.photoClips.push({
     uid:      newUid,
     uploadId: entry.id,
     name:     entry.name || entry.original_name || entry.id,
     tStart,
-    tEnd:     tStart + dur,
+    tEnd:     tStart + _VED_PHOTO_DEFAULT_DUR,
     is_image: true,
-    scale:    1,
+    scale:    0.8,
     x:        0.5,
     y:        0.5,
     opacity:  1,
@@ -817,33 +817,240 @@ function _vedSeqElapsed() {
 }
 
 // ── Image overlay preview ─────────────────────────────────────
+// ── Canvas image interaction ──────────────────────────────────
+
+function _vedImgApplyStyle(wrap, item) {
+  const scale = item.scale  ?? 1;
+  const fX    = item.flipH  ? -1 : 1;
+  const fY    = item.flipV  ? -1 : 1;
+  wrap.style.left      = ((item.x ?? 0.5) * 100) + '%';
+  wrap.style.top       = ((item.y ?? 0.5) * 100) + '%';
+  wrap.style.width     = (scale * 100) + '%';
+  wrap.style.transform = `translate(-50%,-50%) scale(${fX},${fY})`;
+  wrap.style.opacity   = item.opacity ?? 1;
+}
+
+function _vedImgCreateOverlay(item) {
+  const wrap = document.createElement('div');
+  wrap.className     = 'ved-img-wrap';
+  wrap.dataset.uid   = item.uid;
+
+  const img = document.createElement('img');
+  img.src             = `/api/uploads/stream/${item.uploadId}`;
+  img.draggable       = false;
+  img.className       = 'ved-img-el';
+  wrap.appendChild(img);
+
+  // Corner handles (scale)
+  ['nw','ne','se','sw'].forEach(pos => {
+    const h = document.createElement('div');
+    h.className = 'ved-img-corner ved-img-corner--' + pos;
+    h.addEventListener('mousedown', e => {
+      e.preventDefault(); e.stopPropagation();
+      _vedImgScaleStart(e, item, pos);
+    });
+    wrap.appendChild(h);
+  });
+
+  // Floating toolbar (crop, delete)
+  const tb = document.createElement('div');
+  tb.className = 'ved-img-tb';
+  const cropBtn = document.createElement('button');
+  cropBtn.className   = 'ved-img-tb-btn';
+  cropBtn.title       = 'Crop';
+  cropBtn.innerHTML   = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="6 2 6 18 22 18"/><polyline points="2 6 18 6 18 22"/></svg> Crop';
+  cropBtn.addEventListener('click', e => { e.stopPropagation(); _vedImgCropMode(item); });
+  tb.appendChild(cropBtn);
+  wrap.appendChild(tb);
+
+  // Body drag = move
+  wrap.addEventListener('mousedown', e => {
+    if (e.target.closest('.ved-img-corner,.ved-img-tb')) return;
+    e.preventDefault(); e.stopPropagation();
+    vedSelectClip(item.uid, 'photo');
+    _vedUpdateImgOverlays(_vedSeqElapsed());
+    vedRenderInspector();
+    _vedImgMoveStart(e, item);
+  });
+
+  return wrap;
+}
+
+function _vedImgMoveStart(e, item) {
+  const c = document.getElementById('ved-img-overlays');
+  if (!c) return;
+  const rect = c.getBoundingClientRect();
+  const sx = e.clientX, sy = e.clientY;
+  const ix = item.x ?? 0.5, iy = item.y ?? 0.5;
+  const wrap = c.querySelector(`.ved-img-wrap[data-uid="${item.uid}"]`);
+
+  const onMove = ev => {
+    item.x = Math.max(0, Math.min(1, ix + (ev.clientX - sx) / rect.width));
+    item.y = Math.max(0, Math.min(1, iy + (ev.clientY - sy) / rect.height));
+    if (wrap) _vedImgApplyStyle(wrap, item);
+    vedRenderInspector();
+  };
+  const onUp = () => {
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+  };
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
+}
+
+function _vedImgScaleStart(e, item, corner) {
+  const c = document.getElementById('ved-img-overlays');
+  if (!c) return;
+  const rect      = c.getBoundingClientRect();
+  const sx        = e.clientX;
+  const initScale = item.scale ?? 1;
+  // right-side corners → drag right = bigger; left-side → drag left = bigger
+  const sign = (corner === 'ne' || corner === 'se') ? 1 : -1;
+  const wrap = c.querySelector(`.ved-img-wrap[data-uid="${item.uid}"]`);
+
+  const onMove = ev => {
+    const dx = (ev.clientX - sx) / rect.width;
+    item.scale = Math.max(0.05, Math.min(3, initScale + sign * dx * 2));
+    if (wrap) _vedImgApplyStyle(wrap, item);
+    vedRenderInspector();
+  };
+  const onUp = () => {
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+  };
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
+}
+
+function _vedImgCropMode(item) {
+  const c = document.getElementById('ved-img-overlays');
+  if (!c) return;
+  // Remove any existing crop UI
+  c.querySelectorAll('.ved-crop-ui').forEach(el => el.remove());
+
+  const wrap = c.querySelector(`.ved-img-wrap[data-uid="${item.uid}"]`);
+  if (!wrap) return;
+  const wr = wrap.getBoundingClientRect();
+  const cr = c.getBoundingClientRect();
+
+  // Crop values: percentage of image inset from each side (0–100)
+  const crop = { t: item.cropT ?? 0, r: item.cropR ?? 0, b: item.cropB ?? 0, l: item.cropL ?? 0 };
+
+  const ui = document.createElement('div');
+  ui.className = 'ved-crop-ui';
+  ui.style.cssText = `position:absolute;left:${wr.left-cr.left}px;top:${wr.top-cr.top}px;width:${wr.width}px;height:${wr.height}px;pointer-events:all;`;
+
+  const applyClip = () => {
+    ui.style.clipPath = `inset(${crop.t}% ${crop.r}% ${crop.b}% ${crop.l}%)`;
+    const shadeTop    = document.getElementById('_vc_shade_t'); if(shadeTop) shadeTop.style.height = crop.t + '%';
+    const shadeRight  = document.getElementById('_vc_shade_r'); if(shadeRight) shadeRight.style.width = crop.r + '%';
+    const shadeBottom = document.getElementById('_vc_shade_b'); if(shadeBottom) shadeBottom.style.height = crop.b + '%';
+    const shadeLeft   = document.getElementById('_vc_shade_l'); if(shadeLeft) shadeLeft.style.width = crop.l + '%';
+  };
+
+  // Shade layers
+  [['t','top:0;left:0;right:0','_vc_shade_t'],['r','top:0;right:0;bottom:0','_vc_shade_r'],
+   ['b','bottom:0;left:0;right:0','_vc_shade_b'],['l','top:0;left:0;bottom:0','_vc_shade_l']].forEach(([key, pos, id]) => {
+    const s = document.createElement('div');
+    s.id = id;
+    s.style.cssText = `position:absolute;${pos};background:rgba(0,0,0,.55);pointer-events:none;`;
+    if (key==='t'||key==='b') s.style.height = crop[key]+'%';
+    else s.style.width = crop[key]+'%';
+    ui.appendChild(s);
+  });
+
+  // Crop border
+  const border = document.createElement('div');
+  border.style.cssText = `position:absolute;border:2px dashed #fff;box-sizing:border-box;
+    left:${crop.l}%;top:${crop.t}%;right:${crop.r}%;bottom:${crop.b}%;pointer-events:none;`;
+  ui.appendChild(border);
+
+  // Edge handles
+  [['t','top:-4px;left:50%;transform:translateX(-50%)','ns-resize'],
+   ['r','right:-4px;top:50%;transform:translateY(-50%)','ew-resize'],
+   ['b','bottom:-4px;left:50%;transform:translateX(-50%)','ns-resize'],
+   ['l','left:-4px;top:50%;transform:translateY(-50%)','ew-resize']].forEach(([side, pos, cur]) => {
+    const h = document.createElement('div');
+    h.style.cssText = `position:absolute;${pos};width:12px;height:12px;background:#fff;border-radius:50%;cursor:${cur};z-index:5;`;
+    h.addEventListener('mousedown', ev => {
+      ev.preventDefault(); ev.stopPropagation();
+      const startCoord = side==='t'||side==='b' ? ev.clientY : ev.clientX;
+      const initVal = crop[side];
+      const dim = side==='t'||side==='b' ? wr.height : wr.width;
+      const sign = side==='b'||side==='r' ? -1 : 1;
+      const onM = em => {
+        const delta = (em[side==='t'||side==='b'?'clientY':'clientX'] - startCoord) / dim * 100;
+        crop[side] = Math.max(0, Math.min(45, initVal + sign * delta));
+        border.style.left = crop.l+'%'; border.style.top = crop.t+'%';
+        border.style.right = crop.r+'%'; border.style.bottom = crop.b+'%';
+        applyClip();
+      };
+      const onU = () => { document.removeEventListener('mousemove',onM); document.removeEventListener('mouseup',onU); };
+      document.addEventListener('mousemove',onM); document.addEventListener('mouseup',onU);
+    });
+    ui.appendChild(h);
+  });
+
+  // Done / Reset buttons
+  const bar = document.createElement('div');
+  bar.style.cssText = 'position:absolute;bottom:-34px;left:50%;transform:translateX(-50%);display:flex;gap:6px;white-space:nowrap;';
+  const doneBtn = document.createElement('button');
+  doneBtn.className = 'btn-sm'; doneBtn.textContent = 'Apply Crop';
+  doneBtn.addEventListener('click', () => {
+    item.cropT = crop.t; item.cropR = crop.r; item.cropB = crop.b; item.cropL = crop.l;
+    const img = wrap.querySelector('.ved-img-el');
+    if (img) img.style.clipPath = (item.cropT||item.cropR||item.cropB||item.cropL)
+      ? `inset(${item.cropT}% ${item.cropR}% ${item.cropB}% ${item.cropL}%)` : '';
+    ui.remove(); vedRenderInspector();
+  });
+  const resetBtn = document.createElement('button');
+  resetBtn.className = 'btn-outline'; resetBtn.textContent = 'Reset';
+  resetBtn.addEventListener('click', () => {
+    crop.t = crop.r = crop.b = crop.l = 0; applyClip();
+    border.style.left = '0'; border.style.top = '0'; border.style.right = '0'; border.style.bottom = '0';
+  });
+  const cancelBtn = document.createElement('button');
+  cancelBtn.className = 'btn-outline'; cancelBtn.textContent = 'Cancel';
+  cancelBtn.addEventListener('click', () => ui.remove());
+  bar.appendChild(doneBtn); bar.appendChild(resetBtn); bar.appendChild(cancelBtn);
+  ui.appendChild(bar);
+
+  applyClip();
+  c.appendChild(ui);
+}
+
 function _vedUpdateImgOverlays(elapsed) {
-  const container = document.getElementById('ved-img-overlays');
-  if (!container) return;
-  container.innerHTML = '';
-  (VED.photoClips || []).forEach(item => {
+  const c = document.getElementById('ved-img-overlays');
+  if (!c) return;
+
+  const clips = VED.photoClips || [];
+
+  clips.forEach(item => {
     const tS = item.tStart ?? 0;
     const tE = item.tEnd   ?? (tS + _VED_PHOTO_DEFAULT_DUR);
-    if (elapsed < tS || elapsed >= tE) return;
+    const vis = elapsed >= tS && elapsed < tE;
 
-    const scale   = item.scale   ?? 1;
-    const xPct    = (item.x       ?? 0.5) * 100;
-    const yPct    = (item.y       ?? 0.5) * 100;
-    const opacity = item.opacity  ?? 1;
-    const scaleX  = item.flipH ? -scale : scale;
-    const scaleY  = item.flipV ? -scale : scale;
+    let wrap = c.querySelector(`.ved-img-wrap[data-uid="${item.uid}"]`);
+    if (!wrap) { wrap = _vedImgCreateOverlay(item); c.appendChild(wrap); }
 
-    const img = document.createElement('img');
-    img.src = `/api/uploads/stream/${item.uploadId}`;
-    img.style.cssText = `
-      position:absolute;
-      left:${xPct}%;top:${yPct}%;
-      transform:translate(-50%,-50%) scale(${scaleX},${scaleY});
-      max-width:${scale * 100}%;max-height:${scale * 100}%;
-      opacity:${opacity};
-      object-fit:contain;
-    `;
-    container.appendChild(img);
+    wrap.style.display = vis ? '' : 'none';
+    if (vis) _vedImgApplyStyle(wrap, item);
+
+    const isSel = item.uid === VED.selectedClip;
+    wrap.classList.toggle('ved-img-sel', isSel);
+
+    // Apply saved crop to img element
+    const imgEl = wrap.querySelector('.ved-img-el');
+    if (imgEl) {
+      imgEl.style.clipPath = (item.cropT||item.cropR||item.cropB||item.cropL)
+        ? `inset(${item.cropT??0}% ${item.cropR??0}% ${item.cropB??0}% ${item.cropL??0}%)`
+        : '';
+    }
+  });
+
+  // Remove overlays for deleted clips
+  c.querySelectorAll('.ved-img-wrap').forEach(el => {
+    if (!clips.find(x => x.uid === el.dataset.uid)) el.remove();
   });
 }
 
@@ -1345,6 +1552,10 @@ async function vedRender() {
         opacity:    p.opacity ?? 1,
         flip_h:     p.flipH   ?? false,
         flip_v:     p.flipV   ?? false,
+        crop_t:     p.cropT   ?? 0,
+        crop_r:     p.cropR   ?? 0,
+        crop_b:     p.cropB   ?? 0,
+        crop_l:     p.cropL   ?? 0,
       })),
       audio_clips: VED.audioClips.map(c => ({
         upload_id: c.uploadId,

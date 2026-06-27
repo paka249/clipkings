@@ -175,6 +175,60 @@
 .btn-sm--active {
   background: var(--accent-dim); color: var(--accent); border-color: var(--accent);
 }
+
+/* ── Canvas image overlays — interactive ─────────────────────── */
+.ved-img-wrap {
+  position: absolute;
+  transform-origin: center center;
+  pointer-events: all;
+  cursor: move;
+}
+.ved-img-el {
+  width: 100%; height: auto; max-height: 100%;
+  object-fit: contain; display: block;
+  pointer-events: none; user-select: none;
+  transition: clip-path 120ms;
+}
+/* Corner scale handles — hidden unless selected */
+.ved-img-corner {
+  display: none;
+  position: absolute;
+  width: 10px; height: 10px;
+  background: #fff;
+  border: 2px solid var(--accent);
+  border-radius: 2px;
+  z-index: 10;
+}
+.ved-img-sel .ved-img-corner { display: block; }
+.ved-img-corner--nw { top: -5px; left: -5px;  cursor: nw-resize; }
+.ved-img-corner--ne { top: -5px; right: -5px; cursor: ne-resize; }
+.ved-img-corner--se { bottom: -5px; right: -5px; cursor: se-resize; }
+.ved-img-corner--sw { bottom: -5px; left: -5px;  cursor: sw-resize; }
+/* Selection outline */
+.ved-img-sel { outline: 2px solid var(--accent); outline-offset: 1px; }
+/* Floating toolbar — hidden unless selected */
+.ved-img-tb {
+  display: none;
+  position: absolute;
+  top: -32px; left: 50%; transform: translateX(-50%);
+  background: rgba(0,0,0,.75); backdrop-filter: blur(4px);
+  border-radius: 6px; padding: 2px 4px;
+  flex-direction: row; gap: 2px; white-space: nowrap; z-index: 20;
+}
+.ved-img-sel .ved-img-tb { display: flex; }
+.ved-img-tb-btn {
+  background: none; border: none; color: #fff;
+  padding: 3px 7px; cursor: pointer; border-radius: 4px;
+  display: flex; align-items: center; gap: 4px; font-size: .72rem;
+  font-family: var(--sans); font-weight: 500;
+}
+.ved-img-tb-btn:hover { background: rgba(255,255,255,.18); }
+/* Crop overlay UI */
+.ved-crop-ui {
+  box-sizing: border-box;
+  pointer-events: all;
+  z-index: 30;
+}
 .ved-insp-empty {
   display: flex; flex-direction: column; align-items: center;
   gap: 8px; padding: 24px 10px; text-align: center;
