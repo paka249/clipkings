@@ -18,7 +18,7 @@ function previewURL(type) {
   if (label) label.textContent = '';
   if (status) { status.textContent = 'Fetching preview…'; status.className = 'preview-info'; status.style.display = 'block'; }
 
-  fetch('/api/preview', {
+  apiFetch('/api/preview', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ url: val, type }),
@@ -70,7 +70,7 @@ async function edFileChosen(file) {
   fd.append('file', file);
   document.getElementById('ed-file-input').value = '';
   try {
-    const res = await fetch('/api/upload', { method: 'POST', body: fd });
+    const res = await apiFetch('/api/upload', { method: 'POST', body: fd });
     if (!res.ok) {
       const err = await res.json().catch(() => ({ detail: res.statusText }));
       throw new Error(err.detail || 'Upload failed');
@@ -121,7 +121,7 @@ async function bgFileChosen(file) {
   fd.append('file', file);
   document.getElementById('bg-file-input').value = '';
   try {
-    const res = await fetch('/api/upload', { method: 'POST', body: fd });
+    const res = await apiFetch('/api/upload', { method: 'POST', body: fd });
     if (!res.ok) {
       const err = await res.json().catch(() => ({ detail: res.statusText }));
       throw new Error(err.detail || 'Upload failed');
@@ -187,7 +187,7 @@ async function generate() {
     const codec      = document.getElementById('opt-codec').value;
     const fit        = document.getElementById('opt-fit').value;
 
-    const res = await fetch('/api/generate', {
+    const res = await apiFetch('/api/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -223,7 +223,7 @@ function startPolling(jobId) {
 
 async function pollJob(jobId) {
   try {
-    const res = await fetch('/api/jobs/' + jobId);
+    const res = await apiFetch('/api/jobs/' + jobId);
     if (!res.ok) return;
     const job = await res.json();
 

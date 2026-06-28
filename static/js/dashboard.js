@@ -83,7 +83,7 @@ async function _dashUpload(file, statusEl) {
   const form = new FormData();
   form.append('file', file);
   try {
-    const res = await fetch('/api/upload', { method: 'POST', body: form });
+    const res = await apiFetch('/api/upload', { method: 'POST', body: form });
     const data = await res.json();
     if (!res.ok) throw new Error(data.detail || 'Upload failed');
     statusEl.textContent = `✓ ${data.name} (${data.size_mb} MB)`;
@@ -124,7 +124,7 @@ async function dashPreviewUrl() {
   if (!url) return;
   info.style.display = ''; info.textContent = 'Fetching…';
   try {
-    const res = await fetch('/api/preview', { method: 'POST',
+    const res = await apiFetch('/api/preview', { method: 'POST',
       headers: {'Content-Type':'application/json'}, body: JSON.stringify({ url }) });
     const d = await res.json();
     if (!res.ok) throw new Error(d.detail);
@@ -171,7 +171,7 @@ function dsCarScroll(dir) {
 }
 
 function dsCheckBgTemplates() {
-  fetch('/api/bg-templates')
+  apiFetch('/api/bg-templates')
     .then(r => r.json())
     .then(list => {
       list.forEach(({ name, ready }) => {
@@ -227,7 +227,7 @@ async function dashSplitRender() {
   else body.primary_url = document.getElementById('ds-url').value.trim();
 
   try {
-    const res = await fetch('/api/generate', { method: 'POST',
+    const res = await apiFetch('/api/generate', { method: 'POST',
       headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
     const d = await res.json();
     if (!res.ok) throw new Error(d.detail);
@@ -309,7 +309,7 @@ async function dashAiGenerate() {
   else body.source_url = document.getElementById('dai-url').value.trim();
 
   try {
-    const res = await fetch('/api/generate/ai-studio', { method: 'POST',
+    const res = await apiFetch('/api/generate/ai-studio', { method: 'POST',
       headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
     const d = await res.json();
     if (!res.ok) throw new Error(d.detail);
@@ -370,7 +370,7 @@ async function dashRkRender() {
   };
 
   try {
-    const res = await fetch('/api/generate/ranking', { method: 'POST',
+    const res = await apiFetch('/api/generate/ranking', { method: 'POST',
       headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
     const d = await res.json();
     if (!res.ok) throw new Error(d.detail);
@@ -390,7 +390,7 @@ async function _dashPoll(jobId, prefix) {
 
   const tick = async () => {
     try {
-      const res = await fetch('/api/jobs/' + jobId);
+      const res = await apiFetch('/api/jobs/' + jobId);
       const job = await res.json();
 
       if (fillEl)  fillEl.style.width   = (job.progress || 0) + '%';
@@ -461,7 +461,7 @@ async function dashCsPreviewUrl() {
   info.style.display = '';
   info.textContent = 'Fetching info…';
   try {
-    const r = await fetch('/api/preview', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url }) });
+    const r = await apiFetch('/api/preview', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url }) });
     const d = await r.json();
     DCS.primaryUrl = url;
     DCS.uploadId   = null;
@@ -525,7 +525,7 @@ async function dashCsRender() {
   };
 
   try {
-    const r = await fetch('/api/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const r = await apiFetch('/api/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
     const { job_id } = await r.json();
     _dashPoll(job_id, 'dcs');
   } catch (e) {

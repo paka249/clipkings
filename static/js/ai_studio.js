@@ -27,7 +27,7 @@ async function aisPreviewUrl() {
   info.textContent = 'Checking…';
   info.className = 'rk-preview-info';
   try {
-    const res = await fetch('/api/preview', {
+    const res = await apiFetch('/api/preview', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ url }),
     });
@@ -63,7 +63,7 @@ async function aisUploadFile(file) {
   const form = new FormData();
   form.append('file', file);
   try {
-    const res = await fetch('/api/upload', { method: 'POST', body: form });
+    const res = await apiFetch('/api/upload', { method: 'POST', body: form });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       throw new Error(err.detail || res.statusText);
@@ -87,7 +87,7 @@ async function aisLoadUploads() {
   const list = document.getElementById('ais-uploads-list');
   if (!list) return;
   try {
-    const uploads = await fetch('/api/uploads').then(r => r.json());
+    const uploads = await apiFetch('/api/uploads').then(r => r.json());
     if (!uploads.length) {
       list.innerHTML = '<p class="muted-text" style="font-size:.78rem">No uploads yet.</p>';
       return;
@@ -124,7 +124,7 @@ function aisDeleteUpload(id) {
     cancel: { label: 'Cancel' },
     onConfirm: async () => {
       try {
-        const res = await fetch('/api/uploads/' + id, { method: 'DELETE' });
+        const res = await apiFetch('/api/uploads/' + id, { method: 'DELETE' });
         if (!res.ok) throw new Error((await res.json().catch(() => ({}))).detail || 'Error');
         if (AIS.uploadId === id) { AIS.uploadId = ''; aisCheckReady(); }
         await aisLoadUploads();
@@ -183,7 +183,7 @@ async function generateAiStudio() {
   AIS.lastLogCount = 0;
 
   try {
-    const res = await fetch('/api/generate/ai-studio', {
+    const res = await apiFetch('/api/generate/ai-studio', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
@@ -202,7 +202,7 @@ async function generateAiStudio() {
 
 async function _pollAisJob(jobId) {
   try {
-    const res = await fetch('/api/jobs/' + jobId);
+    const res = await apiFetch('/api/jobs/' + jobId);
     if (!res.ok) return;
     const job = await res.json();
 

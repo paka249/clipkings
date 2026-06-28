@@ -107,7 +107,7 @@ async function _vedDrawFilmstrip(canvas, item) {
 // ── Library ───────────────────────────────────────────────────
 async function vedLoadLibrary() {
   try {
-    const res   = await fetch('/api/uploads');
+    const res   = await apiFetch('/api/uploads');
     VED.library = await res.json();
   } catch (_) {
     VED.library = [];
@@ -173,7 +173,7 @@ async function _vedUpload(files, isPhoto = false) {
     const fd = new FormData();
     fd.append('file', file);
     try {
-      const res = await fetch('/api/upload', { method: 'POST', body: fd });
+      const res = await apiFetch('/api/upload', { method: 'POST', body: fd });
       if (!res.ok) {
         const err = await res.json().catch(() => ({ detail: res.statusText }));
         _modal({ icon: 'warn', iconColor: 'danger', title: 'Upload failed', msg: err.detail || 'Unknown error' });
@@ -1080,7 +1080,7 @@ async function vedRender() {
       resolution, codec, fit,
     };
 
-    const res = await fetch('/api/edit/render', {
+    const res = await apiFetch('/api/edit/render', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
