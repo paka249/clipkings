@@ -159,7 +159,7 @@ function bulkDelete() {
       let failed = 0;
       for (const name of names) {
         try {
-          const res = await fetch('/api/exports/' + encodeURIComponent(name), { method: 'DELETE' });
+          const res = await apiFetch('/api/exports/' + encodeURIComponent(name), { method: 'DELETE' });
           if (!res.ok) failed++;
         } catch { failed++; }
       }
@@ -255,7 +255,7 @@ function deleteExport(filename, fromExportsPage = false) {
     cancel: { label: 'Cancel' },
     onConfirm: async () => {
       try {
-        const res = await fetch('/api/exports/' + encodeURIComponent(filename), { method: 'DELETE' });
+        const res = await apiFetch('/api/exports/' + encodeURIComponent(filename), { method: 'DELETE' });
         if (!res.ok) throw new Error((await res.json().catch(() => ({}))).detail || 'Error');
         if (fromExportsPage) loadExportsPage();
         else { loadExportsList(); loadAccountPage(); }
@@ -267,7 +267,7 @@ function deleteExport(filename, fromExportsPage = false) {
 }
 
 async function fetchExports() {
-  const res = await fetch('/api/exports');
+  const res = await apiFetch('/api/exports');
   if (!res.ok) throw new Error('fetch failed');
   return res.json();
 }

@@ -128,7 +128,7 @@ async function _previewRankingUrl(idx) {
   info.textContent = 'Checking…';
   info.className = 'rk-preview-info';
   try {
-    const res = await fetch('/api/preview', {
+    const res = await apiFetch('/api/preview', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ url }),
     });
@@ -251,7 +251,7 @@ async function generateRanking() {
   RKS.lastLogCount = 0;
 
   try {
-    const res = await fetch('/api/generate/ranking', {
+    const res = await apiFetch('/api/generate/ranking', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -275,7 +275,7 @@ async function generateRanking() {
 
 async function _pollRankingJob(jobId) {
   try {
-    const res = await fetch('/api/jobs/' + jobId);
+    const res = await apiFetch('/api/jobs/' + jobId);
     if (!res.ok) return;
     const job = await res.json();
 
@@ -312,7 +312,7 @@ function _appendRkLog(entry) {
 // ── Gaming template status ─────────────────────────────────────
 async function loadGamingTemplateStatus() {
   try {
-    const list = await fetch('/api/bg-templates').then(r => r.json());
+    const list = await apiFetch('/api/bg-templates').then(r => r.json());
     list.forEach(({ name, ready }) => {
       const chip = document.getElementById('gstatus-' + name);
       const card = document.getElementById('gtmpl-' + name);
