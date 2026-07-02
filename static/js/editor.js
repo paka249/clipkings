@@ -370,6 +370,20 @@ function _vedMakeImageHandle(item, side, block) {
   return handle;
 }
 
+// Assign _lane to each photo clip so overlapping clips spread into sub-rows
+function _vedAssignLanes(clips) {
+  const laneEnd = [];
+  const sorted  = clips.slice().sort((a, b) => (a.tStart ?? 0) - (b.tStart ?? 0));
+  sorted.forEach(clip => {
+    const tS = clip.tStart ?? 0;
+    let lane = 0;
+    while (lane < laneEnd.length && laneEnd[lane] > tS + 0.05) lane++;
+    clip._lane = lane;
+    laneEnd[lane] = clip.tEnd ?? (tS + _VED_PHOTO_DEFAULT_DUR);
+  });
+  return Math.max(1, laneEnd.length);
+}
+
 function vedRenderPhotoTrack() {
   const row = document.getElementById('ved-tl-photo-row');
   if (!row) return;
@@ -380,8 +394,21 @@ function vedRenderPhotoTrack() {
     hint.className   = 'ved-tl-empty-hint';
     hint.textContent = 'Add images from the library — drag to position on the timeline';
     row.appendChild(hint);
+    // Reset track to default height
+    const trackDiv  = row.closest('.ved-tl-track--photo');
+    const labelEl   = document.querySelector('.ved-tl-label-photo');
+    if (trackDiv) trackDiv.style.height = '';
+    if (labelEl)  labelEl.style.height  = '';
     return;
   }
+
+  const LANE_H   = 36;
+  const numLanes = _vedAssignLanes(VED.photoClips);
+  const trackH   = numLanes * LANE_H + 8;
+  const trackDiv = row.closest('.ved-tl-track--photo');
+  const labelEl  = document.querySelector('.ved-tl-label-photo');
+  if (trackDiv) trackDiv.style.height = trackH + 'px';
+  if (labelEl)  labelEl.style.height  = trackH + 'px';
 
   const pps = _vedPPS();
   VED.photoClips.forEach((item, i) => {
@@ -389,10 +416,11 @@ function vedRenderPhotoTrack() {
     const tE    = item.tEnd   ?? (tS + _VED_PHOTO_DEFAULT_DUR);
     const dur   = Math.max(0.1, tE - tS);
     const isSel = item.uid === VED.selectedClip;
+    const lane  = item._lane ?? 0;
 
     const block = document.createElement('div');
     block.className = 'ved-tl-clip ved-tl-clip--photo' + (isSel ? ' ved-tl-clip--sel' : '');
-    block.style.cssText = `left:${tS * pps}px;width:${dur * pps}px;cursor:grab`;
+    block.style.cssText = `left:${tS * pps}px;width:${dur * pps}px;top:${4 + lane * LANE_H}px;height:${LANE_H - 8}px;bottom:auto;cursor:grab`;
 
     const img = document.createElement('img');
     img.src = `/api/uploads/stream/${item.uploadId}`;
@@ -1018,9 +1046,12 @@ function _vedImgCreateOverlay(item) {
   wrap.dataset.uid   = item.uid;
 
   const img = document.createElement('img');
-  img.src             = `/api/uploads/stream/${item.uploadId}`;
-  img.draggable       = false;
-  img.className       = 'ved-img-el';
+  img.src       = `/api/uploads/stream/${item.uploadId}`;
+  img.draggable = false;
+  img.className = 'ved-img-el';
+  if (item.cropT || item.cropR || item.cropB || item.cropL) {
+    img.style.clipPath = `inset(${item.cropT??0}% ${item.cropR??0}% ${item.cropB??0}% ${item.cropL??0}%)`;
+  }
   wrap.appendChild(img);
 
   // Corner handles (scale)
@@ -1192,7 +1223,6 @@ function _vedCapRotateStart(e, item) {
 function _vedImgCropMode(item) {
   const c = document.getElementById('ved-img-overlays');
   if (!c) return;
-  // Remove any existing crop UI
   c.querySelectorAll('.ved-crop-ui').forEach(el => el.remove());
 
   const wrap = c.querySelector(`.ved-img-wrap[data-uid="${item.uid}"]`);
@@ -1200,89 +1230,111 @@ function _vedImgCropMode(item) {
   const wr = wrap.getBoundingClientRect();
   const cr = c.getBoundingClientRect();
 
-  // Crop values: percentage of image inset from each side (0–100)
   const crop = { t: item.cropT ?? 0, r: item.cropR ?? 0, b: item.cropB ?? 0, l: item.cropL ?? 0 };
 
   const ui = document.createElement('div');
   ui.className = 'ved-crop-ui';
-  ui.style.cssText = `position:absolute;left:${wr.left-cr.left}px;top:${wr.top-cr.top}px;width:${wr.width}px;height:${wr.height}px;pointer-events:all;`;
+  ui.style.cssText = `position:absolute;left:${wr.left-cr.left}px;top:${wr.top-cr.top}px;width:${wr.width}px;height:${wr.height}px;pointer-events:all;z-index:30;box-sizing:border-box;`;
 
-  const applyClip = () => {
-    ui.style.clipPath = `inset(${crop.t}% ${crop.r}% ${crop.b}% ${crop.l}%)`;
-    const shadeTop    = document.getElementById('_vc_shade_t'); if(shadeTop) shadeTop.style.height = crop.t + '%';
-    const shadeRight  = document.getElementById('_vc_shade_r'); if(shadeRight) shadeRight.style.width = crop.r + '%';
-    const shadeBottom = document.getElementById('_vc_shade_b'); if(shadeBottom) shadeBottom.style.height = crop.b + '%';
-    const shadeLeft   = document.getElementById('_vc_shade_l'); if(shadeLeft) shadeLeft.style.width = crop.l + '%';
-  };
+  // 4 non-overlapping shade regions (top, bottom, then left/right between them)
+  const shTop = document.createElement('div');
+  const shBot = document.createElement('div');
+  const shL   = document.createElement('div');
+  const shR   = document.createElement('div');
+  const SH = 'position:absolute;background:rgba(0,0,0,.62);pointer-events:none;';
+  shTop.style.cssText = SH + 'top:0;left:0;right:0;';
+  shBot.style.cssText = SH + 'bottom:0;left:0;right:0;';
+  shL.style.cssText   = SH + 'left:0;';
+  shR.style.cssText   = SH + 'right:0;';
+  ui.appendChild(shTop); ui.appendChild(shBot);
+  ui.appendChild(shL);   ui.appendChild(shR);
 
-  // Shade layers
-  [['t','top:0;left:0;right:0','_vc_shade_t'],['r','top:0;right:0;bottom:0','_vc_shade_r'],
-   ['b','bottom:0;left:0;right:0','_vc_shade_b'],['l','top:0;left:0;bottom:0','_vc_shade_l']].forEach(([key, pos, id]) => {
-    const s = document.createElement('div');
-    s.id = id;
-    s.style.cssText = `position:absolute;${pos};background:rgba(0,0,0,.55);pointer-events:none;`;
-    if (key==='t'||key==='b') s.style.height = crop[key]+'%';
-    else s.style.width = crop[key]+'%';
-    ui.appendChild(s);
-  });
-
-  // Crop border
+  // Dashed crop border
   const border = document.createElement('div');
-  border.style.cssText = `position:absolute;border:2px dashed #fff;box-sizing:border-box;
-    left:${crop.l}%;top:${crop.t}%;right:${crop.r}%;bottom:${crop.b}%;pointer-events:none;`;
+  border.style.cssText = 'position:absolute;border:2px dashed rgba(255,255,255,.9);box-sizing:border-box;pointer-events:none;z-index:2;';
   ui.appendChild(border);
 
+  // Reposition all shade + border + handles
+  const handles = {};
+  const redraw = () => {
+    shTop.style.height = crop.t + '%';
+    shBot.style.height = crop.b + '%';
+    shL.style.top    = crop.t + '%'; shL.style.bottom = crop.b + '%'; shL.style.width = crop.l + '%';
+    shR.style.top    = crop.t + '%'; shR.style.bottom = crop.b + '%'; shR.style.width = crop.r + '%';
+    border.style.left   = crop.l + '%'; border.style.top    = crop.t + '%';
+    border.style.right  = crop.r + '%'; border.style.bottom = crop.b + '%';
+    // Reposition handles to stay on crop rect edges
+    const cx = crop.l + (100 - crop.l - crop.r) / 2;
+    const cy = crop.t + (100 - crop.t - crop.b) / 2;
+    if (handles.t) { handles.t.style.left = cx + '%';            handles.t.style.top    = crop.t + '%'; }
+    if (handles.b) { handles.b.style.left = cx + '%';            handles.b.style.top    = (100-crop.b) + '%'; }
+    if (handles.l) { handles.l.style.left = crop.l + '%';        handles.l.style.top    = cy + '%'; }
+    if (handles.r) { handles.r.style.left = (100-crop.r) + '%';  handles.r.style.top    = cy + '%'; }
+  };
+
   // Edge handles
-  [['t','top:-4px;left:50%;transform:translateX(-50%)','ns-resize'],
-   ['r','right:-4px;top:50%;transform:translateY(-50%)','ew-resize'],
-   ['b','bottom:-4px;left:50%;transform:translateX(-50%)','ns-resize'],
-   ['l','left:-4px;top:50%;transform:translateY(-50%)','ew-resize']].forEach(([side, pos, cur]) => {
+  [['t','ns-resize'],['r','ew-resize'],['b','ns-resize'],['l','ew-resize']].forEach(([side, cur]) => {
     const h = document.createElement('div');
-    h.style.cssText = `position:absolute;${pos};width:12px;height:12px;background:#fff;border-radius:50%;cursor:${cur};z-index:5;`;
+    h.style.cssText = `position:absolute;width:12px;height:12px;background:#fff;border:2px solid var(--accent);border-radius:50%;cursor:${cur};z-index:5;transform:translate(-50%,-50%);`;
+    handles[side] = h;
+    ui.appendChild(h);
+
     h.addEventListener('mousedown', ev => {
       ev.preventDefault(); ev.stopPropagation();
-      const startCoord = side==='t'||side==='b' ? ev.clientY : ev.clientX;
-      const initVal = crop[side];
-      const dim = side==='t'||side==='b' ? wr.height : wr.width;
-      const sign = side==='b'||side==='r' ? -1 : 1;
+      const isV   = side === 't' || side === 'b';
+      const start = isV ? ev.clientY : ev.clientX;
+      const init  = crop[side];
+      const dim   = isV ? wr.height : wr.width;
+      const sign  = (side === 'b' || side === 'r') ? -1 : 1;
       const onM = em => {
-        const delta = (em[side==='t'||side==='b'?'clientY':'clientX'] - startCoord) / dim * 100;
-        crop[side] = Math.max(0, Math.min(45, initVal + sign * delta));
-        border.style.left = crop.l+'%'; border.style.top = crop.t+'%';
-        border.style.right = crop.r+'%'; border.style.bottom = crop.b+'%';
-        applyClip();
+        const delta = ((isV ? em.clientY : em.clientX) - start) / dim * 100;
+        crop[side] = Math.max(0, Math.min(45, init + sign * delta));
+        redraw();
       };
-      const onU = () => { document.removeEventListener('mousemove',onM); document.removeEventListener('mouseup',onU); };
-      document.addEventListener('mousemove',onM); document.addEventListener('mouseup',onU);
+      const onU = () => {
+        document.removeEventListener('mousemove', onM);
+        document.removeEventListener('mouseup',   onU);
+      };
+      document.addEventListener('mousemove', onM);
+      document.addEventListener('mouseup',   onU);
     });
-    ui.appendChild(h);
   });
 
-  // Done / Reset buttons
+  redraw();
+
+  // Buttons inside the image at the bottom — never clipped by overflow:hidden
   const bar = document.createElement('div');
-  bar.style.cssText = 'position:absolute;bottom:-34px;left:50%;transform:translateX(-50%);display:flex;gap:6px;white-space:nowrap;';
+  bar.style.cssText = 'position:absolute;bottom:10px;left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:10;white-space:nowrap;';
+
   const doneBtn = document.createElement('button');
-  doneBtn.className = 'btn-sm'; doneBtn.textContent = 'Apply Crop';
+  doneBtn.className = 'btn-sm'; doneBtn.style.fontSize = '.75rem';
+  doneBtn.textContent = '✓ Apply Crop';
   doneBtn.addEventListener('click', () => {
+    _vedSnapshot();
     item.cropT = crop.t; item.cropR = crop.r; item.cropB = crop.b; item.cropL = crop.l;
     const img = wrap.querySelector('.ved-img-el');
-    if (img) img.style.clipPath = (item.cropT||item.cropR||item.cropB||item.cropL)
-      ? `inset(${item.cropT}% ${item.cropR}% ${item.cropB}% ${item.cropL}%)` : '';
-    ui.remove(); vedRenderInspector();
+    if (img) img.style.clipPath = (crop.t || crop.r || crop.b || crop.l)
+      ? `inset(${crop.t}% ${crop.r}% ${crop.b}% ${crop.l}%)` : '';
+    ui.remove();
+    vedRenderInspector();
   });
+
   const resetBtn = document.createElement('button');
-  resetBtn.className = 'btn-outline'; resetBtn.textContent = 'Reset';
+  resetBtn.className = 'btn-outline'; resetBtn.style.fontSize = '.75rem';
+  resetBtn.textContent = 'Reset';
   resetBtn.addEventListener('click', () => {
-    crop.t = crop.r = crop.b = crop.l = 0; applyClip();
-    border.style.left = '0'; border.style.top = '0'; border.style.right = '0'; border.style.bottom = '0';
+    crop.t = crop.r = crop.b = crop.l = 0;
+    redraw();
   });
+
   const cancelBtn = document.createElement('button');
-  cancelBtn.className = 'btn-outline'; cancelBtn.textContent = 'Cancel';
+  cancelBtn.className = 'btn-outline'; cancelBtn.style.fontSize = '.75rem';
+  cancelBtn.textContent = 'Cancel';
   cancelBtn.addEventListener('click', () => ui.remove());
+
   bar.appendChild(doneBtn); bar.appendChild(resetBtn); bar.appendChild(cancelBtn);
   ui.appendChild(bar);
 
-  applyClip();
   c.appendChild(ui);
 }
 
