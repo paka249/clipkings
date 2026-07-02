@@ -890,12 +890,17 @@ function vedRenderSequence() {
     });
   }
 
-  if (n === 0) {
+  const hasAny = n > 0 || (VED.photoClips || []).length > 0;
+  if (!hasAny) {
     if (status) { status.className = 'status-missing'; status.innerHTML = '<svg class="icon icon-sm"><use href="#i-warn"/></svg> Add at least one clip'; }
     if (btn) btn.disabled = true;
   } else {
-    const totalSec = VED.sequence.reduce((a, s) => a + _vedClipDur(s), 0);
-    if (status) { status.className = 'status-ready'; status.innerHTML = `<svg class="icon icon-sm"><use href="#i-check"/></svg> ${n} clip${n>1?'s':''} · ~${fmtTS(Math.floor(totalSec))}`; }
+    const totalSec = Math.max(
+      VED.sequence.reduce((a, s) => a + _vedClipDur(s), 0),
+      (VED.photoClips || []).reduce((m, p) => Math.max(m, p.tEnd ?? 0), 0)
+    );
+    const label = n > 0 ? `${n} video clip${n>1?'s':''}` : `${VED.photoClips.length} image${VED.photoClips.length>1?'s':''}`;
+    if (status) { status.className = 'status-ready'; status.innerHTML = `<svg class="icon icon-sm"><use href="#i-check"/></svg> ${label} · ~${fmtTS(Math.floor(totalSec))}`; }
     if (btn) btn.disabled = false;
   }
 
@@ -927,6 +932,7 @@ function vedSelectClip(uid, track) {
   vedRenderCaptionTrack();
   _vedUpdateImgOverlays(_vedSeqElapsed());
   _vedUpdateCaptionOverlays(_vedSeqElapsed());
+  vedRenderInspector();
 }
 
 function vedCloseInspector() {
@@ -1833,9 +1839,11 @@ function vedPreviewEnded() {
 }
 
 function _vedImgOnlyTick() {
-  const total = _vedTotalDur();
+  const total   = _vedTotalDur();
   const elapsed = _vedSeqElapsed();
   _vedUpdateSeekbar();
+  _vedUpdateImgOverlays(elapsed);
+  _vedUpdateCaptionOverlays(elapsed);
   if (elapsed >= total) {
     VED.seqPlaying    = false;
     VED.imgPlayOffset = 0;
@@ -1843,6 +1851,8 @@ function _vedImgOnlyTick() {
     VED.imgRafId      = null;
     _vedSetPlayIcon(false);
     _vedUpdateSeekbar();
+    _vedUpdateImgOverlays(0);
+    _vedUpdateCaptionOverlays(0);
     return;
   }
   VED.imgRafId = requestAnimationFrame(_vedImgOnlyTick);
@@ -1892,6 +1902,15 @@ function vedTlPlayPause() {
 }
 
 function vedTlSeek(secs) {
+  if (!VED.sequence.length) {
+    // Image-only mode: seek the image timer
+    const t = Math.max(0, _vedSeqElapsed() + secs);
+    _vedSeekElapsed(t);
+    _vedUpdateImgOverlays(t);
+    _vedUpdateCaptionOverlays(t);
+    _vedUpdateSeekbar();
+    return;
+  }
   const video = document.getElementById('ved-preview-video');
   if (!video || !video.dataset.src) return;
   const item = VED.sequence.find(s => s.uid === VED.selectedClip)
@@ -2234,7 +2253,7 @@ function vedRenderInspector() {
 
 // ── Render ────────────────────────────────────────────────────
 async function vedRender() {
-  if (!VED.sequence.length) return;
+  if (!VED.sequence.length && !VED.photoClips.length) return;
   document.getElementById('ved-render-btn').disabled = true;
   const logBox = document.getElementById('ved-log-box');
   logBox.innerHTML = '';
