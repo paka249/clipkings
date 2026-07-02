@@ -220,7 +220,7 @@
   background: none; border: none; color: #fff;
   padding: 3px 7px; cursor: pointer; border-radius: 4px;
   display: flex; align-items: center; gap: 4px; font-size: .72rem;
-  font-family: var(--sans); font-weight: 500;
+  font-family: var(--font); font-weight: 500;
 }
 .ved-img-tb-btn:hover { background: rgba(255,255,255,.18); }
 /* Rotation handle — circle above image center, rotates with image */
@@ -619,6 +619,33 @@
 }
 .ved-props-resize-handle:hover,
 .ved-props-resize-handle.dragging { background: var(--accent); }
+
+/* ── Caption overlay rotation handle ───────────────────────── */
+.ved-cap-rot-handle {
+  display: none;
+  position: absolute;
+  top: -52px; left: 50%;
+  transform: translateX(-50%);
+  width: 18px; height: 18px;
+  background: var(--surface);
+  border: 2px solid #a855f7;
+  border-radius: 50%;
+  cursor: grab;
+  z-index: 12;
+  align-items: center; justify-content: center;
+  color: #a855f7;
+}
+.ved-cap-rot-handle:active { cursor: grabbing; }
+.ved-cap-rot-handle::after {
+  content: '';
+  position: absolute;
+  left: 50%; top: 100%;
+  transform: translateX(-50%);
+  width: 1px; height: 34px;
+  background: #a855f7;
+  opacity: .6;
+}
+.ved-cap-sel .ved-cap-rot-handle { display: flex; }
 
 /* ── Caption track label (non-<label>) ─────────────────────── */
 .ved-tl-label-caption {
