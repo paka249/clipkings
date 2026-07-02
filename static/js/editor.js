@@ -6,6 +6,22 @@ const _VED_BASE_PPS    = 60; // pixels per second at zoom 1
 
 function _vedPPS() { return _VED_BASE_PPS * (VED.zoom || 1); }
 
+function _vedUpdatePlaceholder() {
+  const el = document.getElementById('ved-canvas-placeholder');
+  if (!el) return;
+  const hasMedia = VED.sequence.length || VED.photoClips.length ||
+                   VED.audioClips.length || VED.captions.length;
+  el.style.display = hasMedia ? 'none' : '';
+}
+
+function _vedApplyCanvasBg(color) {
+  VED.canvasBg = color || '#111111';
+  const box = document.querySelector('.ved-canvas-box');
+  if (box) box.style.background = VED.canvasBg;
+  const picker = document.getElementById('ved-canvas-bg-picker');
+  if (picker) picker.value = VED.canvasBg;
+}
+
 function _vedClipDur(item) {
   return Math.max(0.05, (item.end != null ? item.end : (item.duration || 0)) - (item.start || 0));
 }
@@ -285,6 +301,7 @@ async function vedDeleteFile(id) {
   vedRenderPhotoTrack();
   vedRenderSequence();
   vedRenderAudioTrack();
+  _vedUpdatePlaceholder();
 }
 
 // ── Image (photo) track ───────────────────────────────────────
@@ -321,6 +338,7 @@ function vedAddPhotoToSeq(uploadId) {
   _vedRenderRuler();
   vedRenderPhotoTrack();
   vedSelectClip(newUid, 'photo');
+  _vedUpdatePlaceholder();
 }
 
 function vedRemoveFromPhotoSeq(uid) {
@@ -329,6 +347,7 @@ function vedRemoveFromPhotoSeq(uid) {
   if (VED.selectedClip === uid) vedCloseInspector();
   _vedRenderRuler();
   vedRenderPhotoTrack();
+  _vedUpdatePlaceholder();
 }
 
 // Make an image resize handle (left = shift tStart, right = extend tEnd)
@@ -399,6 +418,8 @@ function vedRenderPhotoTrack() {
     const labelEl   = document.querySelector('.ved-tl-label-photo');
     if (trackDiv) trackDiv.style.height = '';
     if (labelEl)  labelEl.style.height  = '';
+    const tlEl0 = document.getElementById('ved-timeline');
+    if (tlEl0) tlEl0.style.height = '';
     return;
   }
 
@@ -409,6 +430,12 @@ function vedRenderPhotoTrack() {
   const labelEl  = document.querySelector('.ved-tl-label-photo');
   if (trackDiv) trackDiv.style.height = trackH + 'px';
   if (labelEl)  labelEl.style.height  = trackH + 'px';
+  // Auto-expand timeline height to fit stacked lanes (capped at 420px)
+  const tlEl = document.getElementById('ved-timeline');
+  if (tlEl) {
+    const needed = 204 + trackH + 8; // bar(38) + ruler(22) + video(66) + audio(46) + caption(32) + margins
+    tlEl.style.height = Math.min(420, Math.max(260, needed)) + 'px';
+  }
 
   const pps = _vedPPS();
   VED.photoClips.forEach((item, i) => {
@@ -499,6 +526,7 @@ function vedAddAudioToSeq(uploadId) {
   if (!entry.duration) _vedDetectDuration(newUid, 'audio', entry.id);
   vedRenderAudioTrack();
   vedSelectClip(newUid, 'audio');
+  _vedUpdatePlaceholder();
 }
 
 function vedRemoveFromAudioSeq(uid) {
@@ -506,6 +534,7 @@ function vedRemoveFromAudioSeq(uid) {
   VED.audioClips = VED.audioClips.filter(s => s.uid !== uid);
   if (VED.selectedClip === uid) vedCloseInspector();
   vedRenderAudioTrack();
+  _vedUpdatePlaceholder();
 }
 
 function vedMoveAudioClip(uid, dir) {
@@ -684,6 +713,7 @@ function vedAddToSeq(uploadId) {
   if (!entry.duration) _vedDetectDuration(newUid, 'video', entry.id);
   vedRenderSequence();
   vedSelectClip(newUid);
+  _vedUpdatePlaceholder();
 }
 
 // If the server didn't return a duration (FFprobe unavailable), probe it via a hidden media element
@@ -715,6 +745,7 @@ function vedRemoveFromSeq(uid) {
   VED.sequence = VED.sequence.filter(s => s.uid !== uid);
   if (VED.selectedClip === uid) vedCloseInspector();
   vedRenderSequence();
+  _vedUpdatePlaceholder();
 }
 
 function vedMoveSeq(uid, dir) {
@@ -927,12 +958,7 @@ function vedPreviewClip(uid) {
   if (!item) {
     video.pause();
     video.style.display = 'none';
-    const hint = document.getElementById('ved-canvas-hint');
-    if (placeholder) {
-      placeholder.style.display = 'flex';
-      const hasClips = VED.sequence.length > 0 || VED.audioClips.length > 0;
-      if (hint) hint.textContent = hasClips ? 'Click a clip to preview' : 'Add media to get started';
-    }
+    _vedUpdatePlaceholder();
     _vedSetPlayIcon(false);
     return;
   }
@@ -1388,6 +1414,7 @@ function vedAddCaption() {
   });
   vedSelectCaption(uid);
   _vedRenderRuler();
+  _vedUpdatePlaceholder();
 }
 
 function vedSelectCaption(uid) {
@@ -1412,6 +1439,7 @@ function vedRemoveCaption(uid) {
   vedRenderInspector();
   _vedUpdateCaptionOverlays(_vedSeqElapsed());
   _vedRenderRuler();
+  _vedUpdatePlaceholder();
 }
 
 function _vedMakeCaptionHandle(item, side, block) {
@@ -2054,6 +2082,15 @@ function vedRenderInspector() {
       <div class="ved-insp-empty">
         <svg class="icon icon-lg" style="color:var(--text-3)"><use href="#i-film"/></svg>
         <div>Select a clip<br>to edit its properties</div>
+      </div>
+      <div style="margin-top:8px;padding-top:10px;border-top:1px solid var(--border)">
+        <div class="ved-insp-section-lbl">Canvas Background</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:6px">
+          <input type="color" id="ved-canvas-bg-picker" value="${VED.canvasBg||'#111111'}"
+            style="width:36px;height:28px;padding:1px;border-radius:4px;border:1px solid var(--border);cursor:pointer"
+            oninput="_vedApplyCanvasBg(this.value)">
+          <span style="font-size:.75rem;color:var(--text-2)">Canvas color</span>
+        </div>
       </div>`;
     return;
   }
@@ -2267,6 +2304,7 @@ async function vedRender() {
         rotation:      c.rotation    ?? 0,
       })),
       resolution, codec, fit,
+      canvas_bg: VED.canvasBg || '#000000',
     };
 
     const res = await apiFetch('/api/edit/render', {
