@@ -418,8 +418,6 @@ function vedRenderPhotoTrack() {
     const labelEl   = document.querySelector('.ved-tl-label-photo');
     if (trackDiv) trackDiv.style.height = '';
     if (labelEl)  labelEl.style.height  = '';
-    const tlEl0 = document.getElementById('ved-timeline');
-    if (tlEl0) tlEl0.style.height = '';
     return;
   }
 
@@ -430,12 +428,6 @@ function vedRenderPhotoTrack() {
   const labelEl  = document.querySelector('.ved-tl-label-photo');
   if (trackDiv) trackDiv.style.height = trackH + 'px';
   if (labelEl)  labelEl.style.height  = trackH + 'px';
-  // Auto-expand timeline height to fit stacked lanes (capped at 420px)
-  const tlEl = document.getElementById('ved-timeline');
-  if (tlEl) {
-    const needed = 204 + trackH + 8; // bar(38) + ruler(22) + video(66) + audio(46) + caption(32) + margins
-    tlEl.style.height = Math.min(420, Math.max(260, needed)) + 'px';
-  }
 
   const pps = _vedPPS();
   VED.photoClips.forEach((item, i) => {
