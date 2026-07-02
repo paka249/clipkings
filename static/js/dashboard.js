@@ -534,17 +534,4 @@ async function dashCsRender() {
   }
 }
 
-// ── Editor: caption track ─────────────────────────────────────
-function vedAddCaption() {
-  const text = prompt('Caption text:');
-  if (!text) return;
-  const row = document.getElementById('ved-tl-caption-row');
-  const id  = 'cap-' + Date.now();
-  const div = document.createElement('div');
-  div.className = 'ved-tl-clip';
-  div.id = id;
-  div.style.cssText = 'left:2px;width:160px;top:4px;height:24px;font-size:.65rem;padding:0 6px;display:flex;align-items:center;gap:4px;';
-  div.innerHTML = `<span style="opacity:.7">T</span><span style="overflow:hidden;white-space:nowrap;text-overflow:ellipsis">${text}</span>`;
-  div.title = text;
-  row.appendChild(div);
-}
+// vedAddCaption is defined in editor.js

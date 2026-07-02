@@ -541,6 +541,56 @@
 .editor-cols { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 16px; }
 .editor-left, .editor-right { display: flex; flex-direction: column; }
 
+/* ── Caption overlays ────────────────────────────────────────── */
+.ved-cap-wrap {
+  position: absolute;
+  transform-origin: center center;
+  pointer-events: all;
+  cursor: move;
+  box-sizing: border-box;
+}
+.ved-cap-text {
+  width: 100%;
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.25;
+  pointer-events: none;
+  display: block;
+}
+.ved-cap-resize {
+  position: absolute;
+  bottom: -8px; right: -8px;
+  width: 16px; height: 16px;
+  background: var(--accent);
+  border: 2px solid #fff;
+  border-radius: 50%;
+  cursor: nwse-resize;
+  display: none;
+  z-index: 10;
+}
+.ved-cap-sel .ved-cap-resize { display: block; }
+.ved-cap-sel { outline: 2px solid var(--accent); outline-offset: 3px; }
+.ved-cap-insp-ta {
+  width: 100%;
+  min-height: 56px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  color: var(--text);
+  font-size: .83rem;
+  padding: 6px 8px;
+  resize: vertical;
+  box-sizing: border-box;
+  font-family: inherit;
+  outline: none;
+}
+.ved-cap-insp-ta:focus { border-color: var(--accent); }
+.ved-tl-clip--caption {
+  background: linear-gradient(135deg, #1c0f40 60%, #3a1868);
+  border: 1px solid #6a3aaa;
+}
+.ved-tl-clip--caption:hover { border-color: #a855f7; }
+
 /* ── Editor resize handles ──────────────────────────────────── */
 .ved-tl-resize-handle {
   height: 5px;

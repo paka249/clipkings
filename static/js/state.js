@@ -86,6 +86,7 @@ const VED = {
   lastOutput:    null,
   _lastLogCount: 0,
   zoom:          1,
+  captions:      [],
   imgPlayOffset: 0,
   imgPlayT0:     0,
   imgRafId:      null,
