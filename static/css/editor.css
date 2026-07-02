@@ -292,7 +292,7 @@
 
 /* ── Timeline shell ──────────────────────────────────────────── */
 .ved-timeline {
-  flex-shrink: 0; height: 200px;
+  flex-shrink: 0; height: 260px;
   border-top: 2px solid var(--border); background: var(--surface);
   display: flex; flex-direction: column;
 }
@@ -419,8 +419,9 @@
   border: 2px solid var(--clip-video-border);
   background: var(--clip-video-bg);
   cursor: pointer; user-select: none;
-  transition: border-color .1s;
+  transition: border-color .15s, box-shadow .15s, transform .12s, opacity .12s;
   min-width: 4px;
+  will-change: transform;
 }
 .ved-tl-clip canvas {
   position: absolute; inset: 0; width: 100%; height: 100%;
@@ -501,9 +502,16 @@
 .ved-tl-clip-handle-bar { width: 3px; height: 16px; background: #fff; border-radius: 2px; }
 .ved-tl-clip--drag-over {
   border-color: var(--accent) !important;
-  box-shadow: 0 0 0 2px var(--accent) !important;
+  box-shadow: -4px 0 0 0 var(--accent), 0 0 0 2px color-mix(in srgb, var(--accent) 35%, transparent) !important;
+  transform: translateX(4px);
 }
-.ved-tl-clip--dragging { opacity: .35; }
+.ved-tl-clip--dragging {
+  opacity: .45;
+  transform: scale(1.03) translateY(-4px);
+  box-shadow: 0 10px 28px rgba(0,0,0,.55);
+  border-color: var(--accent) !important;
+  z-index: 20;
+}
 .ved-tl-empty-hint {
   position: absolute; top: 50%; left: 12px; transform: translateY(-50%);
   font-size: .7rem; color: var(--text-3); pointer-events: none;

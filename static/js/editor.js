@@ -465,6 +465,7 @@ function vedAddAudioToSeq(uploadId) {
     start:    0,
     end:      entry.duration || null,
   });
+  if (!entry.duration) _vedDetectDuration(newUid, 'audio', entry.id);
   vedRenderAudioTrack();
   vedSelectClip(newUid, 'audio');
 }
@@ -584,8 +585,33 @@ function vedAddToSeq(uploadId) {
     crop_x:   0.5,
     crop_y:   0.5,
   });
+  if (!entry.duration) _vedDetectDuration(newUid, 'video', entry.id);
   vedRenderSequence();
   vedSelectClip(newUid);
+}
+
+// If the server didn't return a duration (FFprobe unavailable), probe it via a hidden media element
+function _vedDetectDuration(uid, track, uploadId) {
+  const el = document.createElement(track === 'audio' ? 'audio' : 'video');
+  el.preload = 'metadata';
+  el.src     = `/api/uploads/stream/${uploadId}`;
+  el.addEventListener('loadedmetadata', function once() {
+    el.removeEventListener('loadedmetadata', once);
+    const dur = el.duration;
+    el.src = '';
+    if (!dur || !isFinite(dur) || dur <= 0) return;
+    const arr  = track === 'audio' ? VED.audioClips : VED.sequence;
+    const item = arr.find(c => c.uid === uid);
+    if (!item) return;
+    item.duration = dur;
+    if (item.end == null || item.end === 0) item.end = dur;
+    const libEntry = VED.library.find(l => l.id === uploadId);
+    if (libEntry) libEntry.duration = dur;
+    if (track === 'audio') vedRenderAudioTrack();
+    else vedRenderSequence();
+    _vedRenderRuler();
+    _vedUpdateSeekbar();
+  });
 }
 
 function vedRemoveFromSeq(uid) {
@@ -1207,7 +1233,7 @@ function vedAddCaption() {
   const t   = Math.max(0, Math.min(_vedSeqElapsed(), Math.max(0, _vedTotalDur() - 3)));
   VED.captions.push({
     uid, text: 'Caption', tStart: t, tEnd: t + 3,
-    x: 0.5, y: 0.82, fontSizePct: 5,
+    x: 0.5, y: 0.82, fontSizePct: 5, rotation: 0,
     fontFamily: 'Impact', color: '#FFFFFF', bgColor: '',
     bold: false, italic: false, align: 'center', shadow: true, width: 0.75,
   });
@@ -1337,10 +1363,11 @@ function _vedCapApplyStyle(wrap, item, cRect) {
   const h     = (cRect && cRect.height) ? cRect.height : 400;
   const fSize = Math.max(8, Math.round((item.fontSizePct || 5) / 100 * h));
   const inner = wrap.querySelector('.ved-cap-text');
+  const rot = item.rotation ?? 0;
   wrap.style.left      = ((item.x     ?? 0.5)  * 100) + '%';
   wrap.style.top       = ((item.y     ?? 0.82) * 100) + '%';
   wrap.style.width     = ((item.width ?? 0.75) * 100) + '%';
-  wrap.style.transform = 'translate(-50%,-50%)';
+  wrap.style.transform = `translate(-50%,-50%) rotate(${rot}deg)`;
   wrap.style.textAlign = item.align || 'center';
   if (inner) {
     inner.style.fontSize     = fSize + 'px';
@@ -1796,6 +1823,11 @@ function vedRenderInspector() {
         <input type="range" class="ved-insp-range" min="1" max="18" step="0.5" value="${fsPct}"
           oninput="${_upd}c.fontSizePct=+this.value;document.getElementById('ci-fs').textContent=(+this.value).toFixed(1)+'%';${_ref}">
       </div>
+      <div class="ved-insp-field" style="margin-top:4px">
+        <label class="ved-insp-lbl">Rotation — <span id="ci-rot">${(cap.rotation ?? 0).toFixed(0)}°</span></label>
+        <input type="range" class="ved-insp-range" min="-180" max="180" step="1" value="${(cap.rotation ?? 0)}"
+          oninput="${_upd}c.rotation=+this.value;document.getElementById('ci-rot').textContent=(+this.value).toFixed(0)+'°';${_ref}">
+      </div>
       <div class="ved-insp-field" style="margin-top:4px;flex-direction:row;gap:8px;align-items:center">
         <label class="ved-insp-lbl" style="flex:0 0 auto;margin:0">Font</label>
         <select class="select-input" style="flex:1;font-size:.76rem"
@@ -2061,6 +2093,7 @@ async function vedRender() {
         italic:        c.italic      || false,
         align:         c.align       || 'center',
         shadow:        c.shadow      !== false,
+        rotation:      c.rotation    ?? 0,
       })),
       resolution, codec, fit,
     };
@@ -2149,3 +2182,16 @@ function vedDownload() {
     },
   });
 }
+
+// ── Keyboard shortcuts ────────────────────────────────────────
+document.addEventListener('keydown', function _vedKeyNav(e) {
+  if (e.target.matches('input,textarea,select,[contenteditable="true"]')) return;
+  if (!document.getElementById('ved-timeline')?.offsetParent) return;
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+    e.preventDefault();
+    const delta = e.key === 'ArrowLeft' ? -5 : 5;
+    _vedSeekElapsed(Math.max(0, _vedSeqElapsed() + delta));
+    _vedUpdateImgOverlays(_vedSeqElapsed());
+    _vedUpdateCaptionOverlays(_vedSeqElapsed());
+  }
+});
