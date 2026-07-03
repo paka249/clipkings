@@ -15,7 +15,8 @@
       "Bash(venv/bin/python download_bg_templates.py gta \"https://www.youtube.com/watch?v=5rsd34XKKkM\")",
       "Bash(echo \"All 3 started \\(PIDs: $!\\)\")",
       "Bash(ffprobe -v quiet -print_format json -show_streams bg_templates/gta.mp4)",
-      "Bash(pip show *)"
+      "Bash(pip show *)",
+      "PowerShell(\\(Get-Content \"c:\\\\Users\\\\ange7\\\\Downloads\\\\Projects_\\\\clipkings\\\\templates\\\\index.html\"\\) -replace '\\\\?v=39\"', '?v=40\"' | Set-Content \"c:\\\\Users\\\\ange7\\\\Downloads\\\\Projects_\\\\clipkings\\\\templates\\\\index.html\")"
     ],
     "additionalDirectories": [
       "/tmp"
