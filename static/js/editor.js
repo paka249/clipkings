@@ -424,6 +424,7 @@ function vedRenderPhotoTrack() {
     const lane  = item._lane ?? 0;
 
     const block = document.createElement('div');
+    block.dataset.uid = item.uid;
     block.className = 'ved-tl-clip ved-tl-clip--photo' + (isSel ? ' ved-tl-clip--sel' : '');
     block.style.cssText = `left:${tS * pps}px;width:${dur * pps}px;top:${4 + lane * LANE_H}px;height:${LANE_H - 8}px;bottom:auto;cursor:grab`;
 
@@ -452,27 +453,29 @@ function vedRenderPhotoTrack() {
       e.preventDefault(); e.stopPropagation();
       const wasSelected = VED.selectedClip === item.uid;
       if (!wasSelected) vedSelectClip(item.uid, 'photo');
-      const startX   = e.pageX;
-      const initTS   = item.tStart;
-      const clipDur  = item.tEnd - item.tStart;
+      // vedSelectClip rebuilds the track — re-fetch the live element
+      const live = document.querySelector(`#ved-tl-photo-row [data-uid="${item.uid}"]`) || block;
+      const startX  = e.pageX;
+      const initTS  = item.tStart;
+      const clipDur = item.tEnd - item.tStart;
       let moved = false;
 
       const onMove = (ev) => {
         if (!moved && Math.abs(ev.pageX - startX) < 3) return;
+        if (!moved) live.classList.add('ved-tl-clip--lift');
         moved = true;
-        block.style.cursor = 'grabbing';
         const dt = (ev.pageX - startX) / _vedPPS();
         item.tStart = Math.max(0, initTS + dt);
         item.tEnd   = item.tStart + clipDur;
-        block.style.left = (item.tStart * _vedPPS()) + 'px';
-        const infoBot = block.querySelector('.ved-tl-clip-dur');
+        live.style.left = (item.tStart * _vedPPS()) + 'px';
+        const infoBot = live.querySelector('.ved-tl-clip-dur');
         if (infoBot) infoBot.textContent = `${fmtTS(Math.round(item.tStart))}–${fmtTS(Math.round(item.tEnd))}`;
         vedRenderInspector();
       };
       const onUp = () => {
         document.removeEventListener('mousemove', onMove);
         document.removeEventListener('mouseup',   onUp);
-        block.style.cursor = 'grab';
+        live.classList.remove('ved-tl-clip--lift');
         if (!moved && wasSelected) { vedCloseInspector(); return; }
         if (moved) { _vedRenderRuler(); vedRenderPhotoTrack(); }
       };
@@ -570,7 +573,18 @@ function vedRenderAudioTrack() {
     block.appendChild(_vedMakeTrimHandle(item, 'audio', 'l', block));
     block.appendChild(_vedMakeTrimHandle(item, 'audio', 'r', block));
 
-    block.onclick = (e) => { e.stopPropagation(); if (VED.selectedClip === item.uid) { vedCloseInspector(); return; } vedSelectClip(item.uid, 'audio'); };
+    block.addEventListener('mousedown', (e) => {
+      e.stopPropagation();
+      const wasSelected = VED.selectedClip === item.uid;
+      block.classList.add('ved-tl-clip--lift');
+      const onUp = () => {
+        document.removeEventListener('mouseup', onUp);
+        block.classList.remove('ved-tl-clip--lift');
+        if (wasSelected) { vedCloseInspector(); return; }
+        vedSelectClip(item.uid, 'audio');
+      };
+      document.addEventListener('mouseup', onUp);
+    });
     block.ondragstart = (e) => {
       VED.dragUid = item.uid; VED.dragTrack = 'audio';
       e.dataTransfer.effectAllowed = 'move';
@@ -850,11 +864,11 @@ function vedRenderSequence() {
       block.ondragstart = (e) => {
         VED.dragUid = item.uid; VED.dragTrack = 'video';
         e.dataTransfer.effectAllowed = 'move';
-        setTimeout(() => block.classList.add('ved-tl-clip--dragging'), 0);
+        setTimeout(() => block.classList.add('ved-tl-clip--lift'), 0);
       };
       block.ondragend = () => {
         VED.dragUid = null; VED.dragTrack = null;
-        block.classList.remove('ved-tl-clip--dragging');
+        block.classList.remove('ved-tl-clip--lift');
         document.querySelectorAll('.ved-tl-clip--drag-over').forEach(el => el.classList.remove('ved-tl-clip--drag-over'));
       };
       block.ondragover = (e) => {
@@ -1504,15 +1518,20 @@ function vedRenderCaptionTrack() {
       let moved = false;
       const onMove = (ev) => {
         if (!moved && Math.abs(ev.pageX - startX) < 3) return;
-        moved = true; block.style.cursor = 'grabbing';
+        if (!moved) block.classList.add('ved-tl-clip--lift');
+        moved = true;
         item.tStart = Math.max(0, initTS + (ev.pageX - startX) / _vedPPS());
         item.tEnd   = item.tStart + clipDur;
         block.style.left = (item.tStart * _vedPPS()) + 'px';
+        const infoBot = block.querySelector('.ved-tl-clip-dur');
+        if (infoBot) infoBot.textContent = `${fmtTS(Math.round(item.tStart))}–${fmtTS(Math.round(item.tEnd))}`;
       };
       const onUp = () => {
         document.removeEventListener('mousemove', onMove);
         document.removeEventListener('mouseup',   onUp);
+        block.classList.remove('ved-tl-clip--lift');
         block.style.cursor = 'grab';
+        if (!moved && VED.selectedClip === item.uid) { vedCloseInspector(); return; }
         vedRenderCaptionTrack();
         vedRenderInspector();
       };

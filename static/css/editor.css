@@ -475,6 +475,13 @@
   0%, 100% { box-shadow: 0 0 0 1.5px #22c55e; }
   50%       { box-shadow: 0 0 0 3px rgba(34,197,94,.4); }
 }
+.ved-tl-clip--lift {
+  transform: scale(1.04) translateY(-4px) !important;
+  box-shadow: 0 10px 28px rgba(0,0,0,.55), 0 0 0 2px var(--accent) !important;
+  opacity: .88 !important;
+  z-index: 30 !important;
+  cursor: grabbing !important;
+}
 .ved-tl-clip-idx {
   width: 13px; height: 13px; border-radius: 50%;
   background: rgba(255,255,255,.9); color: #000;
