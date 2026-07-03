@@ -1,40 +1,27 @@
 <!-- AI Studio ───────────────────────────────────────────── -->
 <div id="page-aistudio" class="page">
 
-  <!-- Hero header -->
-  <div class="ais-hero">
-    <div class="ais-hero-icon">
-      <svg class="icon" width="20" height="20"><use href="#i-zap"/></svg>
-    </div>
-    <div>
-      <h1 class="ais-hero-title">AI Studio</h1>
-      <p class="ais-hero-sub">Add subtitles and voiceover to any video — powered by Whisper &amp; edge-tts</p>
-    </div>
+  <div class="page-header">
+    <h1>AI Studio</h1>
+    <p class="page-sub">Subtitles and voiceover — Whisper transcription, edge-tts voices</p>
   </div>
 
-  <!-- Two-column body -->
   <div class="ais-body">
 
-    <!-- ── Left column: Source + Features ────────────── -->
+    <!-- ── Left: Source + Features ───── -->
     <div class="ais-col-left">
 
-      <!-- Step 1: Source -->
-      <div class="ais-section">
-        <div class="ais-section-hdr">
-          <span class="ais-step-dot">1</span>
-          <span class="ais-section-title">Source Video</span>
-        </div>
+      <!-- Source -->
+      <div class="card">
+        <div class="card-title">Source video</div>
 
         <div class="ais-tab-row">
-          <button class="ais-tab active" id="ais-tab-url" onclick="aisSourceTab('url')">
-            URL
-          </button>
+          <button class="ais-tab active" id="ais-tab-url" onclick="aisSourceTab('url')">URL</button>
           <button class="ais-tab" id="ais-tab-upload" onclick="aisSourceTab('upload')">
             <svg class="icon icon-sm"><use href="#i-upload"/></svg> Upload
           </button>
         </div>
 
-        <!-- URL panel -->
         <div id="ais-url-panel">
           <div class="ais-url-row">
             <input id="ais-url" type="url" class="text-input ais-url-input"
@@ -46,15 +33,14 @@
           <div id="ais-url-preview" class="ais-prev-info"></div>
         </div>
 
-        <!-- Upload panel -->
         <div id="ais-upload-panel" style="display:none">
           <input id="ais-file-input" type="file" style="display:none"
             accept=".mp4,.mov,.mkv,.webm,.avi,.m4v,.ts,.flv,video/*"
             onchange="aisFileChosen(this.files[0])">
           <label for="ais-file-input" class="ais-dropzone" id="ais-dropzone"
             ondragover="event.preventDefault()" ondrop="aisDropFile(event)">
-            <svg class="icon icon-xl" style="color:var(--accent)"><use href="#i-upload"/></svg>
-            <span class="ais-dz-title">Drop a video or click to browse</span>
+            <svg class="icon icon-xl" style="color:var(--text-3)"><use href="#i-upload"/></svg>
+            <span>Drop a video or click to browse</span>
             <span class="ais-dz-sub">MP4 · MOV · MKV · WebM · max 500 MB</span>
           </label>
           <div id="ais-upload-status" class="ais-upload-status"></div>
@@ -62,25 +48,14 @@
         </div>
       </div>
 
-      <!-- Step 2: AI Features -->
-      <div class="ais-section" style="margin-top:14px">
-        <div class="ais-section-hdr">
-          <span class="ais-step-dot">2</span>
-          <span class="ais-section-title">AI Features</span>
-          <span class="ais-section-hint">Enable at least one</span>
-        </div>
+      <!-- Features -->
+      <div class="card" style="margin-top:12px">
+        <div class="card-title">AI Features</div>
 
-        <!-- Subtitles card -->
+        <!-- Subtitles -->
         <div class="ais-feat-card">
           <label class="ais-feat-hdr">
-            <div class="ais-feat-icon" style="--fi-bg:rgba(59,130,246,.15);--fi-clr:var(--accent)">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                <rect x="2" y="7" width="20" height="10" rx="2"/>
-                <line x1="6" y1="11" x2="10" y2="11"/>
-                <line x1="6" y1="13.5" x2="14" y2="13.5"/>
-              </svg>
-            </div>
-            <div class="ais-feat-info">
+            <div class="ais-feat-text">
               <span class="ais-feat-name">Subtitles</span>
               <span class="ais-feat-desc">AI transcription via Whisper — no API key needed</span>
             </div>
@@ -91,8 +66,8 @@
 
           <div id="ais-subs-card" class="ais-feat-body" style="display:none">
             <div class="ais-grid-2">
-              <div class="ais-field">
-                <label class="ais-lbl">Model</label>
+              <div>
+                <label class="field-label">Model</label>
                 <select id="ais-sub-model" class="select-input">
                   <option value="tiny">Tiny — fastest</option>
                   <option value="base" selected>Base — recommended</option>
@@ -100,8 +75,8 @@
                   <option value="medium">Medium — best</option>
                 </select>
               </div>
-              <div class="ais-field">
-                <label class="ais-lbl">Font</label>
+              <div>
+                <label class="field-label">Font</label>
                 <select id="ais-sub-font" class="select-input">
                   <option value="DejaVu Sans Bold" selected>DejaVu Sans Bold</option>
                   <option value="Liberation Sans Bold">Liberation Sans Bold</option>
@@ -111,49 +86,43 @@
               </div>
             </div>
             <div class="ais-grid-2" style="margin-top:10px">
-              <div class="ais-field">
-                <label class="ais-lbl">Size — <span id="ais-sub-size-val">48</span>px</label>
+              <div>
+                <label class="field-label">Size — <span id="ais-sub-size-val">48</span>px</label>
                 <input type="range" id="ais-sub-size" min="20" max="90" value="48"
-                  class="ais-range" oninput="document.getElementById('ais-sub-size-val').textContent=this.value">
+                  style="width:100%;accent-color:var(--accent)"
+                  oninput="document.getElementById('ais-sub-size-val').textContent=this.value">
               </div>
-              <div class="ais-field">
-                <label class="ais-lbl">Color</label>
+              <div>
+                <label class="field-label">Color</label>
                 <input type="color" id="ais-sub-color" value="#FFFFFF" class="ais-color-input">
               </div>
             </div>
             <div class="ais-grid-2" style="margin-top:10px">
-              <div class="ais-field">
-                <label class="ais-lbl">Style</label>
+              <div>
+                <label class="field-label">Style</label>
                 <div class="ais-chip-row">
                   <label class="ais-chip"><input type="radio" name="ais-sub-style" value="shadow" checked> Shadow</label>
                   <label class="ais-chip"><input type="radio" name="ais-sub-style" value="box"> Box</label>
                 </div>
               </div>
-              <div class="ais-field">
-                <label class="ais-lbl">Position — <span id="ais-sub-pos-val">85</span>%</label>
+              <div>
+                <label class="field-label">Position — <span id="ais-sub-pos-val">85</span>%</label>
                 <div class="ais-slider-row">
-                  <span class="ais-slider-end">Top</span>
+                  <span style="font-size:.72rem;color:var(--text-3)">Top</span>
                   <input type="range" id="ais-sub-pos" min="5" max="95" value="85"
-                    class="ais-range" oninput="document.getElementById('ais-sub-pos-val').textContent=this.value">
-                  <span class="ais-slider-end">Bot</span>
+                    style="flex:1;accent-color:var(--accent)"
+                    oninput="document.getElementById('ais-sub-pos-val').textContent=this.value">
+                  <span style="font-size:.72rem;color:var(--text-3)">Bot</span>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Voiceover card -->
-        <div class="ais-feat-card" style="margin-top:10px">
+        <!-- Voiceover -->
+        <div class="ais-feat-card" style="margin-top:8px">
           <label class="ais-feat-hdr">
-            <div class="ais-feat-icon" style="--fi-bg:rgba(168,85,247,.15);--fi-clr:#a855f7">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
-                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-                <line x1="12" y1="19" x2="12" y2="23"/>
-                <line x1="8" y1="23" x2="16" y2="23"/>
-              </svg>
-            </div>
-            <div class="ais-feat-info">
+            <div class="ais-feat-text">
               <span class="ais-feat-name">Voiceover</span>
               <span class="ais-feat-desc">Neural voice synthesis via edge-tts</span>
             </div>
@@ -163,14 +132,15 @@
           </label>
 
           <div id="ais-vo-card" class="ais-feat-body" style="display:none">
-            <div class="ais-field">
-              <label class="ais-lbl">Script</label>
-              <textarea id="ais-vo-script" class="text-input ais-script-ta" rows="4"
+            <div>
+              <label class="field-label">Script</label>
+              <textarea id="ais-vo-script" class="text-input" rows="4"
+                style="width:100%;resize:vertical"
                 placeholder="Type the narration text…" oninput="aisCheckReady()"></textarea>
             </div>
             <div class="ais-grid-2" style="margin-top:10px">
-              <div class="ais-field">
-                <label class="ais-lbl">Voice</label>
+              <div>
+                <label class="field-label">Voice</label>
                 <select id="ais-voice" class="select-input">
                   <option value="jenny">Jenny — F · US</option>
                   <option value="guy">Guy — M · US</option>
@@ -180,8 +150,8 @@
                   <option value="natasha">Natasha — F · AU</option>
                 </select>
               </div>
-              <div class="ais-field">
-                <label class="ais-lbl">Original audio</label>
+              <div>
+                <label class="field-label">Original audio</label>
                 <div class="ais-chip-row">
                   <label class="ais-chip"><input type="radio" name="ais-mix" value="replace" checked> Replace</label>
                   <label class="ais-chip"><input type="radio" name="ais-mix" value="duck"> Duck</label>
@@ -194,43 +164,38 @@
       </div>
     </div>
 
-    <!-- ── Right column: Output + Generate ───────────── -->
+    <!-- ── Right: Output + Generate ─── -->
     <div class="ais-col-right">
-      <div class="ais-section ais-right-sticky">
-        <div class="ais-section-hdr">
-          <span class="ais-step-dot">3</span>
-          <span class="ais-section-title">Output &amp; Generate</span>
-        </div>
+      <div class="card ais-right-sticky">
+        <div class="card-title">Output</div>
 
-        <div class="ais-field">
-          <label class="ais-lbl">Codec</label>
+        <div>
+          <label class="field-label">Codec</label>
           <select id="ais-codec" class="select-input">
             <option value="h264">H.264 (MP4)</option>
             <option value="h265">H.265 (MP4)</option>
             <option value="vp9">VP9 (WebM)</option>
           </select>
         </div>
-        <div class="ais-field" style="margin-top:10px">
-          <label class="ais-lbl">Quality (CRF) — <span id="ais-crf-val">23</span></label>
+        <div style="margin-top:10px">
+          <label class="field-label">Quality (CRF) — <span id="ais-crf-val">23</span></label>
           <input type="range" id="ais-crf" min="18" max="32" value="23"
-            class="ais-range" oninput="document.getElementById('ais-crf-val').textContent=this.value">
+            style="width:100%;accent-color:var(--accent)"
+            oninput="document.getElementById('ais-crf-val').textContent=this.value">
         </div>
 
         <button class="btn-primary ais-gen-btn" id="ais-generate-btn"
           onclick="generateAiStudio()" disabled>
-          <svg class="icon icon-sm"><use href="#i-zap"/></svg>
-          Generate Video
+          <svg class="icon icon-sm"><use href="#i-zap"/></svg> Generate
         </button>
 
-        <!-- Progress -->
-        <div id="ais-log-wrap" style="display:none;margin-top:18px">
+        <div id="ais-log-wrap" style="display:none;margin-top:16px">
           <div class="ais-prog-bar"><div class="ais-prog-fill" id="ais-progress-fill"></div></div>
           <span class="ais-prog-lbl" id="ais-progress-label">Queued…</span>
-          <div class="log-box" id="ais-log-box" style="margin-top:10px;max-height:180px"></div>
+          <div class="log-box" id="ais-log-box" style="margin-top:10px;max-height:200px"></div>
         </div>
 
-        <!-- Export result -->
-        <div class="export-card" id="ais-export-card" style="display:none;margin-top:16px">
+        <div class="export-card" id="ais-export-card" style="display:none;margin-top:14px">
           <div id="ais-export-result"></div>
         </div>
       </div>

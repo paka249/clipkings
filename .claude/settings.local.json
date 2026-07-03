@@ -16,7 +16,16 @@
       "Bash(echo \"All 3 started \\(PIDs: $!\\)\")",
       "Bash(ffprobe -v quiet -print_format json -show_streams bg_templates/gta.mp4)",
       "Bash(pip show *)",
-      "PowerShell(\\(Get-Content \"c:\\\\Users\\\\ange7\\\\Downloads\\\\Projects_\\\\clipkings\\\\templates\\\\index.html\"\\) -replace '\\\\?v=39\"', '?v=40\"' | Set-Content \"c:\\\\Users\\\\ange7\\\\Downloads\\\\Projects_\\\\clipkings\\\\templates\\\\index.html\")"
+      "PowerShell(\\(Get-Content \"c:\\\\Users\\\\ange7\\\\Downloads\\\\Projects_\\\\clipkings\\\\templates\\\\index.html\"\\) -replace '\\\\?v=39\"', '?v=40\"' | Set-Content \"c:\\\\Users\\\\ange7\\\\Downloads\\\\Projects_\\\\clipkings\\\\templates\\\\index.html\")",
+      "mcp__plugin_playwright_playwright__browser_navigate",
+      "Bash(python -m uvicorn server:app --port 8000)",
+      "PowerShell(Start-Process \"uvicorn\" -ArgumentList \"server:app\",\"--port\",\"8000\" -WorkingDirectory \"c:\\\\Users\\\\ange7\\\\Downloads\\\\Projects_\\\\clipkings\" -WindowStyle Hidden)",
+      "PowerShell(Start-Process \"python\" -ArgumentList \"-m\",\"uvicorn\",\"server:app\",\"--port\",\"8000\" -WorkingDirectory \"c:\\\\Users\\\\ange7\\\\Downloads\\\\Projects_\\\\clipkings\" -WindowStyle Hidden)",
+      "mcp__plugin_playwright_playwright__browser_evaluate",
+      "mcp__plugin_playwright_playwright__browser_take_screenshot",
+      "PowerShell(\\(Get-Content \"c:\\\\Users\\\\ange7\\\\Downloads\\\\Projects_\\\\clipkings\\\\templates\\\\index.html\"\\) -replace '\\\\?v=41\"', '?v=42\"' | Set-Content \"c:\\\\Users\\\\ange7\\\\Downloads\\\\Projects_\\\\clipkings\\\\templates\\\\index.html\")",
+      "Bash(grep -q \"playwright-mcp\" .gitignore)",
+      "Bash(echo \".playwright-mcp/\")"
     ],
     "additionalDirectories": [
       "/tmp"
