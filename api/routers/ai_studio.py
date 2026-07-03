@@ -1,3 +1,4 @@
+import os
 import shutil
 import subprocess
 import tempfile
@@ -7,15 +8,42 @@ from datetime import datetime
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import Response
 from pydantic import BaseModel
 
 from shortform_studio.config import EXPORTS_DIR, UPLOADS_DIR
 from shortform_studio.ffmpeg import build_cmd_ai_studio
+from shortform_studio.tts_utils import VOICES, synthesize
 from shortform_studio.yt import download_video
 
 from .state import _jobs, find_downloaded, load_uploads
 
 router = APIRouter()
+
+
+class TTSPreviewReq(BaseModel):
+    script: str
+    voice: str = "jenny"
+
+
+@router.post("/api/preview/tts")
+def api_preview_tts(req: TTSPreviewReq):
+    if not req.script.strip():
+        raise HTTPException(400, "Script cannot be empty")
+    if req.voice not in VOICES:
+        raise HTTPException(400, f"Unknown voice '{req.voice}'")
+
+    tmp = tempfile.NamedTemporaryFile(suffix=".mp3", delete=False)
+    tmp.close()
+    try:
+        synthesize(req.script.strip()[:400], req.voice, tmp.name)
+        data = Path(tmp.name).read_bytes()
+    except Exception as exc:
+        raise HTTPException(500, str(exc))
+    finally:
+        os.unlink(tmp.name)
+
+    return Response(content=data, media_type="audio/mpeg")
 
 
 class AiStudioReq(BaseModel):

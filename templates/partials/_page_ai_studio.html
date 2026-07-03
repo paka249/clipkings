@@ -159,6 +159,13 @@
                 </div>
               </div>
             </div>
+            <div style="display:flex;align-items:center;gap:10px;margin-top:12px">
+              <button class="btn-outline" id="ais-vo-preview-btn" onclick="aisPreviewVoice()">
+                <svg class="icon icon-sm"><use href="#i-play"/></svg> Preview
+              </button>
+              <span id="ais-vo-preview-status" style="font-size:.75rem;color:var(--text-3)"></span>
+            </div>
+            <audio id="ais-vo-audio" controls style="display:none;width:100%;margin-top:8px;height:32px"></audio>
           </div>
         </div>
       </div>

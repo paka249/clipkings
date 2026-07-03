@@ -225,6 +225,37 @@ async function _pollAisJob(jobId) {
   } catch { /* keep polling */ }
 }
 
+async function aisPreviewVoice() {
+  const script = document.getElementById('ais-vo-script')?.value.trim();
+  const voice  = document.getElementById('ais-voice')?.value || 'jenny';
+  const btn    = document.getElementById('ais-vo-preview-btn');
+  const status = document.getElementById('ais-vo-preview-status');
+  const audio  = document.getElementById('ais-vo-audio');
+  if (!script) { status.textContent = 'Add a script first'; return; }
+  btn.disabled = true;
+  status.textContent = 'Generating…';
+  try {
+    const res = await apiFetch('/api/preview/tts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ script: script.slice(0, 400), voice }),
+    });
+    if (!res.ok) throw new Error((await res.json()).detail || res.statusText);
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    if (audio.dataset.blobUrl) URL.revokeObjectURL(audio.dataset.blobUrl);
+    audio.dataset.blobUrl = url;
+    audio.src = url;
+    audio.style.display = '';
+    audio.play();
+    status.textContent = '';
+  } catch (e) {
+    status.textContent = 'Error: ' + e.message;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
 function _appendAisLog(entry) {
   const box = document.getElementById('ais-log-box');
   if (!box) return;
