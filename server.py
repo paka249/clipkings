@@ -3,10 +3,49 @@ ClipKings — FastAPI backend.
 Run:  python server.py
 Open: http://localhost:8080
 """
+import os
+import shutil
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+# On Windows, ffmpeg/ffprobe are often installed but not on PATH.
+# Find the binary and prepend its directory so every subprocess call
+# (yt-dlp, ffprobe probe, ffmpeg render) finds it automatically.
+def _find_ffmpeg_dir() -> Path | None:
+    # 1. Already on PATH
+    exe = shutil.which("ffmpeg")
+    if exe:
+        return Path(exe).parent
+    # 2. Common standalone installs
+    candidates = [
+        Path(r"C:\ffmpeg\bin"),
+        Path(r"C:\Program Files\ffmpeg\bin"),
+        Path(r"C:\Program Files (x86)\ffmpeg\bin"),
+        Path.home() / "ffmpeg" / "bin",
+    ]
+    for d in candidates:
+        if (d / "ffmpeg.exe").exists():
+            return d
+    # 3. VS Code / editor extensions that bundle ffmpeg
+    ext_root = Path.home() / ".vscode" / "extensions"
+    if ext_root.exists():
+        for hit in ext_root.glob("*/bin/ffmpeg.exe"):
+            return hit.parent
+    return None
+
+if sys.platform == "win32":
+    _ffdir = _find_ffmpeg_dir()
+    if _ffdir:
+        os.environ["PATH"] = str(_ffdir) + os.pathsep + os.environ.get("PATH", "")
+        print(f"[startup] ffmpeg found → {_ffdir}")
+    else:
+        print(
+            "[startup] WARNING: ffmpeg not found.\n"
+            "  Install it with:  winget install Gyan.FFmpeg\n"
+            "  Then restart the server."
+        )
 
 import uvicorn
 from fastapi import Depends, FastAPI, HTTPException, Request

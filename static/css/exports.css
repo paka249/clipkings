@@ -98,6 +98,33 @@
   flex-shrink: 0;
 }
 
+/* ── Export folders ──────────────────────────────────────────── */
+.exp-folder + .exp-folder { border-top: 1px solid var(--border); }
+.exp-folder-hdr {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 6px;
+  cursor: pointer; user-select: none;
+  border-radius: var(--r);
+  transition: background var(--t);
+}
+.exp-folder-hdr:hover { background: var(--surface-2); }
+.exp-folder-icon { color: var(--text-3); flex-shrink: 0; }
+.exp-folder-name { font-size: .83rem; font-weight: 600; flex: 1; }
+.exp-folder-count {
+  font-size: .7rem; font-family: var(--mono);
+  color: var(--text-3);
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 1px 7px;
+}
+.exp-folder-chevron {
+  color: var(--text-3); flex-shrink: 0;
+  transform: rotate(90deg);
+  transition: transform var(--t);
+}
+.exp-folder-chevron.closed { transform: rotate(180deg); }
+.exp-folder-body { padding-left: 4px; }
+.exp-folder-body .export-full-row:last-child { border-bottom: 1px solid var(--border); }
+
 /* ── Watch exports modal ────────────────────────────────────── */
 .watch-modal {
   position: fixed;

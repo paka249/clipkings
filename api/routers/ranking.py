@@ -10,6 +10,7 @@ from pydantic import BaseModel
 
 from shortform_studio.config import EXPORTS_DIR
 from shortform_studio.ffmpeg import build_cmd_ranking
+from shortform_studio.probe import has_audio as probe_has_audio
 from shortform_studio.yt import download_video
 
 from .state import _jobs, find_downloaded
@@ -100,11 +101,6 @@ def _run_ranking_job(job_id: str, req: RankingReq):
                     return
                 if end_sec <= start_sec:
                     end_sec = start_sec + 5.0
-                probe = subprocess.run(
-                    ["ffprobe", "-v", "quiet", "-show_streams", "-select_streams", "a",
-                     "-show_entries", "stream=codec_name", str(path)],
-                    capture_output=True, text=True,
-                )
                 valid_fits = ("crop", "blur", "letterbox")
                 items_data.append({
                     "path": str(path),
@@ -115,7 +111,7 @@ def _run_ranking_job(job_id: str, req: RankingReq):
                     "fit": item.fit if item.fit in valid_fits else "crop",
                     "crop_x": max(0.0, min(1.0, item.crop_x)),
                     "crop_y": max(0.0, min(1.0, item.crop_y)),
-                    "has_audio": "codec_name" in probe.stdout,
+                    "has_audio": probe_has_audio(str(path)),
                 })
 
             ts_str = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -153,15 +149,10 @@ def _run_ranking_job(job_id: str, req: RankingReq):
                 job["status"] = "failed"
                 return
 
-            probe_out = subprocess.run(
-                ["ffprobe", "-v", "quiet", "-show_streams", "-select_streams", "a",
-                 "-show_entries", "stream=codec_name", str(output_path)],
-                capture_output=True, text=True,
-            )
             log(f"[OK] Ranking render complete → {output_path.name}", "ok")
             job["status"] = "completed"
             job["output"] = output_path.name
-            job["has_audio"] = "codec_name" in probe_out.stdout
+            job["has_audio"] = probe_has_audio(str(output_path))
             job["progress"] = 100
 
     except Exception as exc:

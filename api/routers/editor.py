@@ -10,6 +10,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from shortform_studio.config import EXPORTS_DIR
+from shortform_studio.probe import file_duration, has_audio as probe_has_audio
 
 from .state import _jobs, load_uploads
 
@@ -118,12 +119,7 @@ def _run_edit_job(job_id: str, req: EditReq):
                 else:
                     scale_vf = pad_vf
 
-                probe = subprocess.run(
-                    ["ffprobe", "-v", "quiet", "-show_streams", "-select_streams", "a",
-                     "-show_entries", "stream=codec_name", str(src_path)],
-                    capture_output=True, text=True,
-                )
-                has_audio = "codec_name" in probe.stdout
+                has_audio = probe_has_audio(str(src_path))
 
                 out_clip = tmp_dir / f"clip_{i:04d}.mp4"
                 cmd = ["ffmpeg", "-y"]
@@ -206,12 +202,7 @@ def _run_edit_job(job_id: str, req: EditReq):
                         log("[WARN] Audio concat failed, keeping clip audio", "err")
                         shutil.copy2(combined, output_path)
                     else:
-                        dur_probe = subprocess.run(
-                            ["ffprobe", "-v", "quiet", "-show_entries", "format=duration",
-                             "-of", "csv=p=0", str(combined)],
-                            capture_output=True, text=True,
-                        )
-                        combined_dur = dur_probe.stdout.strip()
+                        combined_dur = str(file_duration(str(combined)) or 0)
                         r2 = subprocess.run(
                             ["ffmpeg", "-y", "-i", str(combined),
                              "-stream_loop", "-1", "-i", str(audio_combined),

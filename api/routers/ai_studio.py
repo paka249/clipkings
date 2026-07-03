@@ -11,6 +11,7 @@ from pydantic import BaseModel
 
 from shortform_studio.config import EXPORTS_DIR, UPLOADS_DIR
 from shortform_studio.ffmpeg import build_cmd_ai_studio
+from shortform_studio.probe import has_audio as probe_has_audio, video_dimensions
 from shortform_studio.yt import download_video
 
 from .state import _jobs, find_downloaded, load_uploads
@@ -83,7 +84,7 @@ def _run_ai_studio_job(job_id: str, req: AiStudioReq):
             else:
                 log("[INFO] Downloading source video via yt-dlp…")
                 dl_dest = tmp_dir / "source.mp4"
-                if not download_video(req.source_url.strip(), dl_dest):
+                if not download_video(req.source_url.strip(), dl_dest, log=log):
                     log("[ERROR] Download failed — check the URL", "err")
                     job["status"] = "failed"
                     return
@@ -97,17 +98,7 @@ def _run_ai_studio_job(job_id: str, req: AiStudioReq):
 
             job["progress"] = 20
 
-            probe_v = subprocess.run(
-                ["ffprobe", "-v", "quiet", "-select_streams", "v:0",
-                 "-show_entries", "stream=width,height", str(video_path)],
-                capture_output=True, text=True,
-            )
-            canvas_w, canvas_h = 1080, 1920
-            for line in probe_v.stdout.splitlines():
-                if line.startswith("width="):
-                    canvas_w = int(line.split("=")[1])
-                elif line.startswith("height="):
-                    canvas_h = int(line.split("=")[1])
+            canvas_w, canvas_h = video_dimensions(str(video_path))
 
             ass_path: str | None = None
             if req.do_subtitles:
@@ -174,15 +165,10 @@ def _run_ai_studio_job(job_id: str, req: AiStudioReq):
                 job["status"] = "failed"
                 return
 
-            probe_out = subprocess.run(
-                ["ffprobe", "-v", "quiet", "-show_streams", "-select_streams", "a",
-                 "-show_entries", "stream=codec_name", str(output_path)],
-                capture_output=True, text=True,
-            )
             log(f"[OK] AI Studio render complete → {output_path.name}", "ok")
             job["status"] = "completed"
             job["output"] = output_path.name
-            job["has_audio"] = "codec_name" in probe_out.stdout
+            job["has_audio"] = probe_has_audio(str(output_path))
             job["progress"] = 100
 
     except Exception as exc:

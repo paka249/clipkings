@@ -9,6 +9,7 @@ from pydantic import BaseModel
 
 from shortform_studio.config import BG_TEMPLATES_DIR, EXPORTS_DIR
 from shortform_studio.ffmpeg import build_cmd_center_crop, build_cmd_split_screen
+from shortform_studio.probe import audio_info as probe_audio_info, has_audio as probe_has_audio
 from shortform_studio.timestamps import validate_clips
 from shortform_studio.yt import download_video
 
@@ -97,7 +98,7 @@ def _run_job(job_id: str, req: GenerateReq):
             else:
                 log("[INFO] Downloading primary video via yt-dlp…")
                 primary_path = tmp_dir / "primary.mp4"
-                if not download_video(req.primary_url.strip(), primary_path):
+                if not download_video(req.primary_url.strip(), primary_path, log=log):
                     log("[ERROR] Primary download failed — check the URL", "err")
                     job["status"] = "failed"
                     return
@@ -108,17 +109,10 @@ def _run_job(job_id: str, req: GenerateReq):
                     return
                 log("[OK] Primary downloaded", "ok")
 
-            probe = subprocess.run(
-                ["ffprobe", "-v", "quiet", "-show_streams", "-select_streams", "a",
-                 "-show_entries", "stream=codec_name,sample_rate,channels", str(primary_path)],
-                capture_output=True, text=True,
-            )
-            if "codec_name" in probe.stdout:
-                info = {k: v for line in probe.stdout.splitlines()
-                        if "=" in line and not line.startswith("[")
-                        for k, v in [line.split("=", 1)]}
-                log(f"[OK] Primary audio: {info.get('codec_name','?')} "
-                    f"{info.get('sample_rate','?')} Hz {info.get('channels','?')}ch", "ok")
+            ainfo = probe_audio_info(str(primary_path))
+            if ainfo:
+                log(f"[OK] Primary audio: {ainfo.get('codec_name','?')} "
+                    f"{ainfo.get('sample_rate','?')} Hz {ainfo.get('channels','?')}ch", "ok")
             else:
                 log("[WARN] Primary video has NO audio stream — output will be silent regardless of mute setting!", "err")
             job["progress"] = 40
@@ -151,7 +145,7 @@ def _run_job(job_id: str, req: GenerateReq):
                 elif req.bg_url.strip():
                     log("[INFO] Downloading background video…")
                     bg_dl = tmp_dir / "background.mp4"
-                    if not download_video(req.bg_url.strip(), bg_dl):
+                    if not download_video(req.bg_url.strip(), bg_dl, log=log):
                         log("[ERROR] Background download failed — check the URL", "err")
                         job["status"] = "failed"
                         return
@@ -199,12 +193,7 @@ def _run_job(job_id: str, req: GenerateReq):
                 job["status"] = "failed"
                 return
 
-            probe_out = subprocess.run(
-                ["ffprobe", "-v", "quiet", "-show_streams", "-select_streams", "a",
-                 "-show_entries", "stream=codec_name", str(output_path)],
-                capture_output=True, text=True,
-            )
-            has_audio = "codec_name" in probe_out.stdout
+            has_audio = probe_has_audio(str(output_path))
             log(f"[OK] Render complete → {output_path.name}", "ok")
             if has_audio:
                 log("[OK] Output has audio track", "ok")

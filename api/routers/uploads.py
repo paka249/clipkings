@@ -7,6 +7,7 @@ from fastapi import APIRouter, File, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 
 from shortform_studio.config import UPLOADS_DIR
+from shortform_studio.probe import file_duration
 
 from .state import (
     _ALLOWED_AUDIO_EXTS,
@@ -66,12 +67,9 @@ async def api_upload(file: UploadFile = File(...)):
 
     duration = None
     try:
-        pr = subprocess.run(
-            ["ffprobe", "-v", "quiet", "-show_entries", "format=duration",
-             "-of", "default=noprint_wrappers=1:nokey=1", str(dest)],
-            capture_output=True, text=True, timeout=15,
-        )
-        duration = round(float(pr.stdout.strip()), 2)
+        raw = file_duration(str(dest))
+        if raw is not None:
+            duration = round(raw, 2)
     except Exception:
         pass
 

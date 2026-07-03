@@ -1,5 +1,14 @@
 'use strict';
 
+const _EXPORT_FOLDERS = [
+  { id: 'aistudio', label: 'AI Studio',    icon: 'i-aistudio', prefixes: ['short_aistudio_'] },
+  { id: 'ranking',  label: 'Ranking',      icon: 'i-ranking',  prefixes: ['short_ranking_'] },
+  { id: 'editor',   label: 'Video Editor', icon: 'i-edit',     prefixes: ['short_edit_'] },
+  { id: 'clip',     label: 'Clip Studio',  icon: 'i-film',     prefixes: ['short_crop_', 'short_split_'] },
+  { id: 'other',    label: 'Other',        icon: 'i-folder',   prefixes: [] },
+];
+let _folderOpen = { aistudio: true, ranking: true, editor: true, clip: true, other: true };
+
 // ── Download with rename modal ─────────────────────────────────
 function downloadExport(filename, withPrompt = true) {
   const ext = filename.match(/\.(mp4|webm)$/i)?.[0] ?? '.mp4';
@@ -224,19 +233,56 @@ async function loadExportsPage() {
 
 function _renderExportsPage(files) {
   const div = document.getElementById('exports-page-list');
-  if (!files.length) {
-    div.innerHTML = '<p class="muted-text">No exports yet. Generate a short in the Editor.</p>';
-    _updateSelectionBar();
-    return;
-  }
-  div.innerHTML = `
+
+  // Group into folders by filename prefix
+  const groups = {};
+  _EXPORT_FOLDERS.forEach(f => { groups[f.id] = []; });
+  files.forEach(file => {
+    const folder = _EXPORT_FOLDERS.find(f =>
+      f.prefixes.length > 0 && f.prefixes.some(p => file.name.startsWith(p))
+    );
+    groups[folder ? folder.id : 'other'].push(file);
+  });
+
+  const hasAny = files.length > 0;
+  let html = hasAny ? `
     <div class="export-select-all-row">
       <input type="checkbox" id="select-all-cb" onchange="toggleSelectAll(this.checked)">
       <label for="select-all-cb" class="muted" style="font-size:.78rem;cursor:pointer">Select all</label>
     </div>
-    ${files.map(_exportFullRowHtml).join('')}
-  `;
+  ` : '';
+
+  for (const folder of _EXPORT_FOLDERS) {
+    const folderFiles = groups[folder.id];
+    if (folder.id === 'other' && !folderFiles.length) continue;
+    const isOpen = _folderOpen[folder.id] !== false;
+    html += `<div class="exp-folder">
+      <div class="exp-folder-hdr" onclick="toggleExportFolder('${folder.id}')">
+        <svg class="icon icon-sm exp-folder-chevron${isOpen ? '' : ' closed'}" id="exp-chev-${folder.id}">
+          <use href="#i-chevron-left"/>
+        </svg>
+        <svg class="icon icon-sm exp-folder-icon"><use href="#${folder.icon}"/></svg>
+        <span class="exp-folder-name">${folder.label}</span>
+        <span class="exp-folder-count">${folderFiles.length}</span>
+      </div>
+      <div class="exp-folder-body" id="exp-fbody-${folder.id}"${isOpen ? '' : ' style="display:none"'}>
+        ${folderFiles.length
+          ? folderFiles.map(_exportFullRowHtml).join('')
+          : '<p class="muted-text" style="padding:8px 0 10px;font-size:.8rem">No exports yet.</p>'}
+      </div>
+    </div>`;
+  }
+
+  div.innerHTML = html;
   _updateSelectionBar();
+}
+
+function toggleExportFolder(id) {
+  _folderOpen[id] = !_folderOpen[id];
+  const body = document.getElementById('exp-fbody-' + id);
+  const chev = document.getElementById('exp-chev-' + id);
+  if (body) body.style.display = _folderOpen[id] ? '' : 'none';
+  if (chev) chev.classList.toggle('closed', !_folderOpen[id]);
 }
 
 function filterExports(query) {
