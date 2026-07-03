@@ -450,7 +450,8 @@ function vedRenderPhotoTrack() {
     block.addEventListener('mousedown', (e) => {
       if (e.target.closest('.ved-tl-clip-handle')) return;
       e.preventDefault(); e.stopPropagation();
-      vedSelectClip(item.uid, 'photo');
+      const wasSelected = VED.selectedClip === item.uid;
+      if (!wasSelected) vedSelectClip(item.uid, 'photo');
       const startX   = e.pageX;
       const initTS   = item.tStart;
       const clipDur  = item.tEnd - item.tStart;
@@ -472,6 +473,7 @@ function vedRenderPhotoTrack() {
         document.removeEventListener('mousemove', onMove);
         document.removeEventListener('mouseup',   onUp);
         block.style.cursor = 'grab';
+        if (!moved && wasSelected) { vedCloseInspector(); return; }
         if (moved) { _vedRenderRuler(); vedRenderPhotoTrack(); }
       };
       document.addEventListener('mousemove', onMove);
@@ -568,7 +570,7 @@ function vedRenderAudioTrack() {
     block.appendChild(_vedMakeTrimHandle(item, 'audio', 'l', block));
     block.appendChild(_vedMakeTrimHandle(item, 'audio', 'r', block));
 
-    block.onclick = (e) => { e.stopPropagation(); vedSelectClip(item.uid, 'audio'); };
+    block.onclick = (e) => { e.stopPropagation(); if (VED.selectedClip === item.uid) { vedCloseInspector(); return; } vedSelectClip(item.uid, 'audio'); };
     block.ondragstart = (e) => {
       VED.dragUid = item.uid; VED.dragTrack = 'audio';
       e.dataTransfer.effectAllowed = 'move';
@@ -844,7 +846,7 @@ function vedRenderSequence() {
       block.appendChild(_vedMakeTrimHandle(item, 'video', 'l', block));
       block.appendChild(_vedMakeTrimHandle(item, 'video', 'r', block));
 
-      block.onclick = (e) => { e.stopPropagation(); vedSelectClip(item.uid, 'video'); };
+      block.onclick = (e) => { e.stopPropagation(); if (VED.selectedClip === item.uid) { vedCloseInspector(); return; } vedSelectClip(item.uid, 'video'); };
       block.ondragstart = (e) => {
         VED.dragUid = item.uid; VED.dragTrack = 'video';
         e.dataTransfer.effectAllowed = 'move';
