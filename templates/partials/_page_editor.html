@@ -158,9 +158,6 @@
         <span id="ved-tl-total">0:00</span>
       </span>
       <div style="flex:1"></div>
-      <button class="ved-tl-ctrl-btn" onclick="vedZoom(-1)" title="Zoom out">−</button>
-      <span class="ved-tl-zoom-lbl" id="ved-tl-zoom-lbl">1×</span>
-      <button class="ved-tl-ctrl-btn" onclick="vedZoom(1)" title="Zoom in">+</button>
     </div>
 
     <!-- Scrollable timeline canvas -->
@@ -200,8 +197,10 @@
           <div class="ved-tl-ruler" id="ved-tl-ruler"></div>
 
           <!-- Playhead -->
-          <div class="ved-tl-playhead" id="ved-tl-playhead">
-            <div class="ved-tl-playhead-head"></div>
+          <div class="ved-tl-playhead" id="ved-tl-playhead"
+               onmousedown="event.stopPropagation();(function(e){const onMove=ev=>_vedScrubTo(ev.clientX);const onUp=()=>{document.removeEventListener('mousemove',onMove);document.removeEventListener('mouseup',onUp)};document.addEventListener('mousemove',onMove);document.addEventListener('mouseup',onUp);_vedScrubTo(e.clientX)})(event)"
+               style="cursor:ew-resize">
+            <div class="ved-tl-playhead-head" style="cursor:ew-resize"></div>
             <div class="ved-tl-playhead-line"></div>
           </div>
 

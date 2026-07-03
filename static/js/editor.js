@@ -26,20 +26,6 @@ function _vedClipDur(item) {
   return Math.max(0.05, (item.end != null ? item.end : (item.duration || 0)) - (item.start || 0));
 }
 
-function vedZoom(dir) {
-  const cur = VED.zoom || 1;
-  const idx = _VED_ZOOM_LEVELS.reduce((best, z, i) =>
-    Math.abs(z - cur) < Math.abs(_VED_ZOOM_LEVELS[best] - cur) ? i : best, 0);
-  const ni  = Math.max(0, Math.min(_VED_ZOOM_LEVELS.length - 1, idx + dir));
-  VED.zoom  = _VED_ZOOM_LEVELS[ni];
-  const lbl = document.getElementById('ved-tl-zoom-lbl');
-  if (lbl) lbl.textContent = VED.zoom + '×';
-  _vedRenderRuler();
-  vedRenderSequence();
-  vedRenderAudioTrack();
-  vedRenderCaptionTrack();
-  _vedUpdateSeekbar();
-}
 
 // ── Ruler ─────────────────────────────────────────────────────
 function _vedTotalDur() {
@@ -1921,46 +1907,56 @@ function vedTlSeek(secs) {
   _vedUpdateSeekbar();
 }
 
+function _vedScrubTo(clientX) {
+  const inner = document.getElementById('ved-tl-inner');
+  if (!inner) return;
+  const rect   = inner.getBoundingClientRect();
+  const target = Math.max(0, (clientX - rect.left) / _vedPPS());
+
+  if (!VED.sequence.length) {
+    _vedSeekElapsed(target);
+    _vedUpdateImgOverlays(target);
+    _vedUpdateCaptionOverlays(target);
+    _vedUpdateSeekbar();
+    return;
+  }
+
+  let elapsed = 0;
+  for (let i = 0; i < VED.sequence.length; i++) {
+    const item = VED.sequence[i];
+    const dur  = _vedClipDur(item);
+    if (target <= elapsed + dur || i === VED.sequence.length - 1) {
+      const offset  = Math.min(target - elapsed, dur);
+      const seekTo  = (item.start || 0) + offset;
+      const wasPlay = !document.getElementById('ved-preview-video')?.paused && VED.seqPlaying;
+      VED.seqPlaying = wasPlay;
+      _vedLoadClipAndRun(i, () => {
+        const v = document.getElementById('ved-preview-video');
+        if (v) v.currentTime = seekTo;
+        if (wasPlay) v?.play().catch(() => {});
+        _vedSetPlayIcon(wasPlay);
+        _vedUpdateSeekbar();
+        vedRenderSequence();
+        vedRenderInspector();
+      });
+      break;
+    }
+    elapsed += dur;
+  }
+}
+
 function vedTlPointerDown(e) {
   if (e.target.closest('.ved-tl-clip')) return;
-  if (!VED.sequence.length) return;
+  if (!VED.sequence.length && !VED.photoClips.length && !VED.audioClips.length && !VED.captions.length) return;
 
-  const _doSeek = (ev) => {
-    const inner = document.getElementById('ved-tl-inner');
-    if (!inner) return;
-    const rect   = inner.getBoundingClientRect();
-    const target = Math.max(0, (ev.clientX - rect.left) / _vedPPS());
-    let elapsed = 0;
-    for (let i = 0; i < VED.sequence.length; i++) {
-      const item = VED.sequence[i];
-      const dur  = _vedClipDur(item);
-      if (target <= elapsed + dur || i === VED.sequence.length - 1) {
-        const offset  = Math.min(target - elapsed, dur);
-        const seekTo  = (item.start || 0) + offset;
-        const wasPlay = !document.getElementById('ved-preview-video')?.paused && VED.seqPlaying;
-        VED.seqPlaying = wasPlay;
-        _vedLoadClipAndRun(i, () => {
-          const v = document.getElementById('ved-preview-video');
-          if (v) v.currentTime = seekTo;
-          if (wasPlay) v?.play().catch(() => {});
-          _vedSetPlayIcon(wasPlay);
-          _vedUpdateSeekbar();
-          vedRenderSequence();
-          vedRenderInspector();
-        });
-        break;
-      }
-      elapsed += dur;
-    }
-  };
-
-  const onUp = () => {
-    document.removeEventListener('mousemove', _doSeek);
+  const onMove = (ev) => _vedScrubTo(ev.clientX);
+  const onUp   = () => {
+    document.removeEventListener('mousemove', onMove);
     document.removeEventListener('mouseup',   onUp);
   };
-  document.addEventListener('mousemove', _doSeek);
+  document.addEventListener('mousemove', onMove);
   document.addEventListener('mouseup',   onUp);
-  _doSeek(e);
+  _vedScrubTo(e.clientX);
 }
 
 function _vedSetPlayIcon(playing) {
