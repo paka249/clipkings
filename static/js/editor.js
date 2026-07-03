@@ -6,40 +6,51 @@ const _VED_BASE_PPS    = 60; // pixels per second at zoom 1
 
 function _vedPPS() { return _VED_BASE_PPS * (VED.zoom || 1); }
 
+function _vedUpdatePlaceholder() {
+  const el = document.getElementById('ved-canvas-placeholder');
+  if (!el) return;
+  const hasMedia = VED.sequence.length || VED.photoClips.length ||
+                   VED.audioClips.length || VED.captions.length;
+  el.style.display = hasMedia ? 'none' : '';
+}
+
+function _vedApplyCanvasBg(color) {
+  VED.canvasBg = color || '#111111';
+  const box = document.querySelector('.ved-canvas-box');
+  if (box) box.style.background = VED.canvasBg;
+  const picker = document.getElementById('ved-canvas-bg-picker');
+  if (picker) picker.value = VED.canvasBg;
+}
+
 function _vedClipDur(item) {
   return Math.max(0.05, (item.end != null ? item.end : (item.duration || 0)) - (item.start || 0));
 }
 
-function vedZoom(dir) {
-  const cur = VED.zoom || 1;
-  const idx = _VED_ZOOM_LEVELS.reduce((best, z, i) =>
-    Math.abs(z - cur) < Math.abs(_VED_ZOOM_LEVELS[best] - cur) ? i : best, 0);
-  const ni  = Math.max(0, Math.min(_VED_ZOOM_LEVELS.length - 1, idx + dir));
-  VED.zoom  = _VED_ZOOM_LEVELS[ni];
-  const lbl = document.getElementById('ved-tl-zoom-lbl');
-  if (lbl) lbl.textContent = VED.zoom + '×';
-  _vedRenderRuler();
-  vedRenderSequence();
-  vedRenderAudioTrack();
-  _vedUpdateSeekbar();
-}
 
 // ── Ruler ─────────────────────────────────────────────────────
+function _vedTotalDur() {
+  const seqEnd = _vedSeqTotal();
+  const imgEnd = (VED.photoClips || []).reduce((m, c) => Math.max(m, c.tEnd ?? 0), 0);
+  const capEnd = (VED.captions   || []).reduce((m, c) => Math.max(m, c.tEnd ?? 0), 0);
+  return Math.max(seqEnd, imgEnd, capEnd);
+}
+
 function _vedRenderRuler() {
   const ruler = document.getElementById('ved-tl-ruler');
   if (!ruler) return;
   const pps   = _vedPPS();
-  const total = Math.max(30, _vedSeqTotal() + 15);
+  const total = Math.max(30, _vedTotalDur() + 15);
   const w     = Math.ceil(total * pps) + 120;
   ruler.style.width = w + 'px';
 
-  const intervals = [0.5, 1, 2, 5, 10, 15, 30, 60, 120, 300];
+  // Start at 1 (not 0.5) so labels are always whole-second integers and never duplicate.
+  const intervals = [1, 2, 5, 10, 15, 30, 60, 120, 300];
   const majorSec  = intervals.find(s => s * pps >= 55) || 300;
   const minorSec  = majorSec / 5;
 
   ruler.innerHTML = '';
   for (let t = 0; t <= total + majorSec; t += minorSec) {
-    const isMajor = Math.abs(Math.round(t / minorSec) % 5) === 0;
+    const isMajor = Math.round(t / minorSec) % 5 === 0;
     const tick = document.createElement('div');
     tick.className = 'ved-tl-tick' + (isMajor ? ' ved-tl-tick--major' : '');
     tick.style.left   = (t * pps) + 'px';
@@ -104,6 +115,49 @@ async function _vedDrawFilmstrip(canvas, item) {
   } catch { /* keep dark */ }
 }
 
+// ── File validation ───────────────────────────────────────────
+const _VED_IMG_EXTS = new Set(['.jpg','.jpeg','.png','.webp','.gif','.jfif','.avif']);
+const _VED_AUD_EXTS = new Set(['.mp3','.aac','.wav','.m4a','.ogg','.flac']);
+
+function _vedIsImg(file) {
+  const ext = (file.name.match(/\.[^.]+$/) || [''])[0].toLowerCase();
+  return _VED_IMG_EXTS.has(ext) || file.type.startsWith('image/');
+}
+function _vedIsAud(file) {
+  const ext = (file.name.match(/\.[^.]+$/) || [''])[0].toLowerCase();
+  return _VED_AUD_EXTS.has(ext) || file.type.startsWith('audio/');
+}
+
+// expectedTrack: 'image' | 'audio' | 'video' | null (auto for drag-drop)
+function _vedValidateFile(file, expectedTrack) {
+  const mb    = file.size / 1048576;
+  const isImg = _vedIsImg(file);
+  const isAud = _vedIsAud(file);
+
+  if (expectedTrack === 'image') {
+    if (!isImg)
+      return `"${file.name}" is not an image. The Images track only accepts JPG, PNG, WebP, or GIF.`;
+    if (mb > 10)
+      return `"${file.name}" is ${mb.toFixed(1)} MB — images must be under 10 MB.`;
+  } else if (expectedTrack === 'audio') {
+    if (!isAud)
+      return `"${file.name}" is not an audio file. The Audio track only accepts MP3, AAC, WAV, M4A, OGG, or FLAC.`;
+    if (mb > 100)
+      return `"${file.name}" is ${mb.toFixed(0)} MB — audio must be under 100 MB.`;
+  } else if (expectedTrack === 'video') {
+    if (isImg || isAud)
+      return `"${file.name}" is not a video. The Video track only accepts MP4, MOV, MKV, WebM, AVI, and similar formats.`;
+    if (mb > 500)
+      return `"${file.name}" is ${mb.toFixed(0)} MB — videos must be under 500 MB.`;
+  } else {
+    // Drag-drop: only enforce size limits, auto-route by type
+    if (isImg && mb > 10)  return `"${file.name}" is ${mb.toFixed(1)} MB — images must be under 10 MB.`;
+    if (isAud && mb > 100) return `"${file.name}" is ${mb.toFixed(0)} MB — audio must be under 100 MB.`;
+    if (!isImg && !isAud && mb > 500) return `"${file.name}" is ${mb.toFixed(0)} MB — videos must be under 500 MB.`;
+  }
+  return null;
+}
+
 // ── Library ───────────────────────────────────────────────────
 async function vedLoadLibrary() {
   try {
@@ -127,15 +181,19 @@ function vedRenderLibrary() {
   g.className = 'ved-lib-grid';
   VED.library.forEach(file => {
     const dur  = file.duration ? fmtTS(Math.floor(file.duration)) : '';
-    const isAudio = file.is_audio || ['.mp3','.aac','.wav','.m4a','.ogg','.flac'].includes(file.ext);
+    const isAudio = file.is_audio  || false;
+    const isImage = file.is_image  || _vedIsImg({ name: file.name || file.id, type: file.type || '' });
     const displayName = file.name || file.original_name || file.id;
-    const safeName = displayName.replace(/'/g, "\\'");
+    const addFn = isAudio ? 'vedAddAudioToSeq' : isImage ? 'vedAddPhotoToSeq' : 'vedAddToSeq';
     const card = document.createElement('div');
     card.className = 'ved-lib-card';
     card.innerHTML = `
       <div class="ved-lib-thumb" id="vedthumb-${file.id}">
         ${isAudio
           ? `<svg class="icon icon-xl" style="color:var(--accent)"><use href="#i-vol"/></svg>`
+          : isImage
+          ? `<img src="/api/uploads/stream/${file.id}"
+               style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">`
           : `<video muted playsinline preload="metadata" src="/api/uploads/stream/${file.id}"
                style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"
                onmouseenter="this.play()" onmouseleave="this.pause();this.currentTime=0"></video>
@@ -145,7 +203,7 @@ function vedRenderLibrary() {
       <div class="ved-lib-name" title="${displayName}">${displayName}</div>
       <div class="ved-lib-meta">${file.size_mb} MB${dur ? ' · ' + dur : ''}</div>
       <div class="ved-lib-btns">
-        <button class="ved-lib-btn" onclick="${isAudio ? `vedAddAudioToSeq` : `vedAddToSeq`}('${file.id}')">+ Add</button>
+        <button class="ved-lib-btn" onclick="${addFn}('${file.id}')">+ Add</button>
         <button class="ved-lib-btn ved-lib-btn-danger" onclick="vedDeleteFile('${file.id}')">×</button>
       </div>`;
     g.appendChild(card);
@@ -157,19 +215,30 @@ async function vedDropFiles(event) {
   event.preventDefault();
   event.stopPropagation();
   const files = Array.from(event.dataTransfer?.files || []);
-  if (files.length) await _vedUpload(files);
+  if (files.length) await _vedUpload(files, null); // null = auto-detect
 }
 
-function vedAddVideoFiles(rawList) { return _vedUpload(Array.from(rawList || [])); }
-function vedAddAudioFiles(rawList) { return _vedUpload(Array.from(rawList || [])); }
-function vedAddPhotoFiles(rawList) { return _vedUpload(Array.from(rawList || []), true); }
+function vedAddVideoFiles(rawList) { return _vedUpload(Array.from(rawList || []), 'video'); }
+function vedAddAudioFiles(rawList) { return _vedUpload(Array.from(rawList || []), 'audio'); }
+function vedAddPhotoFiles(rawList) { return _vedUpload(Array.from(rawList || []), 'image'); }
 
-async function _vedUpload(files, isPhoto = false) {
+// track: 'video' | 'audio' | 'image' | null (auto for drag-drop)
+async function _vedUpload(files, track) {
   if (!files.length) return;
   const wrap = document.getElementById('ved-uploading');
   if (wrap) wrap.style.display = 'block';
 
   for (const file of files) {
+    if (VED.library.length >= _VED_MAX_LIB) {
+      _modal({ icon: 'warn', iconColor: 'danger', title: 'Library full',
+        msg: `Max ${_VED_MAX_LIB} files in the library. Delete unused files to upload more.` });
+      break;
+    }
+    const validErr = _vedValidateFile(file, track);
+    if (validErr) {
+      _modal({ icon: 'warn', iconColor: 'danger', title: 'File rejected', msg: validErr });
+      continue;
+    }
     const fd = new FormData();
     fd.append('file', file);
     try {
@@ -181,19 +250,26 @@ async function _vedUpload(files, isPhoto = false) {
       }
       const data = await res.json();
       VED.library.unshift(data);
-      if (isPhoto) vedAddPhotoToSeq(data.id);
-      else if (data.is_audio || ['.mp3','.aac','.wav','.m4a','.ogg','.flac'].includes(data.ext)) vedAddAudioToSeq(data.id);
+      // Route to the right track — use explicit track if provided, else auto-detect
+      const ext = data.ext || '';
+      const resolvedTrack = track || (
+        _vedIsImg({ name: data.original_name || data.id, type: data.type || '' }) ? 'image' :
+        (_VED_AUD_EXTS.has(data.ext) || data.is_audio) ? 'audio' : 'video'
+      );
+      if (resolvedTrack === 'image') vedAddPhotoToSeq(data.id);
+      else if (resolvedTrack === 'audio') vedAddAudioToSeq(data.id);
       else vedAddToSeq(data.id);
     } catch (e) {
       _modal({ icon: 'warn', iconColor: 'danger', title: 'Upload failed', msg: e.message });
     }
   }
 
-  ['ved-video-input','ved-audio-input','ved-photo-input'].forEach(id => {
+  ['ved-video-input','ved-audio-input','ved-image-input'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
   });
 
+  vedRenderLibrary();
   if (wrap) wrap.style.display = 'none';
 }
 
@@ -201,7 +277,7 @@ async function vedDeleteFile(id) {
   const entry = VED.library.find(f => f.id === id);
   const name  = entry?.name || id;
   if (!window.confirm(`Remove "${name}" from the library?\nThis cannot be undone.`)) return;
-  await fetch(`/api/uploads/${id}`, { method: 'DELETE' }).catch(() => {});
+  await apiFetch(`/api/uploads/${id}`, { method: 'DELETE' }).catch(() => {});
   VED.library    = VED.library.filter(f => f.id !== id);
   VED.sequence   = VED.sequence.filter(s => s.uploadId !== id);
   VED.photoClips = VED.photoClips.filter(s => s.uploadId !== id);
@@ -211,42 +287,106 @@ async function vedDeleteFile(id) {
   vedRenderPhotoTrack();
   vedRenderSequence();
   vedRenderAudioTrack();
+  _vedUpdatePlaceholder();
 }
 
-// ── Photo track ───────────────────────────────────────────────
+// ── Image (photo) track ───────────────────────────────────────
 const _VED_PHOTO_DEFAULT_DUR = 3;
 
 function vedAddPhotoToSeq(uploadId) {
   const entry = VED.library.find(f => f.id === uploadId);
   if (!entry) return;
+  if (VED.photoClips.length >= _VED_MAX_IMG) {
+    _modal({ icon: 'warn', iconColor: 'danger', title: 'Image track full',
+      msg: `Max ${_VED_MAX_IMG} image clips in the timeline. Remove one to add another.` });
+    return;
+  }
   const newUid = Math.random().toString(36).slice(2, 8);
-  const dur = entry.duration || _VED_PHOTO_DEFAULT_DUR;
+  _vedSnapshot();
+  // Place after the last existing image (or after the video sequence)
+  const tStart = (VED.photoClips || []).reduce((m, c) => Math.max(m, c.tEnd ?? 0), _vedSeqTotal());
   VED.photoClips.push({
     uid:      newUid,
     uploadId: entry.id,
     name:     entry.name || entry.original_name || entry.id,
-    duration: dur,
-    start:    0,
-    end:      dur,
+    tStart,
+    tEnd:     tStart + _VED_PHOTO_DEFAULT_DUR,
     is_image: true,
+    scale:    0.8,
+    x:        0.5,
+    y:        0.5,
+    opacity:  1,
+    rotation: 0,
+    flipH:    false,
+    flipV:    false,
+    cropT: 0, cropR: 0, cropB: 0, cropL: 0,
   });
+  _vedRenderRuler();
   vedRenderPhotoTrack();
   vedSelectClip(newUid, 'photo');
+  _vedUpdatePlaceholder();
 }
 
 function vedRemoveFromPhotoSeq(uid) {
+  _vedSnapshot();
   VED.photoClips = VED.photoClips.filter(c => c.uid !== uid);
   if (VED.selectedClip === uid) vedCloseInspector();
+  _vedRenderRuler();
   vedRenderPhotoTrack();
+  _vedUpdatePlaceholder();
 }
 
-function vedMovePhotoClip(uid, dir) {
-  const idx = VED.photoClips.findIndex(c => c.uid === uid);
-  if (idx < 0) return;
-  const swap = idx + dir;
-  if (swap < 0 || swap >= VED.photoClips.length) return;
-  [VED.photoClips[idx], VED.photoClips[swap]] = [VED.photoClips[swap], VED.photoClips[idx]];
-  vedRenderPhotoTrack();
+// Make an image resize handle (left = shift tStart, right = extend tEnd)
+function _vedMakeImageHandle(item, side, block) {
+  const handle = document.createElement('div');
+  handle.className = `ved-tl-clip-handle ved-tl-clip-handle-${side}`;
+  const bar = document.createElement('div');
+  bar.className = 'ved-tl-clip-handle-bar';
+  handle.appendChild(bar);
+
+  handle.addEventListener('mousedown', (e) => {
+    e.stopPropagation(); e.preventDefault();
+    vedSelectClip(item.uid, 'photo');
+    const startX  = e.pageX;
+    const initTS  = item.tStart;
+    const initTE  = item.tEnd;
+
+    const onMove = (ev) => {
+      const pps   = _vedPPS();
+      const delta = (ev.pageX - startX) / pps;
+      if (side === 'l') {
+        item.tStart = Math.max(0, Math.min(initTE - 0.1, initTS + delta));
+        block.style.left  = (item.tStart * pps) + 'px';
+        block.style.width = ((item.tEnd - item.tStart) * pps) + 'px';
+      } else {
+        item.tEnd = Math.max(item.tStart + 0.1, initTE + delta);
+        block.style.width = ((item.tEnd - item.tStart) * pps) + 'px';
+      }
+      vedRenderInspector();
+    };
+    const onUp = () => {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup',   onUp);
+      vedRenderPhotoTrack();
+    };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup',   onUp);
+  });
+  return handle;
+}
+
+// Assign _lane to each photo clip so overlapping clips spread into sub-rows
+function _vedAssignLanes(clips) {
+  const laneEnd = [];
+  const sorted  = clips.slice().sort((a, b) => (a.tStart ?? 0) - (b.tStart ?? 0));
+  sorted.forEach(clip => {
+    const tS = clip.tStart ?? 0;
+    let lane = 0;
+    while (lane < laneEnd.length && laneEnd[lane] > tS + 0.05) lane++;
+    clip._lane = lane;
+    laneEnd[lane] = clip.tEnd ?? (tS + _VED_PHOTO_DEFAULT_DUR);
+  });
+  return Math.max(1, laneEnd.length);
 }
 
 function vedRenderPhotoTrack() {
@@ -257,20 +397,36 @@ function vedRenderPhotoTrack() {
   if (!VED.photoClips.length) {
     const hint = document.createElement('span');
     hint.className   = 'ved-tl-empty-hint';
-    hint.textContent = 'Add photos from the library';
+    hint.textContent = 'Add images from the library — drag to position on the timeline';
     row.appendChild(hint);
+    // Reset track to default height
+    const trackDiv  = row.closest('.ved-tl-track--photo');
+    const labelEl   = document.querySelector('.ved-tl-label-photo');
+    if (trackDiv) trackDiv.style.height = '';
+    if (labelEl)  labelEl.style.height  = '';
     return;
   }
 
+  const LANE_H   = 36;
+  const numLanes = _vedAssignLanes(VED.photoClips);
+  const trackH   = numLanes * LANE_H + 8;
+  const trackDiv = row.closest('.ved-tl-track--photo');
+  const labelEl  = document.querySelector('.ved-tl-label-photo');
+  if (trackDiv) trackDiv.style.height = trackH + 'px';
+  if (labelEl)  labelEl.style.height  = trackH + 'px';
+
   const pps = _vedPPS();
-  let cumSec = 0;
   VED.photoClips.forEach((item, i) => {
-    const dur   = _vedClipDur(item);
+    const tS    = item.tStart ?? 0;
+    const tE    = item.tEnd   ?? (tS + _VED_PHOTO_DEFAULT_DUR);
+    const dur   = Math.max(0.1, tE - tS);
     const isSel = item.uid === VED.selectedClip;
+    const lane  = item._lane ?? 0;
+
     const block = document.createElement('div');
+    block.dataset.uid = item.uid;
     block.className = 'ved-tl-clip ved-tl-clip--photo' + (isSel ? ' ved-tl-clip--sel' : '');
-    block.style.cssText = `left:${cumSec * pps}px;width:${dur * pps}px`;
-    block.draggable = true;
+    block.style.cssText = `left:${tS * pps}px;width:${dur * pps}px;top:${4 + lane * LANE_H}px;height:${LANE_H - 8}px;bottom:auto;cursor:grab`;
 
     const img = document.createElement('img');
     img.src = `/api/uploads/stream/${item.uploadId}`;
@@ -285,41 +441,49 @@ function vedRenderPhotoTrack() {
         <span class="ved-tl-clip-nm">${item.name || ''}</span>
       </div>
       <div class="ved-tl-clip-info-bot">
-        <span class="ved-tl-clip-dur">${fmtTS(Math.floor(dur))}</span>
+        <span class="ved-tl-clip-dur">${fmtTS(Math.round(tS))}–${fmtTS(Math.round(tE))}</span>
       </div>`;
     block.appendChild(info);
-    block.appendChild(_vedMakeTrimHandle(item, 'photo', 'l', block));
-    block.appendChild(_vedMakeTrimHandle(item, 'photo', 'r', block));
+    block.appendChild(_vedMakeImageHandle(item, 'l', block));
+    block.appendChild(_vedMakeImageHandle(item, 'r', block));
 
-    block.onclick = (e) => { e.stopPropagation(); vedSelectClip(item.uid, 'photo'); };
-    block.ondragstart = (e) => {
-      VED.dragUid = item.uid; VED.dragTrack = 'photo';
-      e.dataTransfer.effectAllowed = 'move';
-      setTimeout(() => block.classList.add('ved-tl-clip--dragging'), 0);
-    };
-    block.ondragend = () => {
-      VED.dragUid = null; VED.dragTrack = null;
-      block.classList.remove('ved-tl-clip--dragging');
-      document.querySelectorAll('.ved-tl-clip--drag-over').forEach(el => el.classList.remove('ved-tl-clip--drag-over'));
-    };
-    block.ondragover = (e) => {
-      if (VED.dragUid && VED.dragTrack === 'photo' && VED.dragUid !== item.uid) {
-        e.preventDefault(); block.classList.add('ved-tl-clip--drag-over');
-      }
-    };
-    block.ondragleave = () => block.classList.remove('ved-tl-clip--drag-over');
-    block.ondrop = (e) => {
-      e.preventDefault(); block.classList.remove('ved-tl-clip--drag-over');
-      if (!VED.dragUid || VED.dragTrack !== 'photo' || VED.dragUid === item.uid) return;
-      const fi = VED.photoClips.findIndex(c => c.uid === VED.dragUid);
-      const ti = VED.photoClips.findIndex(c => c.uid === item.uid);
-      if (fi < 0 || ti < 0) return;
-      const [moved] = VED.photoClips.splice(fi, 1);
-      VED.photoClips.splice(ti, 0, moved);
-      vedRenderPhotoTrack();
-    };
+    // Body drag: reposition along the timeline
+    block.addEventListener('mousedown', (e) => {
+      if (e.target.closest('.ved-tl-clip-handle')) return;
+      e.preventDefault(); e.stopPropagation();
+      const wasSelected = VED.selectedClip === item.uid;
+      if (!wasSelected) vedSelectClip(item.uid, 'photo');
+      // vedSelectClip rebuilds the track — re-fetch the live element
+      const live = document.querySelector(`#ved-tl-photo-row [data-uid="${item.uid}"]`) || block;
+      const startX  = e.pageX;
+      const initTS  = item.tStart;
+      const clipDur = item.tEnd - item.tStart;
+      let moved = false;
+
+      const onMove = (ev) => {
+        if (!moved && Math.abs(ev.pageX - startX) < 3) return;
+        if (!moved) live.classList.add('ved-tl-clip--lift');
+        moved = true;
+        const dt = (ev.pageX - startX) / _vedPPS();
+        item.tStart = Math.max(0, initTS + dt);
+        item.tEnd   = item.tStart + clipDur;
+        live.style.left = (item.tStart * _vedPPS()) + 'px';
+        const infoBot = live.querySelector('.ved-tl-clip-dur');
+        if (infoBot) infoBot.textContent = `${fmtTS(Math.round(item.tStart))}–${fmtTS(Math.round(item.tEnd))}`;
+        vedRenderInspector();
+      };
+      const onUp = () => {
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup',   onUp);
+        live.classList.remove('ved-tl-clip--lift');
+        if (!moved && wasSelected) { vedCloseInspector(); return; }
+        if (moved) { _vedRenderRuler(); vedRenderPhotoTrack(); }
+      };
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup',   onUp);
+    });
+
     row.appendChild(block);
-    cumSec += dur;
   });
 }
 
@@ -327,7 +491,13 @@ function vedRenderPhotoTrack() {
 function vedAddAudioToSeq(uploadId) {
   const entry = VED.library.find(f => f.id === uploadId);
   if (!entry) return;
+  if (VED.audioClips.length >= _VED_MAX_AUDIO) {
+    _modal({ icon: 'warn', iconColor: 'danger', title: 'Audio track full',
+      msg: `Max ${_VED_MAX_AUDIO} audio clips in the timeline. Remove one to add another.` });
+    return;
+  }
   const newUid = Math.random().toString(36).slice(2, 8);
+  _vedSnapshot();
   VED.audioClips.push({
     uid:      newUid,
     uploadId: entry.id,
@@ -336,14 +506,18 @@ function vedAddAudioToSeq(uploadId) {
     start:    0,
     end:      entry.duration || null,
   });
+  if (!entry.duration) _vedDetectDuration(newUid, 'audio', entry.id);
   vedRenderAudioTrack();
   vedSelectClip(newUid, 'audio');
+  _vedUpdatePlaceholder();
 }
 
 function vedRemoveFromAudioSeq(uid) {
+  _vedSnapshot();
   VED.audioClips = VED.audioClips.filter(s => s.uid !== uid);
   if (VED.selectedClip === uid) vedCloseInspector();
   vedRenderAudioTrack();
+  _vedUpdatePlaceholder();
 }
 
 function vedMoveAudioClip(uid, dir) {
@@ -351,6 +525,7 @@ function vedMoveAudioClip(uid, dir) {
   if (idx < 0) return;
   const swap = idx + dir;
   if (swap < 0 || swap >= VED.audioClips.length) return;
+  _vedSnapshot();
   [VED.audioClips[idx], VED.audioClips[swap]] = [VED.audioClips[swap], VED.audioClips[idx]];
   vedRenderAudioTrack();
 }
@@ -398,7 +573,18 @@ function vedRenderAudioTrack() {
     block.appendChild(_vedMakeTrimHandle(item, 'audio', 'l', block));
     block.appendChild(_vedMakeTrimHandle(item, 'audio', 'r', block));
 
-    block.onclick = (e) => { e.stopPropagation(); vedSelectClip(item.uid, 'audio'); };
+    block.addEventListener('mousedown', (e) => {
+      e.stopPropagation();
+      const wasSelected = VED.selectedClip === item.uid;
+      block.classList.add('ved-tl-clip--lift');
+      const onUp = () => {
+        document.removeEventListener('mouseup', onUp);
+        block.classList.remove('ved-tl-clip--lift');
+        if (wasSelected) { vedCloseInspector(); return; }
+        vedSelectClip(item.uid, 'audio');
+      };
+      document.addEventListener('mouseup', onUp);
+    });
     block.ondragstart = (e) => {
       VED.dragUid = item.uid; VED.dragTrack = 'audio';
       e.dataTransfer.effectAllowed = 'move';
@@ -430,11 +616,84 @@ function vedRenderAudioTrack() {
   });
 }
 
+// ── Undo / Redo ───────────────────────────────────────────────
+const _VED_UNDO = [];
+const _VED_REDO = [];
+const _VED_MAX_UNDO = 50;
+
+function _vedSnapshot() {
+  _VED_REDO.length = 0;
+  _VED_UNDO.push({
+    sequence:      JSON.parse(JSON.stringify(VED.sequence)),
+    photoClips:    JSON.parse(JSON.stringify(VED.photoClips)),
+    audioClips:    JSON.parse(JSON.stringify(VED.audioClips)),
+    captions:      JSON.parse(JSON.stringify(VED.captions)),
+    selectedClip:  VED.selectedClip,
+    selectedTrack: VED.selectedTrack,
+  });
+  if (_VED_UNDO.length > _VED_MAX_UNDO) _VED_UNDO.shift();
+}
+
+function _vedRestoreSnap(snap) {
+  VED.sequence      = snap.sequence;
+  VED.photoClips    = snap.photoClips;
+  VED.audioClips    = snap.audioClips;
+  VED.captions      = snap.captions;
+  VED.selectedClip  = snap.selectedClip;
+  VED.selectedTrack = snap.selectedTrack;
+  vedRenderPhotoTrack();
+  vedRenderSequence();
+  vedRenderAudioTrack();
+  vedRenderCaptionTrack();
+  vedRenderInspector();
+  _vedUpdateImgOverlays(_vedSeqElapsed());
+  _vedUpdateCaptionOverlays(_vedSeqElapsed());
+  _vedRenderRuler();
+  _vedUpdateSeekbar();
+}
+
+function vedUndo() {
+  if (!_VED_UNDO.length) return;
+  _VED_REDO.push({
+    sequence:      JSON.parse(JSON.stringify(VED.sequence)),
+    photoClips:    JSON.parse(JSON.stringify(VED.photoClips)),
+    audioClips:    JSON.parse(JSON.stringify(VED.audioClips)),
+    captions:      JSON.parse(JSON.stringify(VED.captions)),
+    selectedClip:  VED.selectedClip,
+    selectedTrack: VED.selectedTrack,
+  });
+  _vedRestoreSnap(_VED_UNDO.pop());
+}
+
+function vedRedo() {
+  if (!_VED_REDO.length) return;
+  _VED_UNDO.push({
+    sequence:      JSON.parse(JSON.stringify(VED.sequence)),
+    photoClips:    JSON.parse(JSON.stringify(VED.photoClips)),
+    audioClips:    JSON.parse(JSON.stringify(VED.audioClips)),
+    captions:      JSON.parse(JSON.stringify(VED.captions)),
+    selectedClip:  VED.selectedClip,
+    selectedTrack: VED.selectedTrack,
+  });
+  _vedRestoreSnap(_VED_REDO.pop());
+}
+
 // ── Video sequence ────────────────────────────────────────────
+const _VED_MAX_VIDEO = 10;
+const _VED_MAX_AUDIO = 3;
+const _VED_MAX_IMG   = 20;
+const _VED_MAX_LIB   = 30;
+
 function vedAddToSeq(uploadId) {
   const entry = VED.library.find(f => f.id === uploadId);
   if (!entry) return;
+  if (VED.sequence.length >= _VED_MAX_VIDEO) {
+    _modal({ icon: 'warn', iconColor: 'danger', title: 'Video track full',
+      msg: `Max ${_VED_MAX_VIDEO} video clips in the timeline. Remove one to add another.` });
+    return;
+  }
   const newUid = Math.random().toString(36).slice(2, 8);
+  _vedSnapshot();
   VED.sequence.push({
     uid:      newUid,
     uploadId: entry.id,
@@ -445,14 +704,42 @@ function vedAddToSeq(uploadId) {
     crop_x:   0.5,
     crop_y:   0.5,
   });
+  if (!entry.duration) _vedDetectDuration(newUid, 'video', entry.id);
   vedRenderSequence();
   vedSelectClip(newUid);
+  _vedUpdatePlaceholder();
+}
+
+// If the server didn't return a duration (FFprobe unavailable), probe it via a hidden media element
+function _vedDetectDuration(uid, track, uploadId) {
+  const el = document.createElement(track === 'audio' ? 'audio' : 'video');
+  el.preload = 'metadata';
+  el.src     = `/api/uploads/stream/${uploadId}`;
+  el.addEventListener('loadedmetadata', function once() {
+    el.removeEventListener('loadedmetadata', once);
+    const dur = el.duration;
+    el.src = '';
+    if (!dur || !isFinite(dur) || dur <= 0) return;
+    const arr  = track === 'audio' ? VED.audioClips : VED.sequence;
+    const item = arr.find(c => c.uid === uid);
+    if (!item) return;
+    item.duration = dur;
+    if (item.end == null || item.end === 0) item.end = dur;
+    const libEntry = VED.library.find(l => l.id === uploadId);
+    if (libEntry) libEntry.duration = dur;
+    if (track === 'audio') vedRenderAudioTrack();
+    else vedRenderSequence();
+    _vedRenderRuler();
+    _vedUpdateSeekbar();
+  });
 }
 
 function vedRemoveFromSeq(uid) {
+  _vedSnapshot();
   VED.sequence = VED.sequence.filter(s => s.uid !== uid);
   if (VED.selectedClip === uid) vedCloseInspector();
   vedRenderSequence();
+  _vedUpdatePlaceholder();
 }
 
 function vedMoveSeq(uid, dir) {
@@ -460,6 +747,7 @@ function vedMoveSeq(uid, dir) {
   if (idx < 0) return;
   const swap = idx + dir;
   if (swap < 0 || swap >= VED.sequence.length) return;
+  _vedSnapshot();
   [VED.sequence[idx], VED.sequence[swap]] = [VED.sequence[swap], VED.sequence[idx]];
   vedRenderSequence();
 }
@@ -572,15 +860,15 @@ function vedRenderSequence() {
       block.appendChild(_vedMakeTrimHandle(item, 'video', 'l', block));
       block.appendChild(_vedMakeTrimHandle(item, 'video', 'r', block));
 
-      block.onclick = (e) => { e.stopPropagation(); vedSelectClip(item.uid, 'video'); };
+      block.onclick = (e) => { e.stopPropagation(); if (VED.selectedClip === item.uid) { vedCloseInspector(); return; } vedSelectClip(item.uid, 'video'); };
       block.ondragstart = (e) => {
         VED.dragUid = item.uid; VED.dragTrack = 'video';
         e.dataTransfer.effectAllowed = 'move';
-        setTimeout(() => block.classList.add('ved-tl-clip--dragging'), 0);
+        setTimeout(() => block.classList.add('ved-tl-clip--lift'), 0);
       };
       block.ondragend = () => {
         VED.dragUid = null; VED.dragTrack = null;
-        block.classList.remove('ved-tl-clip--dragging');
+        block.classList.remove('ved-tl-clip--lift');
         document.querySelectorAll('.ved-tl-clip--drag-over').forEach(el => el.classList.remove('ved-tl-clip--drag-over'));
       };
       block.ondragover = (e) => {
@@ -604,12 +892,17 @@ function vedRenderSequence() {
     });
   }
 
-  if (n === 0) {
+  const hasAny = n > 0 || (VED.photoClips || []).length > 0;
+  if (!hasAny) {
     if (status) { status.className = 'status-missing'; status.innerHTML = '<svg class="icon icon-sm"><use href="#i-warn"/></svg> Add at least one clip'; }
     if (btn) btn.disabled = true;
   } else {
-    const totalSec = VED.sequence.reduce((a, s) => a + _vedClipDur(s), 0);
-    if (status) { status.className = 'status-ready'; status.innerHTML = `<svg class="icon icon-sm"><use href="#i-check"/></svg> ${n} clip${n>1?'s':''} · ~${fmtTS(Math.floor(totalSec))}`; }
+    const totalSec = Math.max(
+      VED.sequence.reduce((a, s) => a + _vedClipDur(s), 0),
+      (VED.photoClips || []).reduce((m, p) => Math.max(m, p.tEnd ?? 0), 0)
+    );
+    const label = n > 0 ? `${n} video clip${n>1?'s':''}` : `${VED.photoClips.length} image${VED.photoClips.length>1?'s':''}`;
+    if (status) { status.className = 'status-ready'; status.innerHTML = `<svg class="icon icon-sm"><use href="#i-check"/></svg> ${label} · ~${fmtTS(Math.floor(totalSec))}`; }
     if (btn) btn.disabled = false;
   }
 
@@ -628,10 +921,20 @@ function vedSelectClip(uid, track) {
   );
   const idx = VED.sequence.findIndex(s => s.uid === uid);
   if (idx >= 0) VED.seqIdx = idx;
-  vedPreviewClip(uid);
+  if (VED.selectedTrack === 'photo') {
+    // Seek playhead to the photo's start time so it's immediately visible on canvas
+    const pc = VED.photoClips.find(c => c.uid === uid);
+    if (pc) _vedSeekElapsed(pc.tStart ?? 0);
+  } else {
+    vedPreviewClip(uid);
+  }
   vedRenderPhotoTrack();
   vedRenderSequence();
   vedRenderAudioTrack();
+  vedRenderCaptionTrack();
+  _vedUpdateImgOverlays(_vedSeqElapsed());
+  _vedUpdateCaptionOverlays(_vedSeqElapsed());
+  vedRenderInspector();
 }
 
 function vedCloseInspector() {
@@ -641,6 +944,7 @@ function vedCloseInspector() {
   vedRenderPhotoTrack();
   vedRenderSequence();
   vedRenderAudioTrack();
+  vedRenderCaptionTrack();
   vedRenderInspector();
 }
 
@@ -654,12 +958,7 @@ function vedPreviewClip(uid) {
   if (!item) {
     video.pause();
     video.style.display = 'none';
-    const hint = document.getElementById('ved-canvas-hint');
-    if (placeholder) {
-      placeholder.style.display = 'flex';
-      const hasClips = VED.sequence.length > 0 || VED.audioClips.length > 0;
-      if (hint) hint.textContent = hasClips ? 'Click a clip to preview' : 'Add media to get started';
-    }
+    _vedUpdatePlaceholder();
     _vedSetPlayIcon(false);
     return;
   }
@@ -690,7 +989,12 @@ function _vedSeqTotal() {
 
 function _vedSeqElapsed() {
   const video = document.getElementById('ved-preview-video');
-  if (!video || !VED.sequence.length) return 0;
+  if (!VED.sequence.length) {
+    // Image-only mode: drive elapsed from a manual timer
+    const running = VED.seqPlaying && VED.imgPlayT0;
+    return VED.imgPlayOffset + (running ? (performance.now() - VED.imgPlayT0) / 1000 : 0);
+  }
+  if (!video) return 0;
   let e = 0;
   for (let i = 0; i < VED.sequence.length; i++) {
     const s   = VED.sequence[i];
@@ -701,16 +1005,679 @@ function _vedSeqElapsed() {
   return e;
 }
 
+// Seek the whole playback to elapsed time t (works for image-only and video modes)
+function _vedSeekElapsed(t) {
+  t = Math.max(0, t);
+  if (!VED.sequence.length) {
+    VED.seqPlaying    = false;
+    VED.imgPlayOffset = t;
+    VED.imgPlayT0     = 0;
+    if (VED.imgRafId) { cancelAnimationFrame(VED.imgRafId); VED.imgRafId = null; }
+    _vedSetPlayIcon(false);
+    _vedUpdateSeekbar();
+    return;
+  }
+  const video = document.getElementById('ved-preview-video');
+  if (!video) return;
+  video.pause();
+  VED.seqPlaying = false;
+  _vedSetPlayIcon(false);
+  let acc = 0;
+  for (let i = 0; i < VED.sequence.length; i++) {
+    const s   = VED.sequence[i];
+    const dur = Math.max(0, (s.end ?? (s.duration || 0)) - (s.start || 0));
+    if (acc + dur > t || i === VED.sequence.length - 1) {
+      VED.seqIdx = i;
+      const clipT = (s.start || 0) + Math.min(dur, Math.max(0, t - acc));
+      const src   = `/api/uploads/stream/${s.uploadId}`;
+      if (video.dataset.src !== src) {
+        video.dataset.src = src;
+        video.src = src;
+        video.style.display = 'block';
+        const ph = document.getElementById('ved-canvas-placeholder');
+        if (ph) ph.style.display = 'none';
+        video.addEventListener('loadedmetadata', function once() {
+          video.removeEventListener('loadedmetadata', once);
+          video.currentTime = clipT;
+          _vedUpdateSeekbar();
+        });
+      } else {
+        video.currentTime = clipT;
+        _vedUpdateSeekbar();
+      }
+      return;
+    }
+    acc += dur;
+  }
+}
+
+// ── Image overlay preview ─────────────────────────────────────
+// ── Canvas image interaction ──────────────────────────────────
+
+function _vedImgApplyStyle(wrap, item) {
+  const scale = item.scale    ?? 1;
+  const rot   = item.rotation ?? 0;
+  const fX    = item.flipH    ? -1 : 1;
+  const fY    = item.flipV    ? -1 : 1;
+  wrap.style.left      = ((item.x ?? 0.5) * 100) + '%';
+  wrap.style.top       = ((item.y ?? 0.5) * 100) + '%';
+  wrap.style.width     = (scale * 100) + '%';
+  wrap.style.transform = `translate(-50%,-50%) rotate(${rot}deg) scale(${fX},${fY})`;
+  wrap.style.opacity   = item.opacity ?? 1;
+}
+
+function _vedImgCreateOverlay(item) {
+  const wrap = document.createElement('div');
+  wrap.className     = 'ved-img-wrap';
+  wrap.dataset.uid   = item.uid;
+
+  const img = document.createElement('img');
+  img.src       = `/api/uploads/stream/${item.uploadId}`;
+  img.draggable = false;
+  img.className = 'ved-img-el';
+  if (item.cropT || item.cropR || item.cropB || item.cropL) {
+    img.style.clipPath = `inset(${item.cropT??0}% ${item.cropR??0}% ${item.cropB??0}% ${item.cropL??0}%)`;
+  }
+  wrap.appendChild(img);
+
+  // Corner handles (scale)
+  ['nw','ne','se','sw'].forEach(pos => {
+    const h = document.createElement('div');
+    h.className = 'ved-img-corner ved-img-corner--' + pos;
+    h.addEventListener('mousedown', e => {
+      e.preventDefault(); e.stopPropagation();
+      _vedImgScaleStart(e, item, pos);
+    });
+    wrap.appendChild(h);
+  });
+
+  // Rotation handle (circle above image center, connected by line)
+  const rotHandle = document.createElement('div');
+  rotHandle.className = 'ved-img-rot-handle';
+  rotHandle.title = 'Drag to rotate';
+  rotHandle.innerHTML = '<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.5 2v6h-6"/><path d="M21.34 15.57a10 10 0 1 1-.57-8.38"/></svg>';
+  rotHandle.addEventListener('mousedown', e => {
+    e.preventDefault(); e.stopPropagation();
+    _vedImgRotateStart(e, item);
+  });
+  wrap.appendChild(rotHandle);
+
+  // Floating toolbar (crop, flip H, flip V)
+  const tb = document.createElement('div');
+  tb.className = 'ved-img-tb';
+
+  const cropBtn = document.createElement('button');
+  cropBtn.className = 'ved-img-tb-btn'; cropBtn.title = 'Crop';
+  cropBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="6 2 6 18 22 18"/><polyline points="2 6 18 6 18 22"/></svg> Crop';
+  cropBtn.addEventListener('click', e => { e.stopPropagation(); _vedImgCropMode(item); });
+  tb.appendChild(cropBtn);
+
+  const flipH = document.createElement('button');
+  flipH.className = 'ved-img-tb-btn'; flipH.title = 'Mirror horizontal';
+  flipH.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="2" x2="12" y2="22"/><path d="M20 7L12 2 12 22l8-5V7z" fill="currentColor" opacity=".4"/><path d="M4 7l8-5v20L4 17V7z"/></svg>';
+  flipH.addEventListener('click', e => {
+    e.stopPropagation();
+    item.flipH = !item.flipH;
+    const w = document.getElementById('ved-img-overlays')?.querySelector(`.ved-img-wrap[data-uid="${item.uid}"]`);
+    if (w) _vedImgApplyStyle(w, item);
+    vedRenderInspector();
+  });
+  tb.appendChild(flipH);
+
+  const flipV = document.createElement('button');
+  flipV.className = 'ved-img-tb-btn'; flipV.title = 'Mirror vertical';
+  flipV.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="2" y1="12" x2="22" y2="12"/><path d="M7 20l-5-8 20 0-5 8H7z" fill="currentColor" opacity=".4"/><path d="M7 4l-5 8h20L17 4H7z"/></svg>';
+  flipV.addEventListener('click', e => {
+    e.stopPropagation();
+    item.flipV = !item.flipV;
+    const w = document.getElementById('ved-img-overlays')?.querySelector(`.ved-img-wrap[data-uid="${item.uid}"]`);
+    if (w) _vedImgApplyStyle(w, item);
+    vedRenderInspector();
+  });
+  tb.appendChild(flipV);
+
+  wrap.appendChild(tb);
+
+  // Body drag = move
+  wrap.addEventListener('mousedown', e => {
+    if (e.target.closest('.ved-img-corner,.ved-img-tb')) return;
+    e.preventDefault(); e.stopPropagation();
+    vedSelectClip(item.uid, 'photo');
+    _vedUpdateImgOverlays(_vedSeqElapsed());
+    vedRenderInspector();
+    _vedImgMoveStart(e, item);
+  });
+
+  return wrap;
+}
+
+function _vedImgMoveStart(e, item) {
+  const c = document.getElementById('ved-img-overlays');
+  if (!c) return;
+  const rect = c.getBoundingClientRect();
+  const sx = e.clientX, sy = e.clientY;
+  const ix = item.x ?? 0.5, iy = item.y ?? 0.5;
+  const wrap = c.querySelector(`.ved-img-wrap[data-uid="${item.uid}"]`);
+
+  const onMove = ev => {
+    item.x = Math.max(0, Math.min(1, ix + (ev.clientX - sx) / rect.width));
+    item.y = Math.max(0, Math.min(1, iy + (ev.clientY - sy) / rect.height));
+    if (wrap) _vedImgApplyStyle(wrap, item);
+    vedRenderInspector();
+  };
+  const onUp = () => {
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+  };
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
+}
+
+function _vedImgScaleStart(e, item, corner) {
+  const c = document.getElementById('ved-img-overlays');
+  if (!c) return;
+  const rect      = c.getBoundingClientRect();
+  const sx        = e.clientX;
+  const initScale = item.scale ?? 1;
+  // right-side corners → drag right = bigger; left-side → drag left = bigger
+  const sign = (corner === 'ne' || corner === 'se') ? 1 : -1;
+  const wrap = c.querySelector(`.ved-img-wrap[data-uid="${item.uid}"]`);
+
+  const onMove = ev => {
+    const dx = (ev.clientX - sx) / rect.width;
+    item.scale = Math.max(0.05, Math.min(3, initScale + sign * dx * 2));
+    if (wrap) _vedImgApplyStyle(wrap, item);
+    vedRenderInspector();
+  };
+  const onUp = () => {
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+  };
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
+}
+
+function _vedImgRotateStart(e, item) {
+  const c = document.getElementById('ved-img-overlays');
+  if (!c) return;
+  const wrap = c.querySelector(`.ved-img-wrap[data-uid="${item.uid}"]`);
+  if (!wrap) return;
+  const rect = wrap.getBoundingClientRect();
+  const cx   = rect.left + rect.width  / 2;
+  const cy   = rect.top  + rect.height / 2;
+
+  const onMove = ev => {
+    const deg = Math.atan2(ev.clientX - cx, -(ev.clientY - cy)) * 180 / Math.PI;
+    item.rotation = Math.round(deg);
+    _vedImgApplyStyle(wrap, item);
+    vedRenderInspector();
+  };
+  const onUp = () => {
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup',   onUp);
+  };
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup',   onUp);
+}
+
+function _vedCapRotateStart(e, item) {
+  const c = document.getElementById('ved-cap-overlays');
+  if (!c) return;
+  const wrap = c.querySelector(`.ved-cap-wrap[data-uid="${item.uid}"]`);
+  if (!wrap) return;
+  const rect = wrap.getBoundingClientRect();
+  const cx   = rect.left + rect.width  / 2;
+  const cy   = rect.top  + rect.height / 2;
+  const cRect = c.getBoundingClientRect();
+  const onMove = ev => {
+    const deg = Math.atan2(ev.clientX - cx, -(ev.clientY - cy)) * 180 / Math.PI;
+    item.rotation = Math.round(deg);
+    _vedCapApplyStyle(wrap, item, cRect);
+    const lbl = document.getElementById('ci-rot');
+    if (lbl) lbl.textContent = item.rotation + '°';
+    const sl = document.querySelector('#ved-inspector-body input[type=range][min="-180"]');
+    if (sl) sl.value = item.rotation;
+  };
+  const onUp = () => {
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup',   onUp);
+  };
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup',   onUp);
+}
+
+function _vedImgCropMode(item) {
+  const c = document.getElementById('ved-img-overlays');
+  if (!c) return;
+  c.querySelectorAll('.ved-crop-ui').forEach(el => el.remove());
+
+  const wrap = c.querySelector(`.ved-img-wrap[data-uid="${item.uid}"]`);
+  if (!wrap) return;
+  const wr = wrap.getBoundingClientRect();
+  const cr = c.getBoundingClientRect();
+
+  const crop = { t: item.cropT ?? 0, r: item.cropR ?? 0, b: item.cropB ?? 0, l: item.cropL ?? 0 };
+
+  const ui = document.createElement('div');
+  ui.className = 'ved-crop-ui';
+  ui.style.cssText = `position:absolute;left:${wr.left-cr.left}px;top:${wr.top-cr.top}px;width:${wr.width}px;height:${wr.height}px;pointer-events:all;z-index:30;box-sizing:border-box;`;
+
+  // 4 non-overlapping shade regions (top, bottom, then left/right between them)
+  const shTop = document.createElement('div');
+  const shBot = document.createElement('div');
+  const shL   = document.createElement('div');
+  const shR   = document.createElement('div');
+  const SH = 'position:absolute;background:rgba(0,0,0,.62);pointer-events:none;';
+  shTop.style.cssText = SH + 'top:0;left:0;right:0;';
+  shBot.style.cssText = SH + 'bottom:0;left:0;right:0;';
+  shL.style.cssText   = SH + 'left:0;';
+  shR.style.cssText   = SH + 'right:0;';
+  ui.appendChild(shTop); ui.appendChild(shBot);
+  ui.appendChild(shL);   ui.appendChild(shR);
+
+  // Dashed crop border
+  const border = document.createElement('div');
+  border.style.cssText = 'position:absolute;border:2px dashed rgba(255,255,255,.9);box-sizing:border-box;pointer-events:none;z-index:2;';
+  ui.appendChild(border);
+
+  // Reposition all shade + border + handles
+  const handles = {};
+  const redraw = () => {
+    shTop.style.height = crop.t + '%';
+    shBot.style.height = crop.b + '%';
+    shL.style.top    = crop.t + '%'; shL.style.bottom = crop.b + '%'; shL.style.width = crop.l + '%';
+    shR.style.top    = crop.t + '%'; shR.style.bottom = crop.b + '%'; shR.style.width = crop.r + '%';
+    border.style.left   = crop.l + '%'; border.style.top    = crop.t + '%';
+    border.style.right  = crop.r + '%'; border.style.bottom = crop.b + '%';
+    // Reposition handles to stay on crop rect edges
+    const cx = crop.l + (100 - crop.l - crop.r) / 2;
+    const cy = crop.t + (100 - crop.t - crop.b) / 2;
+    if (handles.t) { handles.t.style.left = cx + '%';            handles.t.style.top    = crop.t + '%'; }
+    if (handles.b) { handles.b.style.left = cx + '%';            handles.b.style.top    = (100-crop.b) + '%'; }
+    if (handles.l) { handles.l.style.left = crop.l + '%';        handles.l.style.top    = cy + '%'; }
+    if (handles.r) { handles.r.style.left = (100-crop.r) + '%';  handles.r.style.top    = cy + '%'; }
+  };
+
+  // Edge handles
+  [['t','ns-resize'],['r','ew-resize'],['b','ns-resize'],['l','ew-resize']].forEach(([side, cur]) => {
+    const h = document.createElement('div');
+    h.style.cssText = `position:absolute;width:12px;height:12px;background:#fff;border:2px solid var(--accent);border-radius:50%;cursor:${cur};z-index:5;transform:translate(-50%,-50%);`;
+    handles[side] = h;
+    ui.appendChild(h);
+
+    h.addEventListener('mousedown', ev => {
+      ev.preventDefault(); ev.stopPropagation();
+      const isV   = side === 't' || side === 'b';
+      const start = isV ? ev.clientY : ev.clientX;
+      const init  = crop[side];
+      const dim   = isV ? wr.height : wr.width;
+      const sign  = (side === 'b' || side === 'r') ? -1 : 1;
+      const onM = em => {
+        const delta = ((isV ? em.clientY : em.clientX) - start) / dim * 100;
+        crop[side] = Math.max(0, Math.min(45, init + sign * delta));
+        redraw();
+      };
+      const onU = () => {
+        document.removeEventListener('mousemove', onM);
+        document.removeEventListener('mouseup',   onU);
+      };
+      document.addEventListener('mousemove', onM);
+      document.addEventListener('mouseup',   onU);
+    });
+  });
+
+  redraw();
+
+  // Buttons inside the image at the bottom — never clipped by overflow:hidden
+  const bar = document.createElement('div');
+  bar.style.cssText = 'position:absolute;bottom:10px;left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:10;white-space:nowrap;';
+
+  const doneBtn = document.createElement('button');
+  doneBtn.className = 'btn-sm'; doneBtn.style.fontSize = '.75rem';
+  doneBtn.textContent = '✓ Apply Crop';
+  doneBtn.addEventListener('click', () => {
+    _vedSnapshot();
+    item.cropT = crop.t; item.cropR = crop.r; item.cropB = crop.b; item.cropL = crop.l;
+    const img = wrap.querySelector('.ved-img-el');
+    if (img) img.style.clipPath = (crop.t || crop.r || crop.b || crop.l)
+      ? `inset(${crop.t}% ${crop.r}% ${crop.b}% ${crop.l}%)` : '';
+    ui.remove();
+    vedRenderInspector();
+  });
+
+  const resetBtn = document.createElement('button');
+  resetBtn.className = 'btn-outline'; resetBtn.style.fontSize = '.75rem';
+  resetBtn.textContent = 'Reset';
+  resetBtn.addEventListener('click', () => {
+    crop.t = crop.r = crop.b = crop.l = 0;
+    redraw();
+  });
+
+  const cancelBtn = document.createElement('button');
+  cancelBtn.className = 'btn-outline'; cancelBtn.style.fontSize = '.75rem';
+  cancelBtn.textContent = 'Cancel';
+  cancelBtn.addEventListener('click', () => ui.remove());
+
+  bar.appendChild(doneBtn); bar.appendChild(resetBtn); bar.appendChild(cancelBtn);
+  ui.appendChild(bar);
+
+  c.appendChild(ui);
+}
+
+function _vedUpdateImgOverlays(elapsed) {
+  const c = document.getElementById('ved-img-overlays');
+  if (!c) return;
+
+  const clips = VED.photoClips || [];
+
+  clips.forEach(item => {
+    const tS    = item.tStart ?? 0;
+    const tE    = item.tEnd   ?? (tS + _VED_PHOTO_DEFAULT_DUR);
+    const isSel   = item.uid === VED.selectedClip;
+    const inRange = elapsed >= tS && elapsed < tE;
+
+    let wrap = c.querySelector(`.ved-img-wrap[data-uid="${item.uid}"]`);
+    if (!wrap) { wrap = _vedImgCreateOverlay(item); c.appendChild(wrap); }
+
+    wrap.style.display = inRange ? '' : 'none';
+    wrap.style.zIndex  = isSel ? '5' : '1';
+    wrap.style.outline = '';
+
+    if (inRange) _vedImgApplyStyle(wrap, item);
+    wrap.classList.toggle('ved-img-sel', isSel && inRange);
+
+    // Apply saved crop to img element
+    const imgEl = wrap.querySelector('.ved-img-el');
+    if (imgEl) {
+      imgEl.style.clipPath = (item.cropT||item.cropR||item.cropB||item.cropL)
+        ? `inset(${item.cropT??0}% ${item.cropR??0}% ${item.cropB??0}% ${item.cropL??0}%)`
+        : '';
+    }
+  });
+
+  // Remove overlays for deleted clips
+  c.querySelectorAll('.ved-img-wrap').forEach(el => {
+    if (!clips.find(x => x.uid === el.dataset.uid)) el.remove();
+  });
+}
+
+// ── Caption track ─────────────────────────────────────────────
+function vedAddCaption() {
+  const uid = 'cap-' + Math.random().toString(36).slice(2, 8);
+  const t   = Math.max(0, Math.min(_vedSeqElapsed(), Math.max(0, _vedTotalDur() - 3)));
+  _vedSnapshot();
+  VED.captions.push({
+    uid, text: 'Caption', tStart: t, tEnd: t + 3,
+    x: 0.5, y: 0.82, fontSizePct: 5, rotation: 0,
+    fontFamily: 'Impact', color: '#FFFFFF', bgColor: '',
+    bold: false, italic: false, align: 'center', shadow: true, width: 0.75,
+  });
+  vedSelectCaption(uid);
+  _vedRenderRuler();
+  _vedUpdatePlaceholder();
+}
+
+function vedSelectCaption(uid) {
+  VED.selectedClip  = uid;
+  VED.selectedTrack = 'caption';
+  // Seek to the caption's start time so it's immediately visible on canvas
+  const cap = (VED.captions || []).find(c => c.uid === uid);
+  if (cap) _vedSeekElapsed(cap.tStart ?? 0);
+  vedRenderPhotoTrack();
+  vedRenderSequence();
+  vedRenderAudioTrack();
+  vedRenderCaptionTrack();
+  vedRenderInspector();
+  _vedUpdateCaptionOverlays(_vedSeqElapsed());
+}
+
+function vedRemoveCaption(uid) {
+  _vedSnapshot();
+  VED.captions = VED.captions.filter(c => c.uid !== uid);
+  if (VED.selectedClip === uid) { VED.selectedClip = null; VED.selectedTrack = 'video'; }
+  vedRenderCaptionTrack();
+  vedRenderInspector();
+  _vedUpdateCaptionOverlays(_vedSeqElapsed());
+  _vedRenderRuler();
+  _vedUpdatePlaceholder();
+}
+
+function _vedMakeCaptionHandle(item, side, block) {
+  const handle = document.createElement('div');
+  handle.className = `ved-tl-clip-handle ved-tl-clip-handle-${side}`;
+  const bar = document.createElement('div');
+  bar.className = 'ved-tl-clip-handle-bar';
+  handle.appendChild(bar);
+  handle.addEventListener('mousedown', (e) => {
+    e.stopPropagation(); e.preventDefault();
+    const startX = e.pageX, initTS = item.tStart, initTE = item.tEnd;
+    const onMove = (ev) => {
+      const delta = (ev.pageX - startX) / _vedPPS();
+      if (side === 'l') {
+        item.tStart = Math.max(0, Math.min(initTE - 0.1, initTS + delta));
+        block.style.left  = (item.tStart * _vedPPS()) + 'px';
+        block.style.width = ((item.tEnd - item.tStart) * _vedPPS()) + 'px';
+      } else {
+        item.tEnd = Math.max(item.tStart + 0.1, initTE + delta);
+        block.style.width = ((item.tEnd - item.tStart) * _vedPPS()) + 'px';
+      }
+    };
+    const onUp = () => {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup',   onUp);
+      vedRenderCaptionTrack();
+      vedRenderInspector();
+    };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup',   onUp);
+  });
+  return handle;
+}
+
+function vedRenderCaptionTrack() {
+  const row = document.getElementById('ved-tl-caption-row');
+  if (!row) return;
+  row.innerHTML = '';
+  const caps = VED.captions || [];
+  if (!caps.length) {
+    const hint = document.createElement('span');
+    hint.className   = 'ved-tl-empty-hint';
+    hint.textContent = 'Click + to add a caption';
+    row.appendChild(hint);
+    return;
+  }
+  const pps = _vedPPS();
+  caps.forEach(item => {
+    const tS    = item.tStart ?? 0;
+    const tE    = item.tEnd   ?? (tS + 3);
+    const dur   = Math.max(0.1, tE - tS);
+    const isSel = item.uid === VED.selectedClip;
+    const block = document.createElement('div');
+    block.className = 'ved-tl-clip ved-tl-clip--caption' + (isSel ? ' ved-tl-clip--sel' : '');
+    block.style.cssText = `left:${tS * pps}px;width:${dur * pps}px;cursor:grab`;
+
+    const label = document.createElement('div');
+    label.className = 'ved-tl-clip-info';
+    label.innerHTML = `
+      <div class="ved-tl-clip-info-top">
+        <span class="ved-tl-clip-idx" style="background:rgba(168,85,247,.8)">T</span>
+        <span class="ved-tl-clip-nm" style="font-style:italic">${esc((item.text||'Caption').slice(0,28))}</span>
+      </div>
+      <div class="ved-tl-clip-info-bot">
+        <span class="ved-tl-clip-dur">${fmtTS(Math.round(tS))}–${fmtTS(Math.round(tE))}</span>
+      </div>`;
+    block.appendChild(label);
+    block.appendChild(_vedMakeCaptionHandle(item, 'l', block));
+    block.appendChild(_vedMakeCaptionHandle(item, 'r', block));
+
+    block.addEventListener('mousedown', (e) => {
+      if (e.target.closest('.ved-tl-clip-handle')) return;
+      e.preventDefault(); e.stopPropagation();
+      if (VED.selectedClip !== item.uid) vedSelectCaption(item.uid);
+      const startX = e.pageX, initTS = item.tStart, clipDur = item.tEnd - item.tStart;
+      let moved = false;
+      const onMove = (ev) => {
+        if (!moved && Math.abs(ev.pageX - startX) < 3) return;
+        if (!moved) block.classList.add('ved-tl-clip--lift');
+        moved = true;
+        item.tStart = Math.max(0, initTS + (ev.pageX - startX) / _vedPPS());
+        item.tEnd   = item.tStart + clipDur;
+        block.style.left = (item.tStart * _vedPPS()) + 'px';
+        const infoBot = block.querySelector('.ved-tl-clip-dur');
+        if (infoBot) infoBot.textContent = `${fmtTS(Math.round(item.tStart))}–${fmtTS(Math.round(item.tEnd))}`;
+      };
+      const onUp = () => {
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup',   onUp);
+        block.classList.remove('ved-tl-clip--lift');
+        block.style.cursor = 'grab';
+        if (!moved && VED.selectedClip === item.uid) { vedCloseInspector(); return; }
+        vedRenderCaptionTrack();
+        vedRenderInspector();
+      };
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup',   onUp);
+    });
+    row.appendChild(block);
+  });
+}
+
+function _vedCapApplyStyle(wrap, item, cRect) {
+  const h     = (cRect && cRect.height) ? cRect.height : 400;
+  const fSize = Math.max(8, Math.round((item.fontSizePct || 5) / 100 * h));
+  const inner = wrap.querySelector('.ved-cap-text');
+  const rot = item.rotation ?? 0;
+  wrap.style.left      = ((item.x     ?? 0.5)  * 100) + '%';
+  wrap.style.top       = ((item.y     ?? 0.82) * 100) + '%';
+  wrap.style.width     = ((item.width ?? 0.75) * 100) + '%';
+  wrap.style.transform = `translate(-50%,-50%) rotate(${rot}deg)`;
+  wrap.style.textAlign = item.align || 'center';
+  if (inner) {
+    inner.style.fontSize     = fSize + 'px';
+    inner.style.fontFamily   = item.fontFamily || 'Impact';
+    inner.style.color        = item.color      || '#FFFFFF';
+    inner.style.fontWeight   = item.bold   ? '700' : '400';
+    inner.style.fontStyle    = item.italic ? 'italic' : 'normal';
+    inner.style.textShadow   = (item.shadow !== false)
+      ? '2px 2px 4px rgba(0,0,0,.95),-1px -1px 2px rgba(0,0,0,.8)' : 'none';
+    inner.style.background   = item.bgColor || '';
+    inner.style.padding      = item.bgColor ? '3px 10px' : '0';
+    inner.style.borderRadius = item.bgColor ? '4px' : '0';
+    inner.textContent        = item.text || '';
+  }
+}
+
+function _vedCapCreateOverlay(item, cRect) {
+  const wrap = document.createElement('div');
+  wrap.className   = 'ved-cap-wrap';
+  wrap.dataset.uid = item.uid;
+
+  const inner = document.createElement('div');
+  inner.className = 'ved-cap-text';
+  wrap.appendChild(inner);
+
+  // Rotation handle (above center, like image overlays)
+  const rotH = document.createElement('div');
+  rotH.className = 'ved-cap-rot-handle';
+  rotH.title = 'Drag to rotate';
+  rotH.innerHTML = '<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.5 2v6h-6"/><path d="M21.34 15.57a10 10 0 1 1-.57-8.38"/></svg>';
+  rotH.addEventListener('mousedown', e => {
+    e.preventDefault(); e.stopPropagation();
+    _vedCapRotateStart(e, item);
+  });
+  wrap.appendChild(rotH);
+
+  const rh = document.createElement('div');
+  rh.className = 'ved-cap-resize';
+  rh.title = 'Drag to resize font';
+  rh.addEventListener('mousedown', e => {
+    e.preventDefault(); e.stopPropagation();
+    const c       = document.getElementById('ved-cap-overlays');
+    const cr      = c.getBoundingClientRect();
+    const startY  = e.clientY;
+    const initPct = item.fontSizePct || 5;
+    const onMove  = ev => {
+      const dy = ev.clientY - startY;
+      item.fontSizePct = Math.max(1, Math.min(20, initPct + dy / cr.height * 100));
+      _vedCapApplyStyle(wrap, item, cr);
+    };
+    const onUp = () => {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup',   onUp);
+      vedRenderInspector();
+    };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup',   onUp);
+  });
+  wrap.appendChild(rh);
+
+  wrap.addEventListener('mousedown', e => {
+    if (e.target.closest('.ved-cap-resize')) return;
+    e.preventDefault(); e.stopPropagation();
+    if (VED.selectedClip !== item.uid) vedSelectCaption(item.uid);
+    const c  = document.getElementById('ved-cap-overlays');
+    const cr = c.getBoundingClientRect();
+    const sx = e.clientX, sy = e.clientY;
+    const ix = item.x ?? 0.5, iy = item.y ?? 0.82;
+    const onMove = ev => {
+      item.x = Math.max(0, Math.min(1, ix + (ev.clientX - sx) / cr.width));
+      item.y = Math.max(0, Math.min(1, iy + (ev.clientY - sy) / cr.height));
+      _vedCapApplyStyle(wrap, item, cr);
+    };
+    const onUp = () => {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup',   onUp);
+      vedRenderInspector();
+    };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup',   onUp);
+  });
+
+  _vedCapApplyStyle(wrap, item, cRect);
+  return wrap;
+}
+
+function _vedUpdateCaptionOverlays(elapsed) {
+  const c = document.getElementById('ved-cap-overlays');
+  if (!c) return;
+  const cRect = c.getBoundingClientRect();
+  const sel   = VED.selectedTrack === 'caption';
+
+  (VED.captions || []).forEach(item => {
+    const tS      = item.tStart ?? 0;
+    const tE      = item.tEnd   ?? (tS + 3);
+    const isSel   = sel && item.uid === VED.selectedClip;
+    const inRange = elapsed >= tS && elapsed < tE;
+
+    let wrap = c.querySelector(`.ved-cap-wrap[data-uid="${item.uid}"]`);
+    if (!wrap) { wrap = _vedCapCreateOverlay(item, cRect); c.appendChild(wrap); }
+
+    wrap.style.display       = inRange ? '' : 'none';
+    wrap.style.zIndex        = isSel ? '2' : '1';
+    wrap.style.outline       = '';
+    wrap.style.outlineOffset = '';
+    wrap.classList.toggle('ved-cap-sel', isSel && inRange);
+
+    if (inRange) _vedCapApplyStyle(wrap, item, cRect);
+  });
+
+  c.querySelectorAll('.ved-cap-wrap').forEach(el => {
+    if (!(VED.captions || []).find(x => x.uid === el.dataset.uid)) el.remove();
+  });
+}
+
 function _vedUpdateSeekbar() {
   const playhead = document.getElementById('ved-tl-playhead');
   const curEl    = document.getElementById('ved-tl-cur');
   const totEl    = document.getElementById('ved-tl-total');
   const pps      = _vedPPS();
   const elapsed  = _vedSeqElapsed();
-  const total    = _vedSeqTotal();
+  const total    = _vedTotalDur();
   if (playhead) playhead.style.left = (elapsed * pps) + 'px';
   if (curEl)    curEl.textContent   = fmtTS(Math.floor(elapsed));
   if (totEl)    totEl.textContent   = fmtTS(Math.floor(total));
+  _vedUpdateImgOverlays(elapsed);
+  _vedUpdateCaptionOverlays(elapsed);
   if (VED.seqPlaying) {
     const scroll = document.getElementById('ved-tl-scroll');
     if (scroll) {
@@ -878,9 +1845,53 @@ function vedPreviewEnded() {
   }
 }
 
+function _vedImgOnlyTick() {
+  const total   = _vedTotalDur();
+  const elapsed = _vedSeqElapsed();
+  _vedUpdateSeekbar();
+  _vedUpdateImgOverlays(elapsed);
+  _vedUpdateCaptionOverlays(elapsed);
+  if (elapsed >= total) {
+    VED.seqPlaying    = false;
+    VED.imgPlayOffset = 0;
+    VED.imgPlayT0     = 0;
+    VED.imgRafId      = null;
+    _vedSetPlayIcon(false);
+    _vedUpdateSeekbar();
+    _vedUpdateImgOverlays(0);
+    _vedUpdateCaptionOverlays(0);
+    return;
+  }
+  VED.imgRafId = requestAnimationFrame(_vedImgOnlyTick);
+}
+
 function vedTlPlayPause() {
-  const video = document.getElementById('ved-preview-video');
-  const audio = document.getElementById('ved-preview-audio');
+  const video    = document.getElementById('ved-preview-video');
+  const audio    = document.getElementById('ved-preview-audio');
+  const hasVideo = VED.sequence.length > 0;
+  const hasImgs  = (VED.photoClips || []).length > 0;
+
+  if (!hasVideo && !hasImgs) return;
+
+  if (!hasVideo) {
+    // Image-only playback driven by rAF timer
+    if (VED.seqPlaying) {
+      VED.imgPlayOffset = _vedSeqElapsed();
+      VED.seqPlaying    = false;
+      VED.imgPlayT0     = 0;
+      if (VED.imgRafId) { cancelAnimationFrame(VED.imgRafId); VED.imgRafId = null; }
+      _vedSetPlayIcon(false);
+    } else {
+      const total = _vedTotalDur();
+      if (VED.imgPlayOffset >= total) VED.imgPlayOffset = 0;
+      VED.imgPlayT0  = performance.now();
+      VED.seqPlaying = true;
+      _vedSetPlayIcon(true);
+      VED.imgRafId   = requestAnimationFrame(_vedImgOnlyTick);
+    }
+    return;
+  }
+
   if (!video) return;
   if (!video.paused) {
     video.pause();
@@ -888,7 +1899,6 @@ function vedTlPlayPause() {
     _vedSetPlayIcon(false);
     return;
   }
-  if (!VED.sequence.length) return;
   if (VED.seqPlaying) {
     video.play().catch(() => {});
     audio?.play().catch(() => {});
@@ -899,6 +1909,15 @@ function vedTlPlayPause() {
 }
 
 function vedTlSeek(secs) {
+  if (!VED.sequence.length) {
+    // Image-only mode: seek the image timer
+    const t = Math.max(0, _vedSeqElapsed() + secs);
+    _vedSeekElapsed(t);
+    _vedUpdateImgOverlays(t);
+    _vedUpdateCaptionOverlays(t);
+    _vedUpdateSeekbar();
+    return;
+  }
   const video = document.getElementById('ved-preview-video');
   if (!video || !video.dataset.src) return;
   const item = VED.sequence.find(s => s.uid === VED.selectedClip)
@@ -909,46 +1928,56 @@ function vedTlSeek(secs) {
   _vedUpdateSeekbar();
 }
 
+function _vedScrubTo(clientX) {
+  const inner = document.getElementById('ved-tl-inner');
+  if (!inner) return;
+  const rect   = inner.getBoundingClientRect();
+  const target = Math.max(0, (clientX - rect.left) / _vedPPS());
+
+  if (!VED.sequence.length) {
+    _vedSeekElapsed(target);
+    _vedUpdateImgOverlays(target);
+    _vedUpdateCaptionOverlays(target);
+    _vedUpdateSeekbar();
+    return;
+  }
+
+  let elapsed = 0;
+  for (let i = 0; i < VED.sequence.length; i++) {
+    const item = VED.sequence[i];
+    const dur  = _vedClipDur(item);
+    if (target <= elapsed + dur || i === VED.sequence.length - 1) {
+      const offset  = Math.min(target - elapsed, dur);
+      const seekTo  = (item.start || 0) + offset;
+      const wasPlay = !document.getElementById('ved-preview-video')?.paused && VED.seqPlaying;
+      VED.seqPlaying = wasPlay;
+      _vedLoadClipAndRun(i, () => {
+        const v = document.getElementById('ved-preview-video');
+        if (v) v.currentTime = seekTo;
+        if (wasPlay) v?.play().catch(() => {});
+        _vedSetPlayIcon(wasPlay);
+        _vedUpdateSeekbar();
+        vedRenderSequence();
+        vedRenderInspector();
+      });
+      break;
+    }
+    elapsed += dur;
+  }
+}
+
 function vedTlPointerDown(e) {
   if (e.target.closest('.ved-tl-clip')) return;
-  if (!VED.sequence.length) return;
+  if (!VED.sequence.length && !VED.photoClips.length && !VED.audioClips.length && !VED.captions.length) return;
 
-  const _doSeek = (ev) => {
-    const inner = document.getElementById('ved-tl-inner');
-    if (!inner) return;
-    const rect   = inner.getBoundingClientRect();
-    const target = Math.max(0, (ev.clientX - rect.left) / _vedPPS());
-    let elapsed = 0;
-    for (let i = 0; i < VED.sequence.length; i++) {
-      const item = VED.sequence[i];
-      const dur  = _vedClipDur(item);
-      if (target <= elapsed + dur || i === VED.sequence.length - 1) {
-        const offset  = Math.min(target - elapsed, dur);
-        const seekTo  = (item.start || 0) + offset;
-        const wasPlay = !document.getElementById('ved-preview-video')?.paused && VED.seqPlaying;
-        VED.seqPlaying = wasPlay;
-        _vedLoadClipAndRun(i, () => {
-          const v = document.getElementById('ved-preview-video');
-          if (v) v.currentTime = seekTo;
-          if (wasPlay) v?.play().catch(() => {});
-          _vedSetPlayIcon(wasPlay);
-          _vedUpdateSeekbar();
-          vedRenderSequence();
-          vedRenderInspector();
-        });
-        break;
-      }
-      elapsed += dur;
-    }
-  };
-
-  const onUp = () => {
-    document.removeEventListener('mousemove', _doSeek);
+  const onMove = (ev) => _vedScrubTo(ev.clientX);
+  const onUp   = () => {
+    document.removeEventListener('mousemove', onMove);
     document.removeEventListener('mouseup',   onUp);
   };
-  document.addEventListener('mousemove', _doSeek);
+  document.addEventListener('mousemove', onMove);
   document.addEventListener('mouseup',   onUp);
-  _doSeek(e);
+  _vedScrubTo(e.clientX);
 }
 
 function _vedSetPlayIcon(playing) {
@@ -963,6 +1992,113 @@ function vedRenderInspector() {
   if (!body) return;
 
   const track = VED.selectedTrack;
+
+  // ── Caption inspector ──────────────────────────────────────────
+  if (track === 'caption') {
+    const cap = (VED.captions || []).find(c => c.uid === VED.selectedClip);
+    if (!cap) {
+      if (title) title.textContent = 'Properties';
+      body.innerHTML = `<div class="ved-insp-empty"><svg class="icon icon-lg" style="color:var(--text-3)"><use href="#i-film"/></svg><div>Select a clip<br>to edit its properties</div></div>`;
+      return;
+    }
+    if (title) title.textContent = 'Caption';
+    const uid    = cap.uid;
+    const _upd   = `const c=(VED.captions||[]).find(x=>x.uid==='${uid}');if(!c)return;`;
+    const _ref   = `_vedUpdateCaptionOverlays(_vedSeqElapsed());`;
+    const fsPct  = +(cap.fontSizePct || 5);
+    const tS     = +(cap.tStart ?? 0);
+    const tE     = +(cap.tEnd   ?? (tS + 3));
+    const dur    = Math.max(0.5, tE - tS);
+    const maxPos = Math.max(60, _vedTotalDur() + 30);
+
+    body.innerHTML = `
+      <div class="ved-insp-track-tag">
+        <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round">
+          <rect x="2" y="7" width="20" height="10" rx="2"/><line x1="6" y1="11" x2="10" y2="11"/><line x1="6" y1="13.5" x2="14" y2="13.5"/>
+        </svg>
+        Caption overlay
+      </div>
+      <div class="ved-insp-section-lbl">Text</div>
+      <textarea class="ved-cap-insp-ta" rows="3" placeholder="Caption text…"
+        oninput="${_upd}c.text=this.value;${_ref}">${esc(cap.text || '')}</textarea>
+
+      <div class="ved-insp-section-lbl" style="margin-top:10px">Timing</div>
+      <div class="ved-insp-field">
+        <label class="ved-insp-lbl">Appears at — <span id="ci-at">${fmtTS(Math.round(tS))}</span></label>
+        <input type="range" class="ved-insp-range" min="0" max="${maxPos}" step="0.5" value="${tS.toFixed(1)}"
+          oninput="${_upd}const d=(c.tEnd??c.tStart+3)-(c.tStart??0),v=+this.value;c.tStart=v;c.tEnd=v+d;document.getElementById('ci-at').textContent=fmtTS(Math.round(v));vedRenderCaptionTrack()">
+      </div>
+      <div class="ved-insp-field" style="margin-top:4px">
+        <label class="ved-insp-lbl">Duration — <span id="ci-dur">${dur.toFixed(1)}s</span></label>
+        <input type="range" class="ved-insp-range" min="0.5" max="30" step="0.5" value="${dur.toFixed(1)}"
+          oninput="${_upd}const v=+this.value;c.tEnd=(c.tStart??0)+v;document.getElementById('ci-dur').textContent=v.toFixed(1)+'s';vedRenderCaptionTrack()">
+      </div>
+
+      <div class="ved-insp-section-lbl" style="margin-top:10px">Style</div>
+      <div class="ved-insp-field">
+        <label class="ved-insp-lbl">Font size — <span id="ci-fs">${fsPct.toFixed(1)}%</span></label>
+        <input type="range" class="ved-insp-range" min="1" max="18" step="0.5" value="${fsPct}"
+          oninput="${_upd}c.fontSizePct=+this.value;document.getElementById('ci-fs').textContent=(+this.value).toFixed(1)+'%';${_ref}">
+      </div>
+      <div class="ved-insp-field" style="margin-top:4px">
+        <label class="ved-insp-lbl">Rotation — <span id="ci-rot">${(cap.rotation ?? 0).toFixed(0)}°</span></label>
+        <input type="range" class="ved-insp-range" min="-180" max="180" step="1" value="${(cap.rotation ?? 0)}"
+          oninput="${_upd}c.rotation=+this.value;document.getElementById('ci-rot').textContent=(+this.value).toFixed(0)+'°';${_ref}">
+      </div>
+      <div class="ved-insp-field" style="margin-top:4px;flex-direction:row;gap:8px;align-items:center">
+        <label class="ved-insp-lbl" style="flex:0 0 auto;margin:0">Font</label>
+        <select class="select-input" style="flex:1;font-size:.76rem"
+          onchange="${_upd}c.fontFamily=this.value;${_ref}">
+          ${['Impact','Anton','Bebas Neue','Oswald','Arial Black','Arial','Helvetica Neue',
+             'Roboto Condensed','Montserrat','Playfair Display','Georgia',
+             'Courier New','Trebuchet MS','Verdana','Times New Roman','Comic Sans MS','Permanent Marker'].map(f =>
+            `<option value="${f}"${(cap.fontFamily||'Impact')===f?' selected':''}>${esc(f)}</option>`
+          ).join('')}
+        </select>
+      </div>
+      <div class="ved-insp-field" style="margin-top:8px;flex-direction:row;gap:6px;align-items:center;flex-wrap:wrap">
+        <label class="ved-insp-lbl" style="flex:0 0 auto;margin:0;min-width:60px">Text color</label>
+        <input type="color" value="${cap.color||'#ffffff'}"
+          style="width:32px;height:24px;padding:1px;border-radius:3px;border:1px solid var(--border);cursor:pointer"
+          oninput="${_upd}c.color=this.value;${_ref}">
+        <label class="ved-insp-lbl" style="flex:0 0 auto;margin:0 0 0 6px">Highlight</label>
+        <input type="color" value="${cap.bgColor||'#000000'}"
+          style="width:32px;height:24px;padding:1px;border-radius:3px;border:1px solid var(--border);cursor:pointer;${cap.bgColor?'':'opacity:.4'}"
+          oninput="${_upd}c.bgColor=this.value;${_ref}">
+        <button class="btn-sm${cap.bgColor?' btn-sm--active':''}" title="Toggle background highlight"
+          onclick="${_upd}c.bgColor=c.bgColor?'':'#000000';vedRenderInspector();${_ref}">
+          ${cap.bgColor?'Highlight Off':'Highlight'}</button>
+      </div>
+      <div class="ved-insp-field" style="margin-top:6px;flex-direction:row;gap:5px;align-items:center;flex-wrap:wrap">
+        <label class="ved-insp-lbl" style="flex:0 0 auto;margin:0;min-width:60px">Style</label>
+        <button class="btn-sm${cap.bold?' btn-sm--active':''}" style="font-weight:700;min-width:28px" title="Bold"
+          onclick="${_upd}c.bold=!c.bold;vedRenderInspector();${_ref}"><strong>B</strong></button>
+        <button class="btn-sm${cap.italic?' btn-sm--active':''}" style="font-style:italic;min-width:28px" title="Italic"
+          onclick="${_upd}c.italic=!c.italic;vedRenderInspector();${_ref}"><em>I</em></button>
+        <button class="btn-sm${cap.shadow!==false?' btn-sm--active':''}" title="Drop shadow behind text"
+          onclick="${_upd}c.shadow=c.shadow===false;vedRenderInspector();${_ref}">Shadow</button>
+      </div>
+      <div class="ved-insp-field" style="margin-top:6px;flex-direction:row;gap:5px;align-items:center">
+        <label class="ved-insp-lbl" style="flex:0 0 auto;margin:0;min-width:60px">Align</label>
+        ${[
+          ['left',   '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="18" y2="18"/></svg> Left'],
+          ['center', '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg> Center'],
+          ['right',  '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="9" y1="12" x2="21" y2="12"/><line x1="6" y1="18" x2="21" y2="18"/></svg> Right'],
+        ].map(([a, lbl]) =>
+          `<button class="btn-sm${(cap.align||'center')===a?' btn-sm--active':''}"
+            style="display:inline-flex;align-items:center;gap:3px;font-size:.72rem"
+            title="Align ${a}" onclick="${_upd}c.align='${a}';vedRenderInspector();${_ref}">${lbl}</button>`
+        ).join('')}
+      </div>
+      <div style="margin-top:10px;border-top:1px solid var(--border);padding-top:8px">
+        <button class="btn-sm" style="color:var(--danger);border-color:var(--danger)"
+          onclick="vedRemoveCaption('${uid}')">
+          <svg class="icon icon-sm"><use href="#i-trash"/></svg> Remove
+        </button>
+      </div>`;
+    return;
+  }
+
   const arr   = track === 'audio' ? VED.audioClips
               : track === 'photo' ? VED.photoClips
               : VED.sequence;
@@ -974,18 +2110,109 @@ function vedRenderInspector() {
       <div class="ved-insp-empty">
         <svg class="icon icon-lg" style="color:var(--text-3)"><use href="#i-film"/></svg>
         <div>Select a clip<br>to edit its properties</div>
+      </div>
+      <div style="margin-top:8px;padding-top:10px;border-top:1px solid var(--border)">
+        <div class="ved-insp-section-lbl">Canvas Background</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:6px">
+          <input type="color" id="ved-canvas-bg-picker" value="${VED.canvasBg||'#111111'}"
+            style="width:36px;height:28px;padding:1px;border-radius:4px;border:1px solid var(--border);cursor:pointer"
+            oninput="_vedApplyCanvasBg(this.value)">
+          <span style="font-size:.75rem;color:var(--text-2)">Canvas color</span>
+        </div>
       </div>`;
     return;
   }
 
   const i = arr.indexOf(item);
   const n = arr.length;
-  if (title) title.textContent = `${track === 'audio' ? 'Audio ' : track === 'photo' ? 'Photo ' : ''}Clip ${i + 1} of ${n}`;
 
-  const reRenderFn  = track === 'audio' ? 'vedRenderAudioTrack()' : track === 'photo' ? 'vedRenderPhotoTrack()' : 'vedRenderSequence()';
-  const removeFn    = track === 'audio' ? 'vedRemoveFromAudioSeq' : track === 'photo' ? 'vedRemoveFromPhotoSeq' : 'vedRemoveFromSeq';
-  const moveFn      = track === 'audio' ? 'vedMoveAudioClip'      : track === 'photo' ? 'vedMovePhotoClip'      : 'vedMoveSeq';
-  const trackIcon   = track === 'audio' ? '#i-vol' : track === 'photo' ? '#i-img' : '#i-film';
+  // ── Image clip inspector ──
+  if (track === 'photo') {
+    if (title) title.textContent = `Image ${i + 1} of ${n}`;
+    const tS      = item.tStart  ?? 0;
+    const tE      = item.tEnd    ?? (tS + _VED_PHOTO_DEFAULT_DUR);
+    const dur     = Math.max(0.1, tE - tS);
+    const maxPos  = Math.max(60, _vedSeqTotal() + 30);
+    const scale   = item.scale   ?? 1;
+    const x       = item.x       ?? 0.5;
+    const y       = item.y       ?? 0.5;
+    const opacity = item.opacity ?? 1;
+    const uid     = item.uid;
+
+    const _upd = `const c=VED.photoClips.find(x=>x.uid==='${uid}');if(!c)return;`;
+    const _ref = `_vedUpdateImgOverlays(_vedSeqElapsed());`;
+
+    body.innerHTML = `
+      <div class="ved-insp-track-tag">
+        <svg class="icon icon-sm"><use href="#i-img"/></svg>
+        Image overlay
+      </div>
+      <div class="ved-insp-name" title="${item.name || ''}">${item.name || item.uploadId}</div>
+      <img src="/api/uploads/stream/${item.uploadId}"
+           style="width:100%;border-radius:6px;max-height:68px;object-fit:contain;background:var(--surface-2);margin:6px 0 10px;display:block">
+
+      <div class="ved-insp-section-lbl">Timing</div>
+      <div class="ved-insp-row" style="flex-direction:column;gap:6px">
+        <div class="ved-insp-field">
+          <label class="ved-insp-lbl">Appears at — <span id="ii-at">${fmtTS(Math.round(tS))}</span></label>
+          <input type="range" class="ved-insp-range" min="0" max="${maxPos}" step="0.5" value="${tS.toFixed(1)}"
+            oninput="${_upd}const d=${dur.toFixed(3)},v=+this.value;c.tStart=v;c.tEnd=v+d;document.getElementById('ii-at').textContent=fmtTS(Math.round(v));vedRenderPhotoTrack()">
+        </div>
+        <div class="ved-insp-field">
+          <label class="ved-insp-lbl">Show for — <span id="ii-dur">${dur.toFixed(1)}s</span></label>
+          <input type="range" class="ved-insp-range" min="0.5" max="30" step="0.5" value="${dur.toFixed(1)}"
+            oninput="${_upd}const v=+this.value;c.tEnd=c.tStart+v;document.getElementById('ii-dur').textContent=v.toFixed(1)+'s';vedRenderPhotoTrack()">
+        </div>
+      </div>
+
+      <div class="ved-insp-section-lbl" style="margin-top:10px">Transform</div>
+      <div class="ved-insp-row" style="flex-direction:column;gap:6px">
+        <div class="ved-insp-field">
+          <label class="ved-insp-lbl">Scale — <span id="ii-sc">${Math.round(scale*100)}%</span></label>
+          <input type="range" class="ved-insp-range" min="0.05" max="2" step="0.05" value="${scale}"
+            oninput="${_upd}c.scale=+this.value;document.getElementById('ii-sc').textContent=Math.round(+this.value*100)+'%';${_ref}">
+        </div>
+        <div class="ved-insp-field">
+          <label class="ved-insp-lbl">Position X — <span id="ii-x">${Math.round(x*100)}%</span></label>
+          <input type="range" class="ved-insp-range" min="0" max="1" step="0.01" value="${x}"
+            oninput="${_upd}c.x=+this.value;document.getElementById('ii-x').textContent=Math.round(+this.value*100)+'%';${_ref}">
+        </div>
+        <div class="ved-insp-field">
+          <label class="ved-insp-lbl">Position Y — <span id="ii-y">${Math.round(y*100)}%</span></label>
+          <input type="range" class="ved-insp-range" min="0" max="1" step="0.01" value="${y}"
+            oninput="${_upd}c.y=+this.value;document.getElementById('ii-y').textContent=Math.round(+this.value*100)+'%';${_ref}">
+        </div>
+        <div class="ved-insp-field">
+          <label class="ved-insp-lbl">Opacity — <span id="ii-op">${Math.round(opacity*100)}%</span></label>
+          <input type="range" class="ved-insp-range" min="0" max="1" step="0.01" value="${opacity}"
+            oninput="${_upd}c.opacity=+this.value;document.getElementById('ii-op').textContent=Math.round(+this.value*100)+'%';${_ref}">
+        </div>
+        <div class="ved-insp-field" style="flex-direction:row;gap:8px;align-items:center">
+          <label class="ved-insp-lbl" style="flex:0 0 auto;margin:0">Flip</label>
+          <button id="ii-fh" class="btn-sm${item.flipH ? ' btn-sm--active' : ''}"
+            onclick="${_upd}c.flipH=!c.flipH;this.classList.toggle('btn-sm--active',c.flipH);${_ref}">↔ H</button>
+          <button id="ii-fv" class="btn-sm${item.flipV ? ' btn-sm--active' : ''}"
+            onclick="${_upd}c.flipV=!c.flipV;this.classList.toggle('btn-sm--active',c.flipV);${_ref}">↕ V</button>
+          <button class="btn-sm" title="Reset all transforms"
+            onclick="${_upd}c.scale=1;c.x=0.5;c.y=0.5;c.opacity=1;c.flipH=false;c.flipV=false;vedRenderInspector();${_ref}">Reset</button>
+        </div>
+      </div>
+
+      <div class="ved-insp-actions" style="margin-top:10px">
+        <button class="btn-icon" title="Remove" onclick="vedRemoveFromPhotoSeq('${uid}')">
+          <svg class="icon icon-sm" style="color:var(--danger)"><use href="#i-trash"/></svg>
+        </button>
+      </div>`;
+    return;
+  }
+
+  // ── Video / Audio clip inspector ──
+  if (title) title.textContent = `${track === 'audio' ? 'Audio ' : ''}Clip ${i + 1} of ${n}`;
+
+  const reRenderFn  = track === 'audio' ? 'vedRenderAudioTrack()' : 'vedRenderSequence()';
+  const removeFn    = track === 'audio' ? 'vedRemoveFromAudioSeq' : 'vedRemoveFromSeq';
+  const moveFn      = track === 'audio' ? 'vedMoveAudioClip'      : 'vedMoveSeq';
+  const trackIcon   = track === 'audio' ? '#i-vol' : '#i-film';
   const isAudioClip = track === 'audio';
 
   const startVal = item.start || 0;
@@ -1043,7 +2270,7 @@ function vedRenderInspector() {
 
 // ── Render ────────────────────────────────────────────────────
 async function vedRender() {
-  if (!VED.sequence.length) return;
+  if (!VED.sequence.length && !VED.photoClips.length) return;
   document.getElementById('ved-render-btn').disabled = true;
   const logBox = document.getElementById('ved-log-box');
   logBox.innerHTML = '';
@@ -1067,17 +2294,45 @@ async function vedRender() {
         crop_y:    s.crop_y ?? 0.5,
       })),
       photo_clips: VED.photoClips.map(p => ({
-        upload_id: p.uploadId,
-        start:     p.start || 0,
-        end:       p.end   || _VED_PHOTO_DEFAULT_DUR,
-        is_image:  true,
+        upload_id:  p.uploadId,
+        time_start: p.tStart  ?? 0,
+        time_end:   p.tEnd    ?? ((p.tStart ?? 0) + _VED_PHOTO_DEFAULT_DUR),
+        is_image:   true,
+        scale:      p.scale   ?? 1,
+        x:          p.x       ?? 0.5,
+        y:          p.y       ?? 0.5,
+        opacity:    p.opacity ?? 1,
+        flip_h:     p.flipH   ?? false,
+        flip_v:     p.flipV    ?? false,
+        rotation:   p.rotation ?? 0,
+        crop_t:     p.cropT   ?? 0,
+        crop_r:     p.cropR   ?? 0,
+        crop_b:     p.cropB   ?? 0,
+        crop_l:     p.cropL   ?? 0,
       })),
       audio_clips: VED.audioClips.map(c => ({
         upload_id: c.uploadId,
         start:     c.start  || 0,
         end:       c.end    || null,
       })),
+      captions: (VED.captions || []).map(c => ({
+        text:          c.text        || '',
+        time_start:    c.tStart      ?? 0,
+        time_end:      c.tEnd        ?? ((c.tStart ?? 0) + 3),
+        x:             c.x           ?? 0.5,
+        y:             c.y           ?? 0.82,
+        font_size_pct: c.fontSizePct || 5,
+        font_family:   c.fontFamily  || 'Impact',
+        color:         c.color       || '#FFFFFF',
+        bg_color:      c.bgColor     || '',
+        bold:          c.bold        || false,
+        italic:        c.italic      || false,
+        align:         c.align       || 'center',
+        shadow:        c.shadow      !== false,
+        rotation:      c.rotation    ?? 0,
+      })),
       resolution, codec, fit,
+      canvas_bg: VED.canvasBg || '#000000',
     };
 
     const res = await apiFetch('/api/edit/render', {
@@ -1101,7 +2356,7 @@ async function vedRender() {
 
 async function _vedPollJob(jobId) {
   try {
-    const res  = await fetch(`/api/jobs/${jobId}`);
+    const res  = await apiFetch(`/api/jobs/${jobId}`);
     const data = await res.json();
 
     _vedSetProgress(data.progress || 0, data.status);
@@ -1164,3 +2419,27 @@ function vedDownload() {
     },
   });
 }
+
+// ── Keyboard shortcuts (editor-only) ─────────────────────────
+document.addEventListener('keydown', function _vedKeyNav(e) {
+  if (!document.getElementById('ved-timeline')?.offsetParent) return;
+
+  // Ctrl+Z — undo
+  if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key === 'z') {
+    e.preventDefault(); vedUndo(); return;
+  }
+  // Ctrl+Y or Ctrl+Shift+Z — redo
+  if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.shiftKey && e.key === 'z'))) {
+    e.preventDefault(); vedRedo(); return;
+  }
+
+  // Arrow keys only when not in a text field
+  if (e.target.matches('input,textarea,select,[contenteditable="true"]')) return;
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+    e.preventDefault();
+    const delta = e.key === 'ArrowLeft' ? -5 : 5;
+    _vedSeekElapsed(Math.max(0, _vedSeqElapsed() + delta));
+    _vedUpdateImgOverlays(_vedSeqElapsed());
+    _vedUpdateCaptionOverlays(_vedSeqElapsed());
+  }
+});

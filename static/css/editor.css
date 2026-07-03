@@ -168,6 +168,95 @@
   height: 4px; margin: 4px 0;
 }
 .ved-insp-actions { display: flex; gap: 4px; }
+.ved-insp-section-lbl {
+  font-size: .6rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--text-3); margin-bottom: 6px; margin-top: 4px;
+}
+.btn-sm--active {
+  background: var(--accent-dim); color: var(--accent); border-color: var(--accent);
+}
+
+/* ── Canvas image overlays — interactive ─────────────────────── */
+.ved-img-wrap {
+  position: absolute;
+  transform-origin: center center;
+  pointer-events: all;
+  cursor: move;
+}
+.ved-img-el {
+  width: 100%; height: auto; max-height: 100%;
+  object-fit: contain; display: block;
+  pointer-events: none; user-select: none;
+  transition: clip-path 120ms;
+}
+/* Corner scale handles — hidden unless selected */
+.ved-img-corner {
+  display: none;
+  position: absolute;
+  width: 10px; height: 10px;
+  background: #fff;
+  border: 2px solid var(--accent);
+  border-radius: 2px;
+  z-index: 10;
+}
+.ved-img-sel .ved-img-corner { display: block; }
+.ved-img-corner--nw { top: -5px; left: -5px;  cursor: nw-resize; }
+.ved-img-corner--ne { top: -5px; right: -5px; cursor: ne-resize; }
+.ved-img-corner--se { bottom: -5px; right: -5px; cursor: se-resize; }
+.ved-img-corner--sw { bottom: -5px; left: -5px;  cursor: sw-resize; }
+/* Selection outline */
+.ved-img-sel { outline: 2px solid var(--accent); outline-offset: 1px; }
+/* Floating toolbar — hidden unless selected */
+.ved-img-tb {
+  display: none;
+  position: absolute;
+  top: -32px; left: 50%; transform: translateX(-50%);
+  background: rgba(0,0,0,.75); backdrop-filter: blur(4px);
+  border-radius: 6px; padding: 2px 4px;
+  flex-direction: row; gap: 2px; white-space: nowrap; z-index: 20;
+}
+.ved-img-sel .ved-img-tb { display: flex; }
+.ved-img-tb-btn {
+  background: none; border: none; color: #fff;
+  padding: 3px 7px; cursor: pointer; border-radius: 4px;
+  display: flex; align-items: center; gap: 4px; font-size: .72rem;
+  font-family: var(--font); font-weight: 500;
+}
+.ved-img-tb-btn:hover { background: rgba(255,255,255,.18); }
+/* Rotation handle — circle above image center, rotates with image */
+.ved-img-rot-handle {
+  display: none;
+  position: absolute;
+  top: -52px; left: 50%;
+  transform: translateX(-50%);
+  width: 18px; height: 18px;
+  background: var(--surface);
+  border: 2px solid var(--accent);
+  border-radius: 50%;
+  cursor: grab;
+  z-index: 12;
+  display: none;
+  align-items: center; justify-content: center;
+  color: var(--accent);
+}
+.ved-img-rot-handle:active { cursor: grabbing; }
+/* Connector line from handle down to image top */
+.ved-img-rot-handle::after {
+  content: '';
+  position: absolute;
+  left: 50%; top: 100%;
+  transform: translateX(-50%);
+  width: 1px; height: 34px;
+  background: var(--accent);
+  opacity: .6;
+}
+.ved-img-sel .ved-img-rot-handle { display: flex; }
+/* Crop overlay UI */
+.ved-crop-ui {
+  box-sizing: border-box;
+  pointer-events: all;
+  z-index: 30;
+}
 .ved-insp-empty {
   display: flex; flex-direction: column; align-items: center;
   gap: 8px; padding: 24px 10px; text-align: center;
@@ -203,7 +292,7 @@
 
 /* ── Timeline shell ──────────────────────────────────────────── */
 .ved-timeline {
-  flex-shrink: 0; height: 200px;
+  flex-shrink: 0; height: 260px;
   border-top: 2px solid var(--border); background: var(--surface);
   display: flex; flex-direction: column;
 }
@@ -232,10 +321,12 @@
 
 /* ── Timeline body (labels + scrollable area) ────────────────── */
 .ved-tl-canvas {
-  flex: 1; display: flex; overflow: hidden;
+  flex: 1; display: flex; overflow-x: hidden; overflow-y: auto; align-items: flex-start;
 }
+.ved-tl-canvas::-webkit-scrollbar { width: 4px; }
+.ved-tl-canvas::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 .ved-tl-label-col {
-  width: 54px; flex-shrink: 0;
+  width: 54px; flex-shrink: 0; min-height: 100%;
   display: flex; flex-direction: column;
   border-right: 1px solid var(--border); background: var(--surface);
   z-index: 4;
@@ -266,7 +357,7 @@
 
 /* ── Scrollable area ─────────────────────────────────────────── */
 .ved-tl-scroll {
-  flex: 1; overflow-x: auto; overflow-y: hidden;
+  flex: 1; overflow-x: auto; overflow-y: visible; min-height: 100%;
   background: var(--bg); cursor: crosshair;
 }
 .ved-tl-scroll::-webkit-scrollbar { height: 4px; }
@@ -330,8 +421,9 @@
   border: 2px solid var(--clip-video-border);
   background: var(--clip-video-bg);
   cursor: pointer; user-select: none;
-  transition: border-color .1s;
+  transition: border-color .15s, box-shadow .15s, transform .12s, opacity .12s;
   min-width: 4px;
+  will-change: transform;
 }
 .ved-tl-clip canvas {
   position: absolute; inset: 0; width: 100%; height: 100%;
@@ -383,6 +475,13 @@
   0%, 100% { box-shadow: 0 0 0 1.5px #22c55e; }
   50%       { box-shadow: 0 0 0 3px rgba(34,197,94,.4); }
 }
+.ved-tl-clip--lift {
+  transform: scale(1.04) translateY(-4px) !important;
+  box-shadow: 0 10px 28px rgba(0,0,0,.55), 0 0 0 2px var(--accent) !important;
+  opacity: .88 !important;
+  z-index: 30 !important;
+  cursor: grabbing !important;
+}
 .ved-tl-clip-idx {
   width: 13px; height: 13px; border-radius: 50%;
   background: rgba(255,255,255,.9); color: #000;
@@ -412,9 +511,16 @@
 .ved-tl-clip-handle-bar { width: 3px; height: 16px; background: #fff; border-radius: 2px; }
 .ved-tl-clip--drag-over {
   border-color: var(--accent) !important;
-  box-shadow: 0 0 0 2px var(--accent) !important;
+  box-shadow: -4px 0 0 0 var(--accent), 0 0 0 2px color-mix(in srgb, var(--accent) 35%, transparent) !important;
+  transform: translateX(4px);
 }
-.ved-tl-clip--dragging { opacity: .35; }
+.ved-tl-clip--dragging {
+  opacity: .45;
+  transform: scale(1.03) translateY(-4px);
+  box-shadow: 0 10px 28px rgba(0,0,0,.55);
+  border-color: var(--accent) !important;
+  z-index: 20;
+}
 .ved-tl-empty-hint {
   position: absolute; top: 50%; left: 12px; transform: translateY(-50%);
   font-size: .7rem; color: var(--text-3); pointer-events: none;
@@ -452,6 +558,56 @@
 .editor-cols { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 16px; }
 .editor-left, .editor-right { display: flex; flex-direction: column; }
 
+/* ── Caption overlays ────────────────────────────────────────── */
+.ved-cap-wrap {
+  position: absolute;
+  transform-origin: center center;
+  pointer-events: all;
+  cursor: move;
+  box-sizing: border-box;
+}
+.ved-cap-text {
+  width: 100%;
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.25;
+  pointer-events: none;
+  display: block;
+}
+.ved-cap-resize {
+  position: absolute;
+  bottom: -8px; right: -8px;
+  width: 16px; height: 16px;
+  background: var(--accent);
+  border: 2px solid #fff;
+  border-radius: 50%;
+  cursor: nwse-resize;
+  display: none;
+  z-index: 10;
+}
+.ved-cap-sel .ved-cap-resize { display: block; }
+.ved-cap-sel { outline: 2px solid var(--accent); outline-offset: 3px; }
+.ved-cap-insp-ta {
+  width: 100%;
+  min-height: 56px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  color: var(--text);
+  font-size: .83rem;
+  padding: 6px 8px;
+  resize: vertical;
+  box-sizing: border-box;
+  font-family: inherit;
+  outline: none;
+}
+.ved-cap-insp-ta:focus { border-color: var(--accent); }
+.ved-tl-clip--caption {
+  background: linear-gradient(135deg, #1c0f40 60%, #3a1868);
+  border: 1px solid #6a3aaa;
+}
+.ved-tl-clip--caption:hover { border-color: #a855f7; }
+
 /* ── Editor resize handles ──────────────────────────────────── */
 .ved-tl-resize-handle {
   height: 5px;
@@ -472,6 +628,33 @@
 }
 .ved-props-resize-handle:hover,
 .ved-props-resize-handle.dragging { background: var(--accent); }
+
+/* ── Caption overlay rotation handle ───────────────────────── */
+.ved-cap-rot-handle {
+  display: none;
+  position: absolute;
+  top: -52px; left: 50%;
+  transform: translateX(-50%);
+  width: 18px; height: 18px;
+  background: var(--surface);
+  border: 2px solid #a855f7;
+  border-radius: 50%;
+  cursor: grab;
+  z-index: 12;
+  align-items: center; justify-content: center;
+  color: #a855f7;
+}
+.ved-cap-rot-handle:active { cursor: grabbing; }
+.ved-cap-rot-handle::after {
+  content: '';
+  position: absolute;
+  left: 50%; top: 100%;
+  transform: translateX(-50%);
+  width: 1px; height: 34px;
+  background: #a855f7;
+  opacity: .6;
+}
+.ved-cap-sel .ved-cap-rot-handle { display: flex; }
 
 /* ── Caption track label (non-<label>) ─────────────────────── */
 .ved-tl-label-caption {

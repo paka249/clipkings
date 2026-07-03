@@ -8,8 +8,8 @@
   <input id="ved-audio-input" type="file" style="display:none" multiple
          accept=".mp3,.aac,.wav,.m4a,.ogg,.flac,audio/*"
          onchange="vedAddAudioFiles(this.files)">
-  <input id="ved-photo-input" type="file" style="display:none" multiple
-         accept=".jpg,.jpeg,.png,.webp,.gif,.bmp,.tiff,image/*"
+  <input id="ved-image-input" type="file" style="display:none" multiple
+         accept=".jpg,.jpeg,.png,.webp,.gif,image/jpeg,image/png,image/webp,image/gif"
          onchange="vedAddPhotoFiles(this.files)">
 
   <!-- ── Top bar ── -->
@@ -44,6 +44,10 @@
                  style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;cursor:pointer"></video>
           <audio id="ved-preview-audio" preload="auto"
                  onended="vedPreviewAudioEnded()"></audio>
+          <!-- Image overlays — shown/hidden based on playhead position -->
+          <div id="ved-img-overlays" style="position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:2;user-select:none"></div>
+          <!-- Caption overlays — text on canvas, above images -->
+          <div id="ved-cap-overlays" style="position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:20;user-select:none"></div>
           <div class="ved-preview-placeholder" id="ved-canvas-placeholder">
             <svg class="icon icon-xl" style="color:var(--text-3)"><use href="#i-film"/></svg>
             <div id="ved-canvas-hint" style="margin-top:10px;font-size:.83rem;color:var(--text-2);font-weight:500">Add media to get started</div>
@@ -140,13 +144,13 @@
     <!-- Controls bar -->
     <div class="ved-tl-bar">
       <button class="ved-tl-ctrl-btn" onclick="vedTlSeek(-5)" title="Back 5s">
-        <svg class="icon icon-sm" style="transform:scaleX(-1)"><use href="#i-dl"/></svg>
+        <svg class="icon icon-sm"><use href="#i-skip-back"/></svg>
       </button>
       <button class="ved-tl-ctrl-btn" id="ved-tl-play-btn" onclick="vedTlPlayPause()" title="Play / Pause">
         <svg class="icon icon-sm" id="ved-tl-play-icon"><use href="#i-play"/></svg>
       </button>
       <button class="ved-tl-ctrl-btn" onclick="vedTlSeek(5)" title="Forward 5s">
-        <svg class="icon icon-sm"><use href="#i-dl"/></svg>
+        <svg class="icon icon-sm"><use href="#i-skip-fwd"/></svg>
       </button>
       <span class="ved-tl-timecode">
         <strong id="ved-tl-cur">0:00</strong>
@@ -154,9 +158,6 @@
         <span id="ved-tl-total">0:00</span>
       </span>
       <div style="flex:1"></div>
-      <button class="ved-tl-ctrl-btn" onclick="vedZoom(-1)" title="Zoom out">−</button>
-      <span class="ved-tl-zoom-lbl" id="ved-tl-zoom-lbl">1×</span>
-      <button class="ved-tl-ctrl-btn" onclick="vedZoom(1)" title="Zoom in">+</button>
     </div>
 
     <!-- Scrollable timeline canvas -->
@@ -165,9 +166,9 @@
       <!-- Non-scrolling label column -->
       <div class="ved-tl-label-col">
         <div class="ved-tl-label-spacer"></div>
-        <label for="ved-photo-input" class="ved-tl-track-label ved-tl-label-photo" title="Add photo">
+        <label for="ved-image-input" class="ved-tl-track-label ved-tl-label-photo" title="Add image">
           <svg class="icon icon-sm"><use href="#i-img"/></svg>
-          <span>Photo</span>
+          <span>Images</span>
           <span class="ved-tl-label-plus">+</span>
         </label>
         <label for="ved-video-input" class="ved-tl-track-label ved-tl-label-video" title="Add video">
@@ -196,8 +197,10 @@
           <div class="ved-tl-ruler" id="ved-tl-ruler"></div>
 
           <!-- Playhead -->
-          <div class="ved-tl-playhead" id="ved-tl-playhead">
-            <div class="ved-tl-playhead-head"></div>
+          <div class="ved-tl-playhead" id="ved-tl-playhead"
+               onmousedown="event.stopPropagation();(function(e){const onMove=ev=>_vedScrubTo(ev.clientX);const onUp=()=>{document.removeEventListener('mousemove',onMove);document.removeEventListener('mouseup',onUp)};document.addEventListener('mousemove',onMove);document.addEventListener('mouseup',onUp);_vedScrubTo(e.clientX)})(event)"
+               style="cursor:ew-resize">
+            <div class="ved-tl-playhead-head" style="cursor:ew-resize"></div>
             <div class="ved-tl-playhead-line"></div>
           </div>
 
