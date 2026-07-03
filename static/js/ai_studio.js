@@ -69,9 +69,9 @@ async function aisUploadFile(file) {
       throw new Error(err.detail || res.statusText);
     }
     const entry = await res.json();
-    if (status) status.textContent = '';
-    await aisLoadUploads();
-    aisUseUpload(entry.id);
+    if (status) status.textContent = `Ready: ${esc(entry.name || file.name)}`;
+    AIS.uploadId = entry.id;
+    aisCheckReady();
   } catch (e) {
     if (status) status.textContent = '';
     _modal({
@@ -83,57 +83,6 @@ async function aisUploadFile(file) {
   }
 }
 
-async function aisLoadUploads() {
-  const list = document.getElementById('ais-uploads-list');
-  if (!list) return;
-  try {
-    const uploads = await apiFetch('/api/uploads').then(r => r.json());
-    if (!uploads.length) {
-      list.innerHTML = '<p class="muted-text" style="font-size:.78rem">No uploads yet.</p>';
-      return;
-    }
-    list.innerHTML = uploads.map(u => `
-      <div class="ais-upload-row${AIS.uploadId === u.id ? ' ais-upload-selected' : ''}" id="ais-urow-${u.id}">
-        <div class="ais-upload-name" title="${esc(u.original_name)}">${esc(u.original_name)}</div>
-        <div class="ais-upload-meta">${u.size_mb} MB</div>
-        <button class="btn-sm" onclick="aisUseUpload('${u.id}')">Use</button>
-        <button class="btn-icon btn-danger-icon" onclick="aisDeleteUpload('${u.id}')" title="Delete">×</button>
-      </div>
-    `).join('');
-  } catch {
-    list.innerHTML = '<p class="muted-text" style="font-size:.78rem">Could not load uploads.</p>';
-  }
-}
-
-function aisUseUpload(id) {
-  AIS.uploadId = id;
-  document.querySelectorAll('.ais-upload-row').forEach(r => r.classList.remove('ais-upload-selected'));
-  const row = document.getElementById(`ais-urow-${id}`);
-  if (row) row.classList.add('ais-upload-selected');
-  aisCheckReady();
-}
-
-function aisDeleteUpload(id) {
-  const name = document.getElementById(`ais-urow-${id}`)
-    ?.querySelector('.ais-upload-name')?.textContent || id;
-  _modal({
-    icon: 'trash', iconColor: 'danger',
-    title: 'Delete upload',
-    msg: `<strong>${esc(name)}</strong> will be removed from your uploads library.`,
-    confirm: { label: 'Delete', danger: true },
-    cancel: { label: 'Cancel' },
-    onConfirm: async () => {
-      try {
-        const res = await apiFetch('/api/uploads/' + id, { method: 'DELETE' });
-        if (!res.ok) throw new Error((await res.json().catch(() => ({}))).detail || 'Error');
-        if (AIS.uploadId === id) { AIS.uploadId = ''; aisCheckReady(); }
-        await aisLoadUploads();
-      } catch (e) {
-        _modal({ icon: 'warn', iconColor: 'danger', title: 'Could not delete', msg: e.message, confirm: { label: 'OK' } });
-      }
-    },
-  });
-}
 
 function aisCheckReady() {
   const btn = document.getElementById('ais-generate-btn');
