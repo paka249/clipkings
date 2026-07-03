@@ -25,7 +25,7 @@ async function aisPreviewUrl() {
   const info = document.getElementById('ais-url-preview');
   if (!url || !info) return;
   info.textContent = 'Checking…';
-  info.className = 'rk-preview-info';
+  info.className = 'ais-prev-info';
   try {
     const res = await apiFetch('/api/preview', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -34,10 +34,10 @@ async function aisPreviewUrl() {
     if (!res.ok) throw new Error((await res.json()).detail || res.statusText);
     const d = await res.json();
     info.innerHTML = `<svg class="icon icon-sm"><use href="#i-check"/></svg> ${esc(d.title)} · ${fmtTS(d.duration)}`;
-    info.className = 'rk-preview-info rk-prev-ok';
+    info.className = 'ais-prev-info rk-prev-ok';
   } catch (e) {
     info.textContent = 'Error: ' + e.message;
-    info.className = 'rk-preview-info rk-prev-err';
+    info.className = 'ais-prev-info rk-prev-err';
   }
   aisCheckReady();
 }
