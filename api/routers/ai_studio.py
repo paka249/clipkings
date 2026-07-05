@@ -56,7 +56,9 @@ class AiStudioReq(BaseModel):
     sub_size: int = 48
     sub_color: str = "#FFFFFF"
     sub_style: str = "shadow"
-    sub_position: int = 85
+    sub_position: int = 85  # Y position 0–100 % from top
+    sub_x: int = 50         # X position 0–100 % from left
+    sub_align: str = "center"
     do_voiceover: bool = False
     vo_script: str = ""
     vo_voice: str = "jenny"
@@ -140,7 +142,8 @@ def _run_ai_studio_job(job_id: str, req: AiStudioReq):
                     canvas_w=canvas_w, canvas_h=canvas_h,
                     font=req.sub_font, size=req.sub_size,
                     color_hex=req.sub_color, style=req.sub_style,
-                    position=req.sub_position,
+                    pos_x=req.sub_x, pos_y=req.sub_position,
+                    align=req.sub_align,
                 )
                 ass_path = str(ass_file)
                 log(f"[OK] Subtitles written — {len(segments)} segments", "ok")

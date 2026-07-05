@@ -16,6 +16,9 @@ def _fmt_ass_time(secs: float) -> str:
     return f'{h}:{m:02d}:{s:02d}.{cs:02d}'
 
 
+_ALIGN_CODE = {"left": 4, "center": 5, "right": 6}
+
+
 def segments_to_ass(
     segments: list[dict],
     output_path: str,
@@ -24,12 +27,16 @@ def segments_to_ass(
     font: str,
     size: int,
     color_hex: str,
-    style: str,    # "shadow" | "box"
-    position: int, # 0=top … 100=bottom
+    style: str,
+    pos_x: int = 50,    # 0–100 % from left
+    pos_y: int = 85,    # 0–100 % from top
+    align: str = "center",
 ) -> None:
-    """Write an .ass subtitle file from Whisper segment dicts."""
+    """Write an .ass subtitle file with explicit \pos() positioning."""
     primary_color = _hex_to_ass(color_hex)
-    margin_v      = int((1 - position / 100) * canvas_h)
+    abs_x = int(pos_x / 100 * canvas_w)
+    abs_y = int(pos_y / 100 * canvas_h)
+    an    = _ALIGN_CODE.get(align, 5)
 
     if style == 'box':
         border_style = 3
@@ -47,7 +54,7 @@ def segments_to_ass(
         f'{primary_color},&H000000FF&,&H00000000&,{back_color},'
         f'1,0,0,0,100,100,0,0,'
         f'{border_style},{outline},{shadow},'
-        f'2,20,20,{margin_v},1'
+        f'{an},0,0,0,1'
     )
 
     lines = [
@@ -72,7 +79,10 @@ def segments_to_ass(
         end   = _fmt_ass_time(float(seg['end']))
         text  = str(seg['text']).replace('\n', ' ').strip()
         if text:
-            lines.append(f'Dialogue: 0,{start},{end},Default,,0,0,0,,{text}')
+            lines.append(
+                f'Dialogue: 0,{start},{end},Default,,0,0,0,,'
+                f'{{\\an{an}\\pos({abs_x},{abs_y})}}{text}'
+            )
 
     with open(output_path, 'w', encoding='utf-8') as fh:
         fh.write('\n'.join(lines) + '\n')

@@ -95,31 +95,57 @@
                 <label class="field-label">Size — <span id="ais-sub-size-val">48</span>px</label>
                 <input type="range" id="ais-sub-size" min="20" max="90" value="48"
                   style="width:100%;accent-color:var(--accent)"
-                  oninput="document.getElementById('ais-sub-size-val').textContent=this.value">
+                  oninput="document.getElementById('ais-sub-size-val').textContent=this.value;_aisSyncSubPreview()">
               </div>
               <div>
                 <label class="field-label">Color</label>
-                <input type="color" id="ais-sub-color" value="#FFFFFF" class="ais-color-input">
+                <input type="color" id="ais-sub-color" value="#FFFFFF" class="ais-color-input"
+                  oninput="_aisSyncSubPreview()">
               </div>
             </div>
-            <div class="ais-grid-2" style="margin-top:10px">
+            <div style="margin-top:10px;display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start">
               <div>
                 <label class="field-label">Style</label>
                 <div class="ais-chip-row">
-                  <label class="ais-chip"><input type="radio" name="ais-sub-style" value="shadow" checked> Shadow</label>
-                  <label class="ais-chip"><input type="radio" name="ais-sub-style" value="box"> Box</label>
+                  <label class="ais-chip"><input type="radio" name="ais-sub-style" value="shadow" checked
+                    onchange="_aisSyncSubPreview()"> Shadow</label>
+                  <label class="ais-chip"><input type="radio" name="ais-sub-style" value="box"
+                    onchange="_aisSyncSubPreview()"> Box</label>
                 </div>
               </div>
               <div>
-                <label class="field-label">Position — <span id="ais-sub-pos-val">85</span>%</label>
-                <div class="ais-slider-row">
-                  <span style="font-size:.72rem;color:var(--text-3)">Top</span>
-                  <input type="range" id="ais-sub-pos" min="5" max="95" value="85"
-                    style="flex:1;accent-color:var(--accent)"
-                    oninput="document.getElementById('ais-sub-pos-val').textContent=this.value">
-                  <span style="font-size:.72rem;color:var(--text-3)">Bot</span>
+                <label class="field-label">Alignment</label>
+                <div class="ais-chip-row">
+                  <label class="ais-chip"><input type="radio" name="ais-sub-align" value="left"
+                    onchange="_aisSyncSubPreview()"> Left</label>
+                  <label class="ais-chip"><input type="radio" name="ais-sub-align" value="center" checked
+                    onchange="_aisSyncSubPreview()"> Center</label>
+                  <label class="ais-chip"><input type="radio" name="ais-sub-align" value="right"
+                    onchange="_aisSyncSubPreview()"> Right</label>
                 </div>
               </div>
+            </div>
+            <!-- Visual position editor -->
+            <div style="margin-top:12px">
+              <label class="field-label">Position — click or drag to place</label>
+              <div class="ais-sub-preview" id="ais-sub-preview"
+                onmousedown="aisSubBgClick(event)"
+                ontouchstart="aisSubBgClick(event)">
+                <div class="ais-sub-ph" id="ais-sub-ph"></div>
+                <img id="ais-sub-bg" class="ais-sub-bg" alt="" style="display:none">
+                <div class="ais-sub-widget" id="ais-sub-widget"
+                  onmousedown="aisSubDragStart(event)"
+                  ontouchstart="aisSubDragStart(event)">
+                  <span class="ais-sub-text" id="ais-sub-sample">Sample subtitle text</span>
+                  <div class="ais-sh ais-sh-tl" onmousedown="aisSubResizeStart(event)" ontouchstart="aisSubResizeStart(event)"></div>
+                  <div class="ais-sh ais-sh-tr" onmousedown="aisSubResizeStart(event)" ontouchstart="aisSubResizeStart(event)"></div>
+                  <div class="ais-sh ais-sh-bl" onmousedown="aisSubResizeStart(event)" ontouchstart="aisSubResizeStart(event)"></div>
+                  <div class="ais-sh ais-sh-br" onmousedown="aisSubResizeStart(event)" ontouchstart="aisSubResizeStart(event)"></div>
+                </div>
+              </div>
+              <span class="ais-dz-sub" style="margin-top:4px;display:block">
+                Drag anywhere on the preview · reflects size, color and style in real time
+              </span>
             </div>
           </div>
         </div>

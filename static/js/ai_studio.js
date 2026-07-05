@@ -17,6 +17,137 @@ function aisToggleSection(section, enabled) {
   const card = document.getElementById(`ais-${section}-card`);
   if (!card) return;
   card.style.display = enabled ? '' : 'none';
+  if (section === 'subs' && enabled) _aisInitSubPreview();
+}
+
+// ── Subtitle visual position editor ─────────────────────────
+function _aisInitSubPreview() {
+  if (AIS.subX == null) AIS.subX = 50;
+  if (AIS.subY == null) AIS.subY = 85;
+  _aisRefreshSubBg();
+  _aisSyncSubPreview();
+}
+
+function _aisRefreshSubBg() {
+  const bg = document.getElementById('ais-sub-bg');
+  const ph = document.getElementById('ais-sub-ph');
+  if (!bg) return;
+  if (AIS.thumbSrc) {
+    bg.src = AIS.thumbSrc;
+    bg.style.display = '';
+    if (ph) ph.style.opacity = '0.25';
+  } else {
+    bg.style.display = 'none';
+    if (ph) ph.style.opacity = '1';
+  }
+}
+
+function _aisSyncSubPreview() {
+  const widget = document.getElementById('ais-sub-widget');
+  const text   = document.getElementById('ais-sub-sample');
+  if (!widget || !text) return;
+
+  const x     = AIS.subX ?? 50;
+  const y     = AIS.subY ?? 85;
+  const align = document.querySelector('input[name="ais-sub-align"]:checked')?.value || 'center';
+  const txMap = { left: 'translate(0%,-50%)', center: 'translate(-50%,-50%)', right: 'translate(-100%,-50%)' };
+
+  widget.style.left      = x + '%';
+  widget.style.top       = y + '%';
+  widget.style.transform = txMap[align] || txMap.center;
+  text.style.textAlign   = align;
+
+  // Perceptual scale — maps slider range (20-90) to visible preview px (8-36)
+  const size = parseInt(document.getElementById('ais-sub-size')?.value || 48);
+  text.style.fontSize = Math.max(8, Math.round(size * 0.4)) + 'px';
+
+  const color = document.getElementById('ais-sub-color')?.value || '#ffffff';
+  text.style.color = color;
+
+  const isBox = document.querySelector('input[name="ais-sub-style"]:checked')?.value === 'box';
+  if (isBox) {
+    text.style.textShadow   = 'none';
+    text.style.background   = 'rgba(0,0,0,0.62)';
+    text.style.padding      = '1px 8px';
+    text.style.borderRadius = '3px';
+  } else {
+    text.style.textShadow   = '2px 2px 5px rgba(0,0,0,0.9),0 0 8px rgba(0,0,0,0.6)';
+    text.style.background   = 'none';
+    text.style.padding      = '0';
+    text.style.borderRadius = '0';
+  }
+}
+
+// Drag the widget to reposition
+function aisSubDragStart(e) {
+  e.stopPropagation();
+  e.preventDefault();
+  const wrap   = document.getElementById('ais-sub-preview');
+  const wRect  = wrap.getBoundingClientRect();
+  const startX = e.touches ? e.touches[0].clientX : e.clientX;
+  const startY = e.touches ? e.touches[0].clientY : e.clientY;
+  const origX  = AIS.subX ?? 50;
+  const origY  = AIS.subY ?? 85;
+
+  const onMove = (ev) => {
+    ev.preventDefault();
+    const cx = ev.touches ? ev.touches[0].clientX : ev.clientX;
+    const cy = ev.touches ? ev.touches[0].clientY : ev.clientY;
+    AIS.subX = Math.round(Math.max(3, Math.min(97, origX + ((cx - startX) / wRect.width)  * 100)));
+    AIS.subY = Math.round(Math.max(3, Math.min(97, origY + ((cy - startY) / wRect.height) * 100)));
+    _aisSyncSubPreview();
+  };
+  const onEnd = () => {
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup',   onEnd);
+    document.removeEventListener('touchmove', onMove);
+    document.removeEventListener('touchend',  onEnd);
+  };
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup',   onEnd);
+  document.addEventListener('touchmove', onMove, { passive: false });
+  document.addEventListener('touchend',  onEnd);
+}
+
+// Drag a corner handle to resize (up = bigger, down = smaller)
+function aisSubResizeStart(e) {
+  e.stopPropagation();
+  e.preventDefault();
+  const startY    = e.touches ? e.touches[0].clientY : e.clientY;
+  const slider    = document.getElementById('ais-sub-size');
+  const startSize = parseInt(slider?.value || 48);
+
+  const onMove = (ev) => {
+    ev.preventDefault();
+    const cy      = ev.touches ? ev.touches[0].clientY : ev.clientY;
+    const newSize = Math.round(Math.max(20, Math.min(90, startSize + (cy - startY) * 0.55)));
+    if (slider) { slider.value = newSize; }
+    const lbl = document.getElementById('ais-sub-size-val');
+    if (lbl) lbl.textContent = newSize;
+    _aisSyncSubPreview();
+  };
+  const onEnd = () => {
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup',   onEnd);
+    document.removeEventListener('touchmove', onMove);
+    document.removeEventListener('touchend',  onEnd);
+  };
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup',   onEnd);
+  document.addEventListener('touchmove', onMove, { passive: false });
+  document.addEventListener('touchend',  onEnd);
+}
+
+// Click on background to teleport the widget
+function aisSubBgClick(e) {
+  if (e.target.closest?.('#ais-sub-widget')) return;
+  const wrap = document.getElementById('ais-sub-preview');
+  const rect = wrap.getBoundingClientRect();
+  const cx   = e.touches ? e.touches[0].clientX : e.clientX;
+  const cy   = e.touches ? e.touches[0].clientY : e.clientY;
+  AIS.subX   = Math.round(Math.max(3, Math.min(97, ((cx - rect.left) / rect.width)  * 100)));
+  AIS.subY   = Math.round(Math.max(3, Math.min(97, ((cy - rect.top)  / rect.height) * 100)));
+  _aisSyncSubPreview();
 }
 
 async function aisPreviewUrl() {
@@ -48,6 +179,7 @@ async function aisPreviewUrl() {
     info.className = 'ais-prev-info rk-prev-ok';
 
     // Thumbnail card
+    if (d.thumbnail) { AIS.thumbSrc = d.thumbnail; _aisRefreshSubBg(); }
     if (thumbBox && d.thumbnail) {
       const row = document.createElement('div');
       row.className = 'ais-thumb-row';
@@ -170,7 +302,9 @@ async function generateAiStudio() {
     sub_size:     parseInt(document.getElementById('ais-sub-size').value),
     sub_color:    document.getElementById('ais-sub-color').value,
     sub_style:    document.querySelector('input[name="ais-sub-style"]:checked')?.value || 'shadow',
-    sub_position: parseInt(document.getElementById('ais-sub-pos').value),
+    sub_position: AIS.subY ?? 85,
+    sub_x:        AIS.subX ?? 50,
+    sub_align:    document.querySelector('input[name="ais-sub-align"]:checked')?.value || 'center',
     do_voiceover: doVo,
     vo_script:    document.getElementById('ais-vo-script').value.trim(),
     vo_voice:     document.getElementById('ais-voice')?.value || 'jenny',
@@ -292,6 +426,8 @@ function _showUploadPreview(file) {
       canvas.getContext('2d').drawImage(video, 0, 0);
       URL.revokeObjectURL(blobUrl);
       const mb = (file.size / 1_000_000).toFixed(1);
+      AIS.thumbSrc = canvas.toDataURL('image/jpeg', 0.85);
+      _aisRefreshSubBg();
 
       const row  = document.createElement('div');
       row.className = 'ais-thumb-row';
