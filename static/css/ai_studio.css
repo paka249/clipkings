@@ -47,7 +47,8 @@
   user-select: none;
   transition: border-color var(--t), background var(--t);
 }
-.ais-dropzone:hover { border-color: var(--text-3); background: var(--surface-2); }
+.ais-dropzone:hover  { border-color: var(--text-3); background: var(--surface-2); }
+.ais-dropzone.ais-dz-active { border-color: var(--accent); background: var(--accent-dim); }
 .ais-dz-sub { font-size: .73rem; color: var(--text-3); }
 .ais-upload-status { font-size: .77rem; color: var(--text-2); min-height: 18px; margin-top: 6px; }
 

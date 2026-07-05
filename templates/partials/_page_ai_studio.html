@@ -38,10 +38,13 @@
             accept=".mp4,.mov,.mkv,.webm,.avi,.m4v,.ts,.flv,video/*"
             onchange="aisFileChosen(this.files[0])">
           <label for="ais-file-input" class="ais-dropzone" id="ais-dropzone"
-            ondragover="event.preventDefault()" ondrop="aisDropFile(event)">
+            ondragover="event.preventDefault();event.dataTransfer.dropEffect='copy'"
+            ondragenter="event.preventDefault();this.classList.add('ais-dz-active')"
+            ondragleave="this.classList.remove('ais-dz-active')"
+            ondrop="this.classList.remove('ais-dz-active');aisDropFile(event)">
             <svg class="icon icon-xl" style="color:var(--text-3)"><use href="#i-upload"/></svg>
             <span>Drop a video or click to browse</span>
-            <span class="ais-dz-sub">MP4 · MOV · MKV · WebM · max 500 MB</span>
+            <span class="ais-dz-sub">MP4 · MOV · MKV · WebM · AVI · max 500 MB</span>
           </label>
           <div id="ais-upload-status" class="ais-upload-status"></div>
         </div>

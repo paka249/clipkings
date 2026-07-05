@@ -11,7 +11,7 @@ _ALLOWED_EXTS = {".mp4", ".mov", ".mkv", ".webm", ".avi", ".m4v", ".ts", ".flv"}
 _ALLOWED_AUDIO_EXTS = {".mp3", ".aac", ".wav", ".m4a", ".ogg", ".flac"}
 _ALLOWED_IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".webp", ".gif", ".jfif", ".avif"}
 _MAX_UPLOAD_MB    = 500   # per-file ceiling
-_MAX_LIBRARY_SIZE = 30    # max files in the upload library
+_MAX_LIBRARY_SIZE = 200   # max files in the upload library
 
 _BG_VALID = {
     "subway_surfers", "subway_surfers_2",

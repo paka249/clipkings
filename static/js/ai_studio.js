@@ -54,11 +54,34 @@ function aisFileChosen(file) {
 }
 
 async function aisUploadFile(file) {
+  const status   = document.getElementById('ais-upload-status');
   const fileInput = document.getElementById('ais-file-input');
-  if (fileInput) fileInput.value = '';
 
-  const status = document.getElementById('ais-upload-status');
-  if (status) status.textContent = `Uploading ${file.name}…`;
+  const _setStatus = (msg, isErr = false) => {
+    if (!status) return;
+    status.textContent = msg;
+    status.style.color = isErr ? 'var(--danger)' : 'var(--text-2)';
+  };
+
+  // Client-side validation
+  const ALLOWED_VIDEO = new Set(['.mp4','.mov','.mkv','.webm','.avi','.m4v','.ts','.flv']);
+  const MAX_MB = 500;
+  const ext = ('.' + (file.name.split('.').pop() || '')).toLowerCase();
+  const mb  = file.size / 1_000_000;
+
+  if (!ALLOWED_VIDEO.has(ext)) {
+    _setStatus(`Unsupported type "${ext}" — use MP4, MOV, MKV, WebM or AVI.`, true);
+    return;
+  }
+  if (mb > MAX_MB) {
+    _setStatus(`File is ${mb.toFixed(0)} MB — max is ${MAX_MB} MB.`, true);
+    return;
+  }
+
+  if (fileInput) fileInput.value = '';
+  AIS.uploadId = '';
+  aisCheckReady();
+  _setStatus(`Uploading ${file.name} (${mb.toFixed(1)} MB)…`);
 
   const form = new FormData();
   form.append('file', file);
@@ -66,20 +89,16 @@ async function aisUploadFile(file) {
     const res = await apiFetch('/api/upload', { method: 'POST', body: form });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      throw new Error(err.detail || res.statusText);
+      throw new Error(err.detail || `Server error ${res.status}`);
     }
     const entry = await res.json();
-    if (status) status.textContent = `Ready: ${esc(entry.name || file.name)}`;
     AIS.uploadId = entry.id;
     aisCheckReady();
+    _setStatus(`✓ ${esc(file.name)} (${mb.toFixed(1)} MB) — ready`);
   } catch (e) {
-    if (status) status.textContent = '';
-    _modal({
-      icon: 'warn', iconColor: 'danger',
-      title: 'Upload failed',
-      msg: e.message,
-      confirm: { label: 'OK' },
-    });
+    AIS.uploadId = '';
+    aisCheckReady();
+    _setStatus(`Upload failed: ${e.message}`, true);
   }
 }
 

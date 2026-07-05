@@ -3,10 +3,39 @@ ClipKings — FastAPI backend.
 Run:  python server.py
 Open: http://localhost:8080
 """
+import os
+import shutil
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+
+def _find_ffmpeg_dir() -> Path | None:
+    exe = shutil.which("ffmpeg")
+    if exe:
+        return Path(exe).parent
+    for d in [
+        Path(r"C:\ffmpeg\bin"),
+        Path(r"C:\Program Files\ffmpeg\bin"),
+        Path.home() / "ffmpeg" / "bin",
+    ]:
+        if (d / "ffmpeg.exe").exists():
+            return d
+    ext_root = Path.home() / ".vscode" / "extensions"
+    if ext_root.exists():
+        for hit in ext_root.glob("*/bin/ffmpeg.exe"):
+            return hit.parent
+    return None
+
+
+if sys.platform == "win32":
+    _ffdir = _find_ffmpeg_dir()
+    if _ffdir:
+        os.environ["PATH"] = str(_ffdir) + os.pathsep + os.environ.get("PATH", "")
+        print(f"[startup] ffmpeg found → {_ffdir}")
+    else:
+        print("[startup] WARNING: ffmpeg not found. Install: winget install Gyan.FFmpeg")
 
 import uvicorn
 from fastapi import Depends, FastAPI, HTTPException, Request
