@@ -25,12 +25,14 @@
         <div id="ais-url-panel">
           <div class="ais-url-row">
             <input id="ais-url" type="url" class="text-input ais-url-input"
-              placeholder="https://www.youtube.com/watch?v=…" oninput="aisCheckReady()">
+              placeholder="https://www.youtube.com/watch?v=…"
+              oninput="aisCheckReady();document.getElementById('ais-url-thumb').style.display='none'">
             <button class="btn-outline ais-preview-btn" onclick="aisPreviewUrl()">
               <svg class="icon icon-sm"><use href="#i-eye"/></svg> Preview
             </button>
           </div>
           <div id="ais-url-preview" class="ais-prev-info"></div>
+          <div id="ais-url-thumb" style="display:none"></div>
         </div>
 
         <div id="ais-upload-panel" style="display:none">
@@ -47,6 +49,7 @@
             <span class="ais-dz-sub">MP4 · MOV · MKV · WebM · AVI · max 500 MB</span>
           </label>
           <div id="ais-upload-status" class="ais-upload-status"></div>
+          <div id="ais-upload-preview" style="display:none"></div>
         </div>
       </div>
 

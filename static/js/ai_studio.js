@@ -6,7 +6,6 @@ function openAiStudioTemplate() {
 
 function aisSourceTab(type) {
   AIS.sourceType = type;
-  AIS.uploadId   = '';
   document.getElementById('ais-tab-url').classList.toggle('active', type === 'url');
   document.getElementById('ais-tab-upload').classList.toggle('active', type === 'upload');
   document.getElementById('ais-url-panel').style.display    = type === 'url'    ? '' : 'none';
@@ -21,11 +20,15 @@ function aisToggleSection(section, enabled) {
 }
 
 async function aisPreviewUrl() {
-  const url  = document.getElementById('ais-url').value.trim();
-  const info = document.getElementById('ais-url-preview');
+  const url      = document.getElementById('ais-url').value.trim();
+  const info     = document.getElementById('ais-url-preview');
+  const thumbBox = document.getElementById('ais-url-thumb');
   if (!url || !info) return;
+
   info.textContent = 'Checking…';
   info.className = 'ais-prev-info';
+  if (thumbBox) { thumbBox.style.display = 'none'; thumbBox.innerHTML = ''; }
+
   try {
     const res = await apiFetch('/api/preview', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -33,8 +36,44 @@ async function aisPreviewUrl() {
     });
     if (!res.ok) throw new Error((await res.json()).detail || res.statusText);
     const d = await res.json();
-    info.innerHTML = `<svg class="icon icon-sm"><use href="#i-check"/></svg> ${esc(d.title)} · ${fmtTS(d.duration)}`;
+
+    // Status line
+    const check = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    check.setAttribute('class', 'icon icon-sm');
+    const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+    use.setAttribute('href', '#i-check');
+    check.appendChild(use);
+    info.textContent = '';
+    info.append(check, ` ${d.title} · ${fmtTS(d.duration)}`);
     info.className = 'ais-prev-info rk-prev-ok';
+
+    // Thumbnail card
+    if (thumbBox && d.thumbnail) {
+      const row = document.createElement('div');
+      row.className = 'ais-thumb-row';
+
+      const img = document.createElement('img');
+      img.className = 'ais-thumb-img';
+      img.src = d.thumbnail;
+      img.alt = '';
+      img.style.height = '62px';
+
+      const infoDiv = document.createElement('div');
+      infoDiv.className = 'ais-thumb-info';
+
+      const nameEl = document.createElement('span');
+      nameEl.className = 'ais-thumb-name';
+      nameEl.textContent = d.title;
+
+      const metaEl = document.createElement('span');
+      metaEl.className = 'ais-thumb-meta';
+      metaEl.textContent = fmtTS(d.duration);
+
+      infoDiv.append(nameEl, metaEl);
+      row.append(img, infoDiv);
+      thumbBox.appendChild(row);
+      thumbBox.style.display = '';
+    }
   } catch (e) {
     info.textContent = 'Error: ' + e.message;
     info.className = 'ais-prev-info rk-prev-err';
@@ -80,6 +119,7 @@ async function aisUploadFile(file) {
 
   if (fileInput) fileInput.value = '';
   AIS.uploadId = '';
+  _clearUploadPreview();
   aisCheckReady();
   _setStatus(`Uploading ${file.name} (${mb.toFixed(1)} MB)…`);
 
@@ -95,6 +135,7 @@ async function aisUploadFile(file) {
     AIS.uploadId = entry.id;
     aisCheckReady();
     _setStatus(`✓ ${esc(file.name)} (${mb.toFixed(1)} MB) — ready`);
+    _showUploadPreview(file);
   } catch (e) {
     AIS.uploadId = '';
     aisCheckReady();
@@ -222,6 +263,62 @@ async function aisPreviewVoice() {
   } finally {
     btn.disabled = false;
   }
+}
+
+function _clearUploadPreview() {
+  const el = document.getElementById('ais-upload-preview');
+  if (el) { el.style.display = 'none'; el.innerHTML = ''; }
+}
+
+function _showUploadPreview(file) {
+  const container = document.getElementById('ais-upload-preview');
+  if (!container) return;
+  _clearUploadPreview();
+
+  const video = document.createElement('video');
+  video.preload = 'metadata';
+  video.muted = true;
+  video.playsInline = true;
+  const blobUrl = URL.createObjectURL(file);
+  video.src = blobUrl;
+
+  video.onloadedmetadata = () => {
+    video.currentTime = Math.min(1, video.duration * 0.1);
+    const dur = fmtTS(video.duration);
+    video.onseeked = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      canvas.getContext('2d').drawImage(video, 0, 0);
+      URL.revokeObjectURL(blobUrl);
+      const mb = (file.size / 1_000_000).toFixed(1);
+
+      const row  = document.createElement('div');
+      row.className = 'ais-thumb-row';
+
+      const img  = document.createElement('img');
+      img.className = 'ais-thumb-img';
+      img.src = canvas.toDataURL('image/jpeg', 0.85);
+      img.alt = '';
+
+      const info = document.createElement('div');
+      info.className = 'ais-thumb-info';
+
+      const name = document.createElement('span');
+      name.className = 'ais-thumb-name';
+      name.textContent = file.name;
+
+      const meta = document.createElement('span');
+      meta.className = 'ais-thumb-meta';
+      meta.textContent = `${mb} MB · ${dur}`;
+
+      info.append(name, meta);
+      row.append(img, info);
+      container.append(row);
+      container.style.display = '';
+    };
+  };
+  video.onerror = () => URL.revokeObjectURL(blobUrl);
 }
 
 function _appendAisLog(entry) {

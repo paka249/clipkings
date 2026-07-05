@@ -376,51 +376,43 @@ def build_cmd_ai_studio(
         cmd += ["-c", "copy", str(output_path)]
         return cmd
 
-    need_audio_fc = bool(vo_path) and vo_mix in ("duck", "add")
-    need_video_fc = bool(ass_path)
+    fp: list[str] = []
 
-    if need_audio_fc or need_video_fc:
-        fp: list[str] = []
-
-        if ass_path:
-            safe = ass_path.replace("\\", "\\\\").replace(":", "\\:").replace("'", "\\'")
-            fp.append(f"[0:v]subtitles='{safe}'[vout]")
-            v_map = "[vout]"
-        else:
-            v_map = "0:v"
-
-        if need_audio_fc:
-            if vo_mix == "duck":
-                fp.append(
-                    "[0:a][1:a]sidechaincompress="
-                    "threshold=0.02:ratio=8:attack=5:release=200[aout]"
-                )
-            else:  # add
-                fp.append("[0:a][1:a]amix=inputs=2:duration=first[aout]")
-            a_map = "[aout]"
-        elif vo_path:  # replace
-            a_map = "1:a"
-        else:
-            a_map = "0:a"
-
-        cmd += ["-filter_complex", "; ".join(fp), "-map", v_map, "-map", a_map]
+    # Video track
+    if ass_path:
+        safe = ass_path.replace("\\", "\\\\").replace(":", "\\:").replace("'", "\\'")
+        fp.append(f"[0:v]subtitles='{safe}'[vout]")
+        v_map = "[vout]"
     else:
-        if vo_path:  # replace, no subtitles
-            cmd += ["-map", "0:v", "-map", "1:a"]
-        else:
-            cmd += ["-map", "0:v", "-map", "0:a"]
+        v_map = "0:v"
 
+    # Audio track
+    if vo_path:
+        if vo_mix == "duck":
+            fp.append(
+                "[0:a][1:a]sidechaincompress="
+                "threshold=0.02:ratio=8:attack=5:release=200[aout]"
+            )
+            a_map = "[aout]"
+        elif vo_mix == "add":
+            fp.append("[0:a][1:a]amix=inputs=2:duration=first[aout]")
+            a_map = "[aout]"
+        else:  # replace — pad TTS with silence so it always fills the full video duration
+            fp.append("[1:a]apad[aout]")
+            a_map = "[aout]"
+    else:
+        # 0:a? = optional: won't error if the source video has no audio track
+        a_map = "0:a?"
+
+    cmd += ["-filter_complex", "; ".join(fp), "-map", v_map, "-map", a_map]
     cmd += ["-c:v", vcodec]
     if codec in ("h264", "h265"):
         cmd += ["-preset", "fast", "-crf", str(crf)]
     else:
         cmd += ["-crf", str(crf), "-b:v", "0"]
-
     cmd += ["-c:a", acodec, "-b:a", "192k", "-ac", "2", "-ar", "44100"]
-
     if codec != "vp9":
         cmd += ["-movflags", "+faststart"]
-
     cmd += ["-pix_fmt", "yuv420p", str(output_path)]
     return cmd
 
