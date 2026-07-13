@@ -3,9 +3,11 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
+from urllib.parse import unquote, urlparse
 
 import yt_dlp
 
+from . import probe
 from .logging_utils import log_message
 
 
@@ -19,20 +21,50 @@ def _ydl_opts_stream() -> dict:
     }
 
 
+def _yt_dlp_extract(url: str) -> dict:
+    with yt_dlp.YoutubeDL(_ydl_opts_stream()) as ydl:
+        info = ydl.extract_info(url, download=False)
+        direct_url = info.get("url") or info.get("requested_formats", [{}])[0].get("url")
+        return {
+            "url": direct_url,
+            "title": info.get("title", "Unknown"),
+            "duration": info.get("duration", 0),
+            "thumbnail": info.get("thumbnail", ""),
+        }
+
+
+def _gallery_dl_extract(url: str) -> dict | None:
+    # gallery-dl covers hosts yt-dlp has no extractor for (e.g. Bunkr).
+    # -G resolves the page to its direct CDN url without downloading it.
+    result = subprocess.run(
+        [sys.executable, "-m", "gallery_dl", "-G", url],
+        capture_output=True,
+        text=True,
+    )
+    urls = [line for line in result.stdout.splitlines() if line and not line.startswith("|")]
+    if result.returncode != 0 or not urls:
+        log_message(
+            f"[ERROR] gallery-dl extraction failed: {result.stderr.strip()}", "err"
+        )
+        return None
+
+    direct_url = urls[0]
+    title = unquote(Path(urlparse(direct_url).path).name) or "Unknown"
+    return {
+        "url": direct_url,
+        "title": title,
+        "duration": probe.file_duration(direct_url) or 0,
+        "thumbnail": "",
+    }
+
+
 def extract_stream_url(url: str) -> dict | None:
     try:
-        with yt_dlp.YoutubeDL(_ydl_opts_stream()) as ydl:
-            info = ydl.extract_info(url, download=False)
-            direct_url = info.get("url") or info.get("requested_formats", [{}])[0].get("url")
-            return {
-                "url": direct_url,
-                "title": info.get("title", "Unknown"),
-                "duration": info.get("duration", 0),
-                "thumbnail": info.get("thumbnail", ""),
-            }
+        return _yt_dlp_extract(url)
     except Exception as exc:
         log_message(f"[ERROR] yt-dlp extraction failed: {exc}", "err")
-        return None
+        log_message("[INFO] Retrying preview via gallery-dl", "info")
+        return _gallery_dl_extract(url)
 
 
 def _yt_dlp_download(url: str, out_path: Path) -> None:
