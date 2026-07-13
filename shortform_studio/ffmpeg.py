@@ -380,8 +380,10 @@ def build_cmd_ai_studio(
 
     # Video track
     if ass_path:
-        safe = ass_path.replace("\\", "\\\\").replace(":", "\\:").replace("'", "\\'")
-        fp.append(f"[0:v]subtitles='{safe}'[vout]")
+        # Forward slashes + escape colon with \: so ffmpeg's filter parser
+        # doesn't split on the Windows drive letter (e.g. C: → C\:)
+        safe = ass_path.replace("\\", "/").replace(":", "\\:")
+        fp.append(f"[0:v]subtitles={safe}[vout]")
         v_map = "[vout]"
     else:
         v_map = "0:v"

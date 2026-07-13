@@ -49,7 +49,7 @@ def has_audio(path):
             capture_output=True, text=True,
         )
         return "codec_name" in result.stdout
-    return bool(re.search(r"Stream[^:]*: Audio:", _ffmpeg_stderr(path)))
+    return bool(re.search(r"Stream.*: Audio:", _ffmpeg_stderr(path)))
 
 
 def audio_info(path):
@@ -68,7 +68,7 @@ def audio_info(path):
                 info[k] = v
         return info or None
     m = re.search(
-        r"Stream[^:]*: Audio:\s+(\w+)[^,]*, (\d+) Hz, (\w+)",
+        r"Stream.*: Audio:\s+(\w+)[^,]*, (\d+) Hz, (\w+)",
         _ffmpeg_stderr(path),
     )
     if not m:

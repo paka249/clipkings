@@ -25,7 +25,19 @@
       "mcp__plugin_playwright_playwright__browser_take_screenshot",
       "PowerShell(\\(Get-Content \"c:\\\\Users\\\\ange7\\\\Downloads\\\\Projects_\\\\clipkings\\\\templates\\\\index.html\"\\) -replace '\\\\?v=41\"', '?v=42\"' | Set-Content \"c:\\\\Users\\\\ange7\\\\Downloads\\\\Projects_\\\\clipkings\\\\templates\\\\index.html\")",
       "Bash(grep -q \"playwright-mcp\" .gitignore)",
-      "Bash(echo \".playwright-mcp/\")"
+      "Bash(echo \".playwright-mcp/\")",
+      "Read(//c/ange7/Downloads/Projects_/clipkings/shortform_studio/**)",
+      "Bash(python -m yt_dlp --list-extractors)",
+      "Bash(pip install *)",
+      "Bash(python -c 'import gallery_dl.extractor as extractor; extractor._list = None *)",
+      "Bash(python -c ' *)",
+      "Bash(python -m gallery_dl --help)",
+      "Bash(python -m pytest tests/test_yt.py -v)",
+      "Bash(gallery-dl -D /tmp/gdltest -o skip=false https://example.com/nonexistent)",
+      "Bash(echo \"exit: $?\")",
+      "Bash(python -m gallery_dl --version)",
+      "Bash(python -c \"from shortform_studio import yt; print\\('import ok'\\)\")",
+      "Bash(python -m pytest tests/ -v)"
     ],
     "additionalDirectories": [
       "/tmp"

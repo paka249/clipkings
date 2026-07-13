@@ -6,17 +6,16 @@ function showExportResult(filename, hasAudio = true, cardId = 'export-card', res
   const safeFile = esc(filename);
   const mime = filename.toLowerCase().endsWith('.webm') ? 'video/webm' : 'video/mp4';
   const pid = 'sfsp' + Date.now();
-  const audioNote = hasAudio
-    ? `<span class="audio-badge audio-on"><svg class="icon icon-sm"><use href="#i-vol"/></svg> Audio</span>`
-    : `<span class="audio-badge audio-off"><svg class="icon icon-sm"><use href="#i-vol-off"/></svg> Silent</span>`;
-  document.getElementById(resultId).innerHTML = `
+
+  const el = document.getElementById(resultId);
+  if (!el) return;
+  el.innerHTML = `
     <p class="success-msg">
       <svg class="icon icon-sm"><use href="#i-check"/></svg>
       <strong>${safeFile}</strong>
-      ${audioNote}
     </p>
     <div class="sfs-player" id="${pid}">
-      <video id="${pid}_v" muted preload="auto" playsinline>
+      <video id="${pid}_v" preload="auto" playsinline>
         <source src="/api/video/${encodeURIComponent(filename)}" type="${mime}">
       </video>
       <div class="sfs-overlay" onclick="_sfsPP('${pid}')">
@@ -33,15 +32,15 @@ function showExportResult(filename, hasAudio = true, cardId = 'export-card', res
           <button class="sfs-btn sfs-btn-skip" onclick="_sfsSkip('${pid}',5)" title="+5 seconds">5s&#8618;</button>
           <span class="sfs-time" id="${pid}_tm">0:00 / 0:00</span>
           <span style="flex:1"></span>
-          ${hasAudio ? `
-          <button class="sfs-btn sfs-btn-vol" id="${pid}_vb" onclick="_sfsMute('${pid}')" title="Muted — click for audio">
+          <button class="sfs-btn sfs-btn-vol" id="${pid}_vb" onclick="_sfsMute('${pid}')" title="Mute / Unmute">
             <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
-              <path d="M6.717 3.55A.5.5 0 0 1 7 4v8a.5.5 0 0 1-.812.39L3.825 10.5H1.5A.5.5 0 0 1 1 10V6a.5.5 0 0 1 .5-.5h2.325L6.188 3.61a.5.5 0 0 1 .529-.06zm7.083 4.45a.5.5 0 0 1 0 .707l-4 4a.5.5 0 0 1-.707-.707l4-4a.5.5 0 0 1 .707 0zm-4.707 0a.5.5 0 0 1 .707 0l4 4a.5.5 0 0 1-.707.707l-4-4a.5.5 0 0 1 0-.707z"/>
+              <path d="M11.536 14.01A8.473 8.473 0 0 0 14.026 8a8.473 8.473 0 0 0-2.49-6.01l-.708.707A7.476 7.476 0 0 1 13.025 8c0 2.071-.84 3.946-2.197 5.303l.708.707z"/>
+              <path d="M10.121 12.596A6.48 6.48 0 0 0 12.025 8a6.48 6.48 0 0 0-1.904-4.596l-.707.707A5.483 5.483 0 0 1 11.025 8a5.483 5.483 0 0 1-1.61 3.89l.706.706z"/>
+              <path d="M8.707 11.182A4.486 4.486 0 0 0 10.025 8a4.486 4.486 0 0 0-1.318-3.182L8 5.525A3.489 3.489 0 0 1 9.025 8 3.49 3.49 0 0 1 8 10.475l.707.707zM6.717 3.55A.5.5 0 0 1 7 4v8a.5.5 0 0 1-.812.39L3.825 10.5H1.5A.5.5 0 0 1 1 10V6a.5.5 0 0 1 .5-.5h2.325L6.188 3.61a.5.5 0 0 1 .529-.06z"/>
             </svg>
           </button>
           <input type="range" class="sfs-vol-slider" id="${pid}_vs" min="0" max="1" step="0.05" value="1"
             oninput="_sfsVol('${pid}',this.value)" title="Volume">
-          ` : ''}
           <button class="sfs-btn" onclick="_sfsFs('${pid}')" title="Fullscreen">
             <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
               <path d="M1.5 1h4a.5.5 0 0 1 0 1H2v3.5a.5.5 0 0 1-1 0V1.5A.5.5 0 0 1 1.5 1zm13 0a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-1 0V2h-3.5a.5.5 0 0 1 0-1h4zm0 13h-4a.5.5 0 0 1 0-1H14v-3.5a.5.5 0 0 1 1 0v4a.5.5 0 0 1-.5.5zM1 10.5a.5.5 0 0 1 1 0V14h3.5a.5.5 0 0 1 0 1H1.5a.5.5 0 0 1-.5-.5v-4z"/>
@@ -96,7 +95,6 @@ function _sfsSetup(pid) {
     sb.addEventListener('touchstart', e => seek(e.touches[0].clientX), { passive: true });
     sb.addEventListener('touchmove', e => seek(e.touches[0].clientX), { passive: true });
   }
-  v.play().catch(() => {});
 }
 
 function _sfsProgress(pid, v) {
@@ -147,7 +145,7 @@ function _sfsVolIcon(pid, v) {
     btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
       <path d="M6.717 3.55A.5.5 0 0 1 7 4v8a.5.5 0 0 1-.812.39L3.825 10.5H1.5A.5.5 0 0 1 1 10V6a.5.5 0 0 1 .5-.5h2.325L6.188 3.61a.5.5 0 0 1 .529-.06zm7.083 4.45a.5.5 0 0 1 0 .707l-4 4a.5.5 0 0 1-.707-.707l4-4a.5.5 0 0 1 .707 0zm-4.707 0a.5.5 0 0 1 .707 0l4 4a.5.5 0 0 1-.707.707l-4-4a.5.5 0 0 1 0-.707z"/>
     </svg>`;
-    btn.title = 'Muted — click for audio';
+    btn.title = 'Unmute';
   } else {
     btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
       <path d="M11.536 14.01A8.473 8.473 0 0 0 14.026 8a8.473 8.473 0 0 0-2.49-6.01l-.708.707A7.476 7.476 0 0 1 13.025 8c0 2.071-.84 3.946-2.197 5.303l.708.707z"/>
